@@ -57,7 +57,7 @@ export function ControleTab({
                 disabled={offline || smartMode}
                 onClick={() => {
                   if (!offline && !smartMode) {
-                    navigator.vibrate?.([8, 12, 8, 12, 8]);
+                    navigator.vibrate?.([5, 7, 5, 7, 5, 7, 5, 7, 5, 7, 5]);
                     setLight(stage);
                   }
                 }}
