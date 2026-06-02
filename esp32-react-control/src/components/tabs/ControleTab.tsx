@@ -23,21 +23,14 @@ export function ControleTab({
 }: ControleTabProps) {
   return (
     <div className="space-y-stack-lg animate-fadeIn">
-      {/* Screen Title Section */}
-      <section className="space-y-1">
-        <span className="font-label-caps text-[10px] text-primary uppercase tracking-widest font-bold">Acesso Manual</span>
-        <h2 className="font-headline-lg-mobile text-xl font-bold">Painel de Controle</h2>
-      </section>
+
 
       {smartMode && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-start gap-3 animate-fadeIn">
-          <span className="material-symbols-outlined text-primary text-xl mt-0.5 animate-pulse">lock</span>
-          <div>
-            <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Controles Bloqueados</h4>
-            <p className="text-[11px] text-on-surface-variant mt-1 leading-relaxed">
-              O <b>Modo Inteligente (IA)</b> está ativo e gerencia as luzes e bombas automaticamente. Desative-o na aba <b>Cultivo</b> para liberar o controle manual.
-            </p>
-          </div>
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center gap-3 animate-fadeIn shadow-sm">
+          <span className="material-symbols-outlined text-primary text-xl animate-pulse">lock</span>
+          <p className="text-xs text-on-surface-variant leading-relaxed">
+            O <b>BioCore AI</b> assumiu os controles. Desative a IA na aba <b>Cultivo</b> para liberar acesso manual.
+          </p>
         </div>
       )}
 
@@ -45,7 +38,7 @@ export function ControleTab({
       <section className="bg-surface-container border border-outline-variant rounded-xl p-stack-md inner-bevel">
         <div className="flex items-center justify-between mb-stack-md">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-xl">light_mode</span>
+            <span className="material-symbols-outlined text-yellow-400 text-xl drop-shadow-md">light_mode</span>
             <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold">Iluminação LED</span>
           </div>
           <span className="font-mono-data text-xs text-primary font-semibold">
@@ -96,7 +89,7 @@ export function ControleTab({
       {/* Hydraulic Dock Section */}
       <section className="space-y-stack-md">
         <div className="flex items-center gap-2 mb-2">
-          <span className="material-symbols-outlined text-secondary text-xl">water_drop</span>
+          <span className="material-symbols-outlined text-blue-400 text-xl drop-shadow-md">water_drop</span>
           <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold">Sistema Hidráulico</span>
         </div>
         
@@ -114,8 +107,7 @@ export function ControleTab({
           >
             <div className="flex justify-between items-start">
               <div>
-                <span className="font-label-caps text-[9px] text-on-surface-variant uppercase font-bold">BOMBA 1</span>
-                <div className="text-sm font-bold mt-0.5">Nutrientes N</div>
+                <div className="text-sm font-bold">Nitrogênio (N)</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
@@ -147,8 +139,7 @@ export function ControleTab({
           >
             <div className="flex justify-between items-start">
               <div>
-                <span className="font-label-caps text-[9px] text-on-surface-variant uppercase font-bold">BOMBA 2</span>
-                <div className="text-sm font-bold mt-0.5">H2O Pura</div>
+                <div className="text-sm font-bold">Fósforo (P)</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
@@ -180,8 +171,7 @@ export function ControleTab({
           >
             <div className="flex justify-between items-start">
               <div>
-                <span className="font-label-caps text-[9px] text-on-surface-variant uppercase font-bold">BOMBA 3</span>
-                <div className="text-sm font-bold mt-0.5">Drenagem</div>
+                <div className="text-sm font-bold">Potássio (K)</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
@@ -213,8 +203,7 @@ export function ControleTab({
           >
             <div className="flex justify-between items-start">
               <div>
-                <span className="font-label-caps text-[9px] text-on-surface-variant uppercase font-bold">BOMBA 4</span>
-                <div className="text-sm font-bold mt-0.5">Resfriamento</div>
+                <div className="text-sm font-bold">Água</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5

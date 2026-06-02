@@ -14,8 +14,8 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
           <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
             <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Solo (NPK e Sensores)</span>
-            <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono">
-              {sensors ? 'ATURANDO_LIVE' : 'VALORES_MOCK'}
+            <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-bold animate-pulse">
+              {sensors ? 'AO VIVO' : 'OFFLINE'}
             </span>
           </header>
           
@@ -54,10 +54,10 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           </div>
 
           {/* Soil moisture & temperature */}
-          <div className="grid grid-cols-2 gap-4 py-3 border-t border-outline-variant/30 mt-3">
+          <div className="grid grid-cols-2 gap-4 pt-3 border-t border-outline-variant/30 mt-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
-                <span className="material-symbols-outlined text-primary text-xl">water_drop</span>
+                <span className="material-symbols-outlined text-blue-400 text-xl shadow-blue-400/20 drop-shadow-md">water_drop</span>
               </div>
               <div>
                 <span className="font-label-caps text-[9px] text-outline block uppercase font-bold">Umidade do Solo</span>
@@ -66,7 +66,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
             </div>
             <div className="flex items-center gap-3 border-l border-outline-variant/30 pl-4">
               <div className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
-                <span className="material-symbols-outlined text-secondary text-xl">device_thermostat</span>
+                <span className="material-symbols-outlined text-orange-400 text-xl shadow-orange-400/20 drop-shadow-md">device_thermostat</span>
               </div>
               <div>
                 <span className="font-label-caps text-[9px] text-outline block uppercase font-bold">Temperatura Solo</span>
@@ -76,16 +76,6 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
               </div>
             </div>
           </div>
-
-          <div className="mt-2 pt-3 border-t border-outline-variant/30 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-primary animate-pulse' : 'bg-outline'}`}></div>
-              <span className="font-mono-data text-[10px] text-on-surface-variant">
-                {status === 'connected' ? 'Sincronização em tempo real ativa' : 'Reconectando ao broker...'}
-              </span>
-            </div>
-            <span className="material-symbols-outlined text-on-surface-variant text-sm cursor-pointer hover:text-white">info</span>
-          </div>
         </div>
       </section>
 
@@ -93,14 +83,13 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
       <section className="space-y-3">
         <header className="flex justify-between items-center">
           <h2 className="font-title-md text-base text-on-surface font-bold uppercase tracking-wide">Sensores de Ambiente</h2>
-          <span className="material-symbols-outlined text-outline cursor-pointer hover:text-white">filter_list</span>
         </header>
         <div className="grid grid-cols-1 gap-2.5">
           {/* Temperature Card */}
-          <div className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center justify-between hover:bg-surface-container-highest transition-colors cursor-pointer group active:scale-95">
+          <div className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant group-hover:border-secondary transition-all">
-                <span className="material-symbols-outlined text-secondary text-xl">device_thermostat</span>
+              <div className="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+                <span className="material-symbols-outlined text-orange-400 text-xl drop-shadow-md">device_thermostat</span>
               </div>
               <div>
                 <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Temperatura do Ar</p>
@@ -108,16 +97,15 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono-data text-xs text-secondary">Estável</span>
-              <span className="material-symbols-outlined text-outline text-lg">chevron_right</span>
+              <span className="font-mono-data text-xs text-orange-400">Estável</span>
             </div>
           </div>
 
           {/* Air Humidity Card */}
-          <div className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center justify-between hover:bg-surface-container-highest transition-colors cursor-pointer group active:scale-95">
+          <div className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant group-hover:border-tertiary transition-all">
-                <span className="material-symbols-outlined text-tertiary text-xl">air</span>
+              <div className="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+                <span className="material-symbols-outlined text-sky-300 text-xl drop-shadow-md">air</span>
               </div>
               <div>
                 <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Umidade do Ar</p>
@@ -125,24 +113,11 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono-data text-xs text-error">-1.2%</span>
-              <span className="material-symbols-outlined text-outline text-lg">chevron_right</span>
+              <span className="font-mono-data text-xs text-sky-300">Estável</span>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Active Task Banner */}
-      <div className="bg-primary/5 border border-primary/30 rounded-xl p-stack-md flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full convex-button flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-background text-xl font-bold">play_arrow</span>
-        </div>
-        <div className="flex-1">
-          <p className="font-label-caps text-[9px] text-primary font-bold">IRRIGAÇÃO AGENDADA</p>
-          <p className="text-xs text-on-surface font-medium">Início em 12 minutos - Setor B</p>
-        </div>
-        <span className="material-symbols-outlined text-outline cursor-pointer hover:text-white text-lg">close</span>
-      </div>
     </div>
   );
 }

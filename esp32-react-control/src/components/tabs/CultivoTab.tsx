@@ -13,19 +13,11 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
   return (
     <div className="space-y-stack-lg animate-fadeIn">
       {/* Active Crop Section */}
-      <section className="bg-surface-container rounded-xl overflow-hidden border border-outline-variant inner-bevel">
-        <div className="p-stack-md border-b border-outline-variant flex justify-between items-center">
-          <span className="font-label-caps text-label-caps text-outline uppercase tracking-widest">Estado Atual</span>
-          {smartMode && (
-            <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono font-bold animate-pulse">
-              AUTO AI
-            </span>
-          )}
-        </div>
-        <div className="relative h-64 w-full bg-surface-container-highest">
+      <section className="bg-surface-container rounded-xl overflow-hidden border border-outline-variant shadow-sm">
+        <div className="relative h-56 w-full bg-surface-container-highest">
           <img
             alt={hortalica.nome}
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover opacity-90"
             src={
               hortalica.chave === 'alface'
                 ? "https://images.unsplash.com/photo-1621961476421-e09e13d96924?q=80&w=600&auto=format&fit=crop"
@@ -37,51 +29,33 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
               e.currentTarget.src = "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?q=80&w=600&auto=format&fit=crop";
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-container via-black/20 to-transparent"></div>
+          
+          <div className="absolute top-4 left-4">
+            <span className="font-label-caps text-[10px] bg-black/60 backdrop-blur-md text-white px-2 py-1 rounded-lg uppercase tracking-wider">
+              {smartMode ? 'Cultivo Inteligente' : 'Controle Manual'}
+            </span>
+          </div>
+
           <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-            <div>
-              <span className="font-label-caps text-label-caps bg-primary/10 text-primary px-2 py-1 rounded-sm border border-primary/20 mb-2 inline-block">CULTIVANDO</span>
-              <button
-                onClick={() => setShowSelector(true)}
-                className="flex items-center gap-2 text-left bg-black/50 hover:bg-black/70 active:scale-95 transition-all px-4 py-2 rounded-xl border border-outline-variant/40 min-h-[44px] bio-glow"
-              >
-                <span className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-bold flex items-center gap-2">
-                  <span>{hortalica.emoji}</span>
-                  <span>{hortalica.nome}</span>
-                </span>
-                <span className="material-symbols-outlined text-primary text-xl">expand_more</span>
-              </button>
-            </div>
-          </div>
-          <div className="absolute top-4 right-4 bg-surface-container/80 backdrop-blur-md p-2 rounded-full border border-outline-variant active-glow cursor-pointer" onClick={() => setShowSelector(true)}>
-            <span className="material-symbols-outlined text-primary text-xl">potted_plant</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 divide-x divide-outline-variant border-t border-outline-variant">
-          <div className="p-stack-md text-center">
-            <p className="font-label-caps text-label-caps text-outline text-[10px]">DIA</p>
-            <p className="font-mono-data text-mono-data text-primary text-sm font-semibold">14/30</p>
-          </div>
-          <div className="p-stack-md text-center">
-            <p className="font-label-caps text-label-caps text-outline text-[10px]">SAÚDE</p>
-            <p className="font-mono-data text-mono-data text-primary text-sm font-semibold">98%</p>
-          </div>
-          <div className="p-stack-md text-center">
-            <p className="font-label-caps text-label-caps text-outline text-[10px]">COLHEITA</p>
-            <p className="font-mono-data text-mono-data text-primary text-sm font-semibold">12 JUN</p>
+            <button
+              onClick={() => setShowSelector(true)}
+              className="flex items-center gap-2 text-left bg-black/50 backdrop-blur-md hover:bg-black/70 active:scale-95 transition-all px-4 py-2 rounded-xl border border-white/20 min-h-[44px]"
+            >
+              <span className="text-xl">{hortalica.emoji}</span>
+              <span className="font-title-lg text-lg text-white font-bold">{hortalica.nome}</span>
+              <span className="material-symbols-outlined text-white/70">expand_more</span>
+            </button>
           </div>
         </div>
       </section>
 
       {/* Smart Mode Card */}
-      <section className="bg-surface-container rounded-xl border border-outline-variant inner-bevel p-stack-lg relative overflow-hidden">
-        <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
-          <span className="material-symbols-outlined text-[120px]">psychology</span>
-        </div>
-        <div className="flex justify-between items-center mb-stack-md relative z-10">
+      <section className="bg-surface-container rounded-xl border border-outline-variant p-4 relative overflow-hidden shadow-sm">
+        <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">bolt</span>
-            <h3 className="font-title-md text-title-md font-bold tracking-tight">MODO INTELIGENTE</h3>
+            <h3 className="font-title-md text-base font-bold">BioCore AI</h3>
           </div>
           {/* Switch Toggle */}
           <label className="relative inline-flex items-center cursor-pointer touch-target-min">
@@ -89,134 +63,82 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
               type="checkbox"
               checked={smartMode}
               onChange={(e) => setSmartMode(e.target.checked)}
-              className="sr-only peer switch-input"
+              className="sr-only"
             />
-            <div className="w-12 h-6 bg-surface-container-highest rounded-full transition-colors switch-rail border border-outline-variant relative">
-              <div className="absolute left-1 top-1 w-4 h-4 bg-outline rounded-full transition-transform switch-knob flex items-center justify-center"></div>
+            <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
+              ${smartMode ? 'bg-primary/20 border-primary' : 'bg-surface-container-highest border-outline'}
+            `}>
+              <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
+                ${smartMode ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' : 'bg-outline left-0.5'}
+              `}></div>
             </div>
           </label>
         </div>
 
-        <div className="space-y-stack-md relative z-10">
+        <div>
           {smartMode ? (
-            <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full px-2.5 py-0.5 text-[10px] font-mono mb-2 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-              🧠 INTELIGÊNCIA AUTÔNOMA ATIVA
-            </div>
+            <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
+              A inteligência autônoma está ativa. O BioCore AI cuida da luz, água e nutrientes do seu cultivo para você não se preocupar.
+            </p>
           ) : (
-            <div className="inline-flex items-center gap-1.5 bg-error/10 border border-error/20 text-error rounded-full px-2.5 py-0.5 text-[10px] font-mono mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-error"></span>
-              ⚠️ OPERAÇÃO MANUAL ASSISTIDA
-            </div>
+            <p className="text-xs text-error mb-4 leading-relaxed">
+              O modo autônomo está desativado. Você precisa controlar tudo manualmente.
+            </p>
           )}
 
-          <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed text-xs">
-            {smartMode 
-              ? hortalica.descricaoIA 
-              : 'O sistema de IA está desativado. O cultivo agora depende do controle manual dos atuadores de luz e bombas no painel de controle.'
-            }
-          </p>
-          <div className="grid grid-cols-1 gap-2 pt-2">
-            <div className="flex items-center gap-3 bg-background/40 p-3 rounded-lg border border-outline-variant/30">
-              <span className="material-symbols-outlined text-secondary text-lg">light_mode</span>
-              <div>
-                <p className="font-label-caps text-[10px] font-bold text-on-surface uppercase">Fotoperíodo LED</p>
-                <p className="text-xs text-on-surface-variant">
-                  {smartMode 
-                    ? `Ciclo automático de ${hortalica.fotoperiodo}h luz / ${24 - hortalica.fotoperiodo}h escuridão.`
-                    : 'Controle desativado. Aguardando comandos manuais na aba Controle.'
-                  }
-                </p>
+          {smartMode && (
+            <div className="flex justify-between items-center bg-primary/10 border border-primary/20 rounded-xl p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-lg">auto_awesome</span>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-primary uppercase">Cultivo Perfeito</p>
+                  <p className="text-[10px] text-on-surface-variant">Ambiente 100% otimizado</p>
+                </div>
               </div>
+              <span className="relative flex h-3 w-3 mr-1">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+              </span>
             </div>
-            <div className="flex items-center gap-3 bg-background/40 p-3 rounded-lg border border-outline-variant/30">
-              <span className="material-symbols-outlined text-secondary text-lg">water_drop</span>
-              <div>
-                <p className="font-label-caps text-[10px] font-bold text-on-surface uppercase">Irrigação Inteligente</p>
-                <p className="text-xs text-on-surface-variant">
-                  {smartMode 
-                    ? `Ativada sob demanda quando umidade do solo cai abaixo de ${hortalica.u_solo}%.`
-                    : 'Modo manual ativo. Perigo de estresse hídrico sem controle do usuário.'
-                  }
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-background/40 p-3 rounded-lg border border-outline-variant/30">
-              <span className="material-symbols-outlined text-secondary text-lg">science</span>
-              <div>
-                <p className="font-label-caps text-[10px] font-bold text-on-surface uppercase">Dosagem NPK</p>
-                <p className="text-xs text-on-surface-variant">
-                  {smartMode 
-                    ? `Manutenção em tempo real das metas NPK da planta (${hortalica.N}-${hortalica.P}-${hortalica.K}).`
-                    : 'Dosador inativo. Risco de desbalanço de nutrientes.'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="mt-stack-lg pt-stack-md border-t border-outline-variant flex justify-center">
-          <button 
-            onClick={() => alert(`Parâmetros Inteligentes para ${hortalica.nome}:\n- Umidade Solo Alvo: ${hortalica.u_solo}%\n- Fotoperíodo: ${hortalica.fotoperiodo}h/dia\n- Nutrientes Alvo: N:${hortalica.N} P:${hortalica.P} K:${hortalica.K}`)}
-            className="bg-primary hover:bg-primary-fixed-dim text-on-primary font-bold py-3 px-6 rounded-xl w-full transition-transform active:scale-95 bio-glow text-sm"
-          >
-            VER DETALHES DE METAS IA
-          </button>
+          )}
         </div>
       </section>
 
-      {/* Bento Grid: Leituras e Metas Alvo */}
-      <div className="grid grid-cols-2 gap-stack-md">
-        {/* Umidade do Solo Card */}
-        <div className="bg-surface-container p-stack-md rounded-xl border border-outline-variant inner-bevel flex flex-col justify-between">
+      {/* Simplified Bento Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Umidade Card */}
+        <div className="bg-surface-container p-4 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-blue-400 text-lg shadow-blue-400/20 drop-shadow-md">water_drop</span>
+            <span className="font-label-caps text-[10px] text-outline uppercase font-semibold">Solo</span>
+          </div>
           <div>
-            <span className="font-label-caps text-[9px] text-outline block mb-1 uppercase font-semibold">Umidade Solo</span>
             <div className="flex items-baseline gap-1">
-              <span className="font-display-lg text-2xl font-bold text-on-surface">
-                {sensors?.u_solo ?? 65}
-              </span>
+              <span className="font-display-sm text-xl font-bold">{sensors?.u_solo ?? 65}</span>
               <span className="font-body-sm text-xs text-outline">%</span>
             </div>
-          </div>
-          <div className="mt-3 pt-2 border-t border-outline-variant/30 flex justify-between items-center text-[10px]">
-            <span className="text-on-surface-variant font-medium">Meta Alvo:</span>
-            <span className="font-mono-data text-primary font-bold">{hortalica.u_solo}%</span>
+            <p className="text-[10px] text-on-surface-variant mt-1">
+              Meta: {hortalica.u_solo}%
+            </p>
           </div>
         </div>
 
-        {/* Fotoperíodo Card */}
-        <div className="bg-surface-container p-stack-md rounded-xl border border-outline-variant inner-bevel flex flex-col justify-between">
+        {/* Luz Card */}
+        <div className="bg-surface-container p-4 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-yellow-400 text-lg shadow-yellow-400/20 drop-shadow-md">light_mode</span>
+            <span className="font-label-caps text-[10px] text-outline uppercase font-semibold">Luz Diária</span>
+          </div>
           <div>
-            <span className="font-label-caps text-[9px] text-outline block mb-1 uppercase font-semibold">Fotoperíodo Ideal</span>
             <div className="flex items-baseline gap-1">
-              <span className="font-display-lg text-2xl font-bold text-on-surface">
-                {hortalica.fotoperiodo}
-              </span>
-              <span className="font-body-sm text-xs text-outline">horas</span>
+              <span className="font-display-sm text-xl font-bold">{hortalica.fotoperiodo}</span>
+              <span className="font-body-sm text-xs text-outline">h</span>
             </div>
-          </div>
-          <div className="mt-3 pt-2 border-t border-outline-variant/30 flex justify-between items-center text-[10px]">
-            <span className="text-on-surface-variant font-medium">Ciclo LED:</span>
-            <span className="font-mono-data text-primary font-bold">{hortalica.fotoperiodo}h / {24 - hortalica.fotoperiodo}h</span>
-          </div>
-        </div>
-
-        {/* NPK Alvo Card */}
-        <div className="col-span-2 bg-surface-container p-stack-md rounded-xl border border-outline-variant inner-bevel">
-          <span className="font-label-caps text-[9px] text-outline block mb-3 uppercase font-semibold">Nutrientes Alvo IA (NPK)</span>
-          <div className="grid grid-cols-3 divide-x divide-outline-variant/40 text-center">
-            <div>
-              <span className="font-label-caps text-[8px] text-outline uppercase block">Nitrogênio (N)</span>
-              <span className="font-mono-data text-base font-bold text-primary block mt-1">{hortalica.N} <span className="text-[9px] text-outline font-normal">mg/kg</span></span>
-            </div>
-            <div>
-              <span className="font-label-caps text-[8px] text-outline uppercase block">Fósforo (P)</span>
-              <span className="font-mono-data text-base font-bold text-secondary block mt-1">{hortalica.P} <span className="text-[9px] text-outline font-normal">mg/kg</span></span>
-            </div>
-            <div>
-              <span className="font-label-caps text-[8px] text-outline uppercase block">Potássio (K)</span>
-              <span className="font-mono-data text-base font-bold text-tertiary block mt-1">{hortalica.K} <span className="text-[9px] text-outline font-normal">mg/kg</span></span>
-            </div>
+            <p className="text-[10px] text-on-surface-variant mt-1">
+              Ciclo ideal automático
+            </p>
           </div>
         </div>
       </div>

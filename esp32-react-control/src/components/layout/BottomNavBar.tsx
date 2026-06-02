@@ -51,7 +51,7 @@ export function BottomNavBar({ activeTab, setActiveTab }: BottomNavBarProps) {
         `}
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'controle' ? '1' : '0'}` }}>
-          settings_input_component
+          tune
         </span>
       </button>
 
@@ -66,7 +66,7 @@ export function BottomNavBar({ activeTab, setActiveTab }: BottomNavBarProps) {
         `}
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'historico' ? '1' : '0'}` }}>
-          event_note
+          history
         </span>
       </button>
     </nav>

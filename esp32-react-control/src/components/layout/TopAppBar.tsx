@@ -22,7 +22,7 @@ export function TopAppBar({ status }: TopAppBarProps) {
     <header className="fixed top-0 w-full z-50 border-b border-outline-variant bg-surface-container-low flex justify-between items-center h-16 px-margin-mobile">
       <div className="flex items-center gap-2">
         <span className="material-symbols-outlined text-primary text-2xl">biotech</span>
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface">BIOCORE AI</h1>
+        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface">BIOCORE <span className="text-primary">AI</span></h1>
       </div>
       <div className="flex items-center gap-3">
         <span className={`text-xs font-mono tracking-wider uppercase opacity-60 hidden xs:inline`}>

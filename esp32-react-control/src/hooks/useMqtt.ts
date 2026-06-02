@@ -93,15 +93,15 @@ export function useMqtt(): MqttState {
   }, [])
 
   const togglePump = useCallback((index: 0 | 1 | 2 | 3) => {
-    setPumps(prev => {
-      const next = [...prev] as [boolean, boolean, boolean, boolean]
-      next[index] = !next[index]
-      clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), next[index] ? '1' : '0')
-      const names = ['Bomba N', 'Bomba P', 'Bomba K', 'Irrigação']
-      setLogs(p => pushLog(makeLog(`${names[index]} → ${next[index] ? 'ON' : 'OFF'}`), p))
-      return next
-    })
-  }, [])
+    const newValue = !pumps[index]
+    const next = [...pumps] as [boolean, boolean, boolean, boolean]
+    next[index] = newValue
+    setPumps(next)
+
+    clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0')
+    const names = ['Bomba N', 'Bomba P', 'Bomba K', 'Bomba Água']
+    setLogs(p => pushLog(makeLog(`${names[index]} → ${newValue ? 'ON' : 'OFF'}`), p))
+  }, [pumps])
 
   const alterarHortalica = useCallback((chave: ChavePlanta) => {
     const planta = BANCO_HORTALICAS[chave]
