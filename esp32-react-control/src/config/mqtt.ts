@@ -5,7 +5,8 @@ export const MQTT_CONFIG = {
 } as const
 
 export const TOPICS = {
-  data:  'biocore/dados',
-  light: 'biocore/cmd/luz',
-  pump:  (n: 1 | 2 | 3 | 4) => `biocore/cmd/bomba${n}`,
+  data:      'biocore/dados',
+  light:     'biocore/cmd/luz',
+  pump:      (n: 1 | 2 | 3 | 4) => `biocore/cmd/bomba${n}`,
+  hortalica: 'biocore/config/hortalica',
 } as const
