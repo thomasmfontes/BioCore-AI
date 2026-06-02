@@ -18,13 +18,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           <img
             alt={hortalica.nome}
             className="w-full h-full object-cover opacity-90"
-            src={
-              hortalica.chave === 'alface'
-                ? "https://images.unsplash.com/photo-1621961476421-e09e13d96924?q=80&w=600&auto=format&fit=crop"
-                : hortalica.chave === 'tomate'
-                ? "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=600&auto=format&fit=crop"
-                : "https://images.unsplash.com/photo-1594900010996-a9c0490b411d?q=80&w=600&auto=format&fit=crop"
-            }
+            src={hortalica.imagemUrl}
             onError={(e) => {
               e.currentTarget.src = "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?q=80&w=600&auto=format&fit=crop";
             }}

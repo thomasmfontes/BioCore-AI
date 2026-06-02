@@ -9,7 +9,7 @@ interface BottomNavBarProps {
 
 export function BottomNavBar({ activeTab, setActiveTab }: BottomNavBarProps) {
   return (
-    <nav className="fixed bottom-0 w-full z-50 h-[64px] border-t border-outline-variant bg-surface-container shadow-[0_-4px_10px_rgba(0,0,0,0.3)] flex justify-around items-center px-4">
+    <nav className="md:hidden fixed bottom-0 w-full z-50 h-[64px] border-t border-outline-variant bg-surface-container shadow-[0_-4px_10px_rgba(0,0,0,0.3)] flex justify-around items-center px-4">
       {/* Cultivo Tab */}
       <button
         onClick={() => setActiveTab('cultivo')}

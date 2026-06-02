@@ -20,10 +20,10 @@ export default function App() {
 
   return (
     <div className="bg-background text-on-surface min-h-screen flex flex-col font-body-lg">
-      <TopAppBar status={status} />
+      <TopAppBar status={status} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-20 pb-24 px-margin-mobile max-w-md mx-auto w-full flex flex-col gap-stack-lg">
+      <main className="flex-1 pt-20 pb-24 md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg">
         
         {activeTab === 'cultivo' && (
           <CultivoTab 

@@ -16,6 +16,7 @@ export interface DadosPlanta {
   P: number            // mg/kg fósforo alvo
   K: number            // mg/kg potássio alvo
   descricaoIA: string  // texto contextual exibido no Modo Inteligente
+  imagemUrl: string    // foto real de fundo
 }
 
 export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
@@ -23,6 +24,7 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     chave: 'alface',
     nome: 'Alface Crespa',
     emoji: '🥬',
+    imagemUrl: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?q=80&w=800&auto=format&fit=crop',
     u_solo: 65,
     fotoperiodo: 16,
     N: 45, P: 12, K: 30,
@@ -32,6 +34,7 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     chave: 'tomate',
     nome: 'Tomate Cereja',
     emoji: '🍅',
+    imagemUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=800&auto=format&fit=crop',
     u_solo: 60,
     fotoperiodo: 14,
     N: 50, P: 20, K: 40,
@@ -41,6 +44,7 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     chave: 'manjericao',
     nome: 'Manjericão',
     emoji: '🌿',
+    imagemUrl: 'https://images.unsplash.com/photo-1618164421295-8e0b65f4d1e2?q=80&w=800&auto=format&fit=crop',
     u_solo: 55,
     fotoperiodo: 12,
     N: 35, P: 10, K: 25,
