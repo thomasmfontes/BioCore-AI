@@ -45,20 +45,22 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
       </section>
 
       {/* Smart Mode Card */}
-      <section className="bg-surface-container rounded-xl border border-outline-variant p-4 relative overflow-hidden shadow-sm">
+      <section 
+        onClick={() => setSmartMode(!smartMode)}
+        className={`bg-surface-container rounded-xl border p-4 relative overflow-hidden shadow-sm cursor-pointer select-none transition-all duration-200 active:scale-[0.98]
+          ${smartMode 
+            ? 'border-primary active-toggle' 
+            : 'border-outline-variant'
+          }
+        `}
+      >
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">bolt</span>
             <h3 className="font-title-md text-base font-bold">BioCore AI</h3>
           </div>
           {/* Switch Toggle */}
-          <label className="relative inline-flex items-center cursor-pointer touch-target-min">
-            <input
-              type="checkbox"
-              checked={smartMode}
-              onChange={(e) => setSmartMode(e.target.checked)}
-              className="sr-only"
-            />
+          <div className="relative inline-flex items-center touch-target-min">
             <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
               ${smartMode ? 'bg-primary/20 border-primary' : 'bg-surface-container-highest border-outline'}
             `}>
@@ -66,7 +68,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
                 ${smartMode ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' : 'bg-outline left-0.5'}
               `}></div>
             </div>
-          </label>
+          </div>
         </div>
 
         <div>

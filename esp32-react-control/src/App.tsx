@@ -25,7 +25,7 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 pt-20 pb-24 md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg">
         
-        {activeTab === 'cultivo' && (
+        <div className={activeTab === 'cultivo' ? 'block' : 'hidden'}>
           <CultivoTab 
             hortalica={hortalica}
             smartMode={smartMode}
@@ -33,16 +33,16 @@ export default function App() {
             sensors={sensors}
             setShowSelector={setShowSelector}
           />
-        )}
+        </div>
 
-        {activeTab === 'telemetria' && (
+        <div className={activeTab === 'telemetria' ? 'block' : 'hidden'}>
           <TelemetriaTab 
             sensors={sensors}
             status={status}
           />
-        )}
+        </div>
 
-        {activeTab === 'controle' && (
+        <div className={activeTab === 'controle' ? 'block' : 'hidden'}>
           <ControleTab 
             smartMode={smartMode}
             offline={offline}
@@ -52,13 +52,13 @@ export default function App() {
             togglePump={togglePump}
             hortalica={hortalica}
           />
-        )}
+        </div>
 
-        {activeTab === 'historico' && (
+        <div className={activeTab === 'historico' ? 'block' : 'hidden'}>
           <HistoricoTab 
             logs={logs}
           />
-        )}
+        </div>
 
       </main>
 

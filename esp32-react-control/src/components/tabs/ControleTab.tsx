@@ -59,7 +59,7 @@ export function ControleTab({
                 className={`flex-1 py-2 px-1 rounded-full font-label-caps text-[10px] font-bold transition-all text-center
                   disabled:opacity-40 disabled:cursor-not-allowed
                   ${active 
-                    ? 'bg-primary text-on-primary font-bold glow-primary scale-105' 
+                    ? 'bg-primary text-on-primary font-bold glow-primary' 
                     : 'text-outline hover:text-on-surface'
                   }
                 `}
