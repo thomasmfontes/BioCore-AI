@@ -25,6 +25,12 @@
 }
 
 @layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
     font-family: 'Inter', sans-serif;
     background-color: #111417;
@@ -32,7 +38,12 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-height: max(884px, 100dvh);
+  }
+
+  @media (min-width: 768px) {
+    body {
+      min-height: max(884px, 100dvh);
+    }
   }
 }
 

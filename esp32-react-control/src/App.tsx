@@ -19,11 +19,11 @@ export default function App() {
   const offline = status !== 'connected'
 
   return (
-    <div className="bg-background text-on-surface min-h-screen flex flex-col font-body-lg">
+    <div className="bg-background text-on-surface h-dvh md:h-auto md:min-h-screen flex flex-col font-body-lg overflow-hidden md:overflow-visible">
       <TopAppBar status={status} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-20 pb-24 md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg">
+      <main className="flex-1 pt-20 pb-28 md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg overflow-y-auto md:overflow-y-visible">
         
         <div className={activeTab === 'cultivo' ? 'block' : 'hidden'}>
           <CultivoTab 
