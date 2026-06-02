@@ -1,0 +1,28 @@
+# Dependency directories
+esp32-react-control/node_modules/
+
+# Build outputs
+esp32-react-control/dist/
+esp32-react-control/dist-ssr/
+
+# Environment files
+esp32-react-control/*.local
+esp32-react-control/.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+.claude/
+.gemini/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Arduino build files
+TESTE-BIOCORE/build/
