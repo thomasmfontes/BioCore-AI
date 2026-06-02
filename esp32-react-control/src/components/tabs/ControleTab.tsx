@@ -96,7 +96,12 @@ export function ControleTab({
         <div className="grid grid-cols-2 gap-3">
           {/* Pump Toggle 1: Nutrientes */}
           <div 
-            onClick={() => !offline && !smartMode && togglePump(0)}
+            onClick={() => {
+              if (!offline && !smartMode) {
+                navigator.vibrate?.([10, 30, 10]);
+                togglePump(0);
+              }
+            }}
             className={`border rounded-xl p-stack-md flex flex-col gap-3 transition-all duration-200 cursor-pointer select-none
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[0] 
@@ -128,7 +133,12 @@ export function ControleTab({
 
           {/* Pump Toggle 2: H2O Pura */}
           <div 
-            onClick={() => !offline && !smartMode && togglePump(1)}
+            onClick={() => {
+              if (!offline && !smartMode) {
+                navigator.vibrate?.([10, 30, 10]);
+                togglePump(1);
+              }
+            }}
             className={`border rounded-xl p-stack-md flex flex-col gap-3 transition-all duration-200 cursor-pointer select-none
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[1] 
@@ -160,7 +170,12 @@ export function ControleTab({
 
           {/* Pump Toggle 3: Drenagem */}
           <div 
-            onClick={() => !offline && !smartMode && togglePump(2)}
+            onClick={() => {
+              if (!offline && !smartMode) {
+                navigator.vibrate?.([10, 30, 10]);
+                togglePump(2);
+              }
+            }}
             className={`border rounded-xl p-stack-md flex flex-col gap-3 transition-all duration-200 cursor-pointer select-none
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[2] 
@@ -192,7 +207,12 @@ export function ControleTab({
 
           {/* Pump Toggle 4: Resfriamento */}
           <div 
-            onClick={() => !offline && !smartMode && togglePump(3)}
+            onClick={() => {
+              if (!offline && !smartMode) {
+                navigator.vibrate?.([10, 30, 10]);
+                togglePump(3);
+              }
+            }}
             className={`border rounded-xl p-stack-md flex flex-col gap-3 transition-all duration-200 cursor-pointer select-none
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[3] 

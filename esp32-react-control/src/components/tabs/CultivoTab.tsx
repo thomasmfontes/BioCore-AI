@@ -46,7 +46,10 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
 
       {/* Smart Mode Card */}
       <section 
-        onClick={() => setSmartMode(!smartMode)}
+        onClick={() => {
+          navigator.vibrate?.([10, 30, 10]);
+          setSmartMode(!smartMode);
+        }}
         className={`bg-surface-container rounded-xl border p-4 relative overflow-hidden shadow-sm cursor-pointer select-none transition-all duration-200 active:scale-[0.98]
           ${smartMode 
             ? 'border-primary active-toggle' 
