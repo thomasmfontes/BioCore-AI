@@ -56,9 +56,7 @@ export function ControleTab({
                 key={stage}
                 disabled={offline || smartMode}
                 onClick={() => {
-                  if (lightStage !== stage) {
-                    navigator.vibrate?.(45);
-                  }
+                  navigator.vibrate?.([10, 30, 10]);
                   setLight(stage);
                 }}
                 className={`flex-1 py-2 px-1 rounded-full font-label-caps text-[10px] font-bold transition-all text-center
