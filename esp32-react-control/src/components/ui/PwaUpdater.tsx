@@ -77,7 +77,7 @@ export function PwaUpdater() {
   if (!needRefresh && !offlineReady) return null
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] bg-surface-container-high border border-primary/20 p-4 rounded-xl shadow-2xl animate-slideUp flex flex-col gap-3">
+    <div className="pointer-events-auto w-full bg-surface-container-high border border-primary/20 p-4 rounded-xl shadow-2xl animate-slideUp flex flex-col gap-3">
       <div className="flex items-start gap-3">
         <span className="material-symbols-outlined text-primary text-3xl">
           {needRefresh ? 'update' : 'offline_pin'}

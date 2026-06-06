@@ -74,7 +74,7 @@ export function PwaInstallPrompt() {
     <>
       {/* Floating Banner */}
       {showBanner && !showModal && (
-        <div className="fixed bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[990] bg-surface-container-high border border-primary/30 p-4 rounded-xl shadow-2xl animate-slideUp flex flex-col gap-3 glow-primary">
+        <div className="pointer-events-auto w-full bg-surface-container-high border border-primary/30 p-4 rounded-xl shadow-2xl animate-slideUp flex flex-col gap-3 glow-primary">
           <div className="flex items-start gap-3">
             <span className="material-symbols-outlined text-primary text-3xl">
               install_mobile
