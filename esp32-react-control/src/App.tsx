@@ -8,6 +8,7 @@ import { ControleTab } from './components/tabs/ControleTab'
 import { HistoricoTab } from './components/tabs/HistoricoTab'
 import { PlantSelector } from './components/ui/PlantSelector'
 import { PwaUpdater } from './components/ui/PwaUpdater'
+import { PwaInstallPrompt } from './components/ui/PwaInstallPrompt'
 
 export type Tab = 'cultivo' | 'telemetria' | 'controle' | 'historico'
 
@@ -74,6 +75,7 @@ export default function App() {
       />
 
       <PwaUpdater />
+      <PwaInstallPrompt />
     </div>
   )
 }
