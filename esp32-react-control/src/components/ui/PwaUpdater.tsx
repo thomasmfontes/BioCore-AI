@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function PwaUpdater() {
@@ -13,6 +14,60 @@ export function PwaUpdater() {
       console.error('Erro no registro do Service Worker:', error)
     },
   })
+
+  // Check for updates on mount, visibility change, focus, and online status
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return
+    }
+
+    const checkUpdate = async () => {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration()
+        if (registration) {
+          console.log('Checking for service worker updates...')
+          await registration.update()
+        }
+      } catch (err) {
+        console.error('Failed to check SW update:', err)
+      }
+    }
+
+    // 1. Check on mount after 2 seconds
+    const timer = setTimeout(checkUpdate, 2000)
+
+    // 2. Check on visibility change (re-opening app, unlocking device, tab change)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkUpdate()
+      }
+    }
+
+    // 3. Check on window focus
+    const handleFocus = () => {
+      checkUpdate()
+    }
+
+    // 4. Check on internet connection restored
+    const handleOnline = () => {
+      checkUpdate()
+    }
+
+    // 5. Check every 10 minutes
+    const interval = setInterval(checkUpdate, 10 * 60 * 1000)
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('online', handleOnline)
+
+    return () => {
+      clearTimeout(timer)
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('online', handleOnline)
+    }
+  }, [])
 
   const close = () => {
     setOfflineReady(false)
