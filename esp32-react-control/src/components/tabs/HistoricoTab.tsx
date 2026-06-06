@@ -8,9 +8,7 @@ interface HistoricoTabProps {
 export function HistoricoTab({ logs }: HistoricoTabProps) {
   return (
     <div className="space-y-stack-lg animate-fadeIn">
-
-
-      <section className="bg-surface-container border border-outline-variant rounded-xl p-4 inner-bevel">
+      <section className="clay-card-dark rounded-3xl p-4">
         <div className="flex items-center justify-between pb-3 border-b border-outline-variant mb-4">
           <span className="font-label-caps text-[10px] text-outline uppercase tracking-wider font-bold">Últimos Eventos</span>
           <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono uppercase font-bold animate-pulse">

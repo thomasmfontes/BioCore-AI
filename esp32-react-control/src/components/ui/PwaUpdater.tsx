@@ -77,7 +77,7 @@ export function PwaUpdater() {
   if (!needRefresh && !offlineReady) return null
 
   return (
-    <div className="pointer-events-auto w-full bg-surface-container-high border border-primary/20 p-4 rounded-xl shadow-2xl animate-slideUp flex flex-col gap-3">
+    <div className="pointer-events-auto w-full clay-card-dark p-4 rounded-2xl animate-slideUp flex flex-col gap-3">
       <div className="flex items-start gap-3">
         <span className="material-symbols-outlined text-primary text-3xl">
           {needRefresh ? 'update' : 'offline_pin'}
@@ -103,7 +103,7 @@ export function PwaUpdater() {
         {needRefresh && (
           <button
             onClick={() => updateServiceWorker(true)}
-            className="px-4 py-2 bg-primary text-on-primary font-bold rounded-lg hover:shadow-lg transition-all active:scale-95"
+            className="px-4 py-2 clay-btn-primary font-bold rounded-xl active:scale-95"
           >
             Atualizar
           </button>

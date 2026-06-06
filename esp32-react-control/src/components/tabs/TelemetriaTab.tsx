@@ -10,8 +10,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
     <div className="space-y-stack-lg animate-fadeIn">
       {/* Hero Card: SOLO (NPK e Sensores) */}
       <section>
-        <div className="bg-surface-container border border-outline-variant rounded-xl p-stack-md relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+        <div className="clay-card-dark rounded-3xl p-stack-md relative overflow-hidden">
           <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
             <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Solo (NPK e Sensores)</span>
             <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-bold animate-pulse">
@@ -56,7 +55,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           {/* Soil moisture & temperature */}
           <div className="grid grid-cols-2 gap-4 pt-3 border-t border-outline-variant/30 mt-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+              <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
                 <span className="material-symbols-outlined text-blue-400 text-xl shadow-blue-400/20 drop-shadow-md">water_drop</span>
               </div>
               <div>
@@ -65,7 +64,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
               </div>
             </div>
             <div className="flex items-center gap-3 border-l border-outline-variant/30 pl-4">
-              <div className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+              <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
                 <span className="material-symbols-outlined text-orange-400 text-xl shadow-orange-400/20 drop-shadow-md">device_thermostat</span>
               </div>
               <div>
@@ -86,9 +85,9 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
         </header>
         <div className="grid grid-cols-1 gap-2.5">
           {/* Temperature Card */}
-          <div className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center justify-between">
+          <div className="clay-card-dark rounded-3xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+              <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
                 <span className="material-symbols-outlined text-orange-400 text-xl drop-shadow-md">device_thermostat</span>
               </div>
               <div>
@@ -102,9 +101,9 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           </div>
 
           {/* Air Humidity Card */}
-          <div className="bg-surface-container-high border border-outline-variant rounded-xl p-4 flex items-center justify-between">
+          <div className="clay-card-dark rounded-3xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+              <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
                 <span className="material-symbols-outlined text-sky-300 text-xl drop-shadow-md">air</span>
               </div>
               <div>

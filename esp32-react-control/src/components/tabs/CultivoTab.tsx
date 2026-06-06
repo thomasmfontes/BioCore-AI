@@ -13,7 +13,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
   return (
     <div className="space-y-stack-lg animate-fadeIn">
       {/* Active Crop Section */}
-      <section className="bg-surface-container rounded-xl overflow-hidden border border-outline-variant shadow-sm">
+      <section className="clay-card-dark rounded-3xl overflow-hidden">
         <div className="relative h-56 w-full bg-surface-container-highest">
           <img
             alt={hortalica.nome}
@@ -23,7 +23,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
               e.currentTarget.src = "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?q=80&w=600&auto=format&fit=crop";
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface-container via-black/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1e2226] via-black/20 to-transparent"></div>
           
           <div className="absolute top-4 left-4">
             <span className="font-label-caps text-[10px] bg-black/60 backdrop-blur-md text-white px-2 py-1 rounded-lg uppercase tracking-wider">
@@ -34,7 +34,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
             <button
               onClick={() => setShowSelector(true)}
-              className="flex items-center gap-2 text-left bg-black/50 backdrop-blur-md hover:bg-black/70 active:scale-95 transition-all px-4 py-2 rounded-xl border border-white/20 min-h-[44px]"
+              className="flex items-center gap-2 text-left bg-black/50 backdrop-blur-md hover:bg-black/70 active:scale-95 transition-all px-4 py-2 rounded-2xl border border-white/20 min-h-[44px]"
             >
               <span className="text-xl">{hortalica.emoji}</span>
               <span className="font-title-lg text-lg text-white font-bold">{hortalica.nome}</span>
@@ -50,25 +50,31 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           navigator.vibrate?.([10, 30, 10]);
           setSmartMode(!smartMode);
         }}
-        className={`bg-surface-container rounded-xl border p-4 relative overflow-hidden shadow-sm cursor-pointer select-none transition-all duration-200 active:scale-[0.98]
+        className={`p-4 relative overflow-hidden select-none transition-all duration-300 active:scale-[0.98] rounded-3xl cursor-pointer
           ${smartMode 
-            ? 'border-primary active-toggle' 
-            : 'border-outline-variant'
+            ? 'clay-card-primary' 
+            : 'clay-card-dark'
           }
         `}
       >
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-xl">bolt</span>
-            <h3 className="font-title-md text-base font-bold">BioCore AI</h3>
+            <span className={`material-symbols-outlined text-xl ${smartMode ? 'text-on-primary-fixed' : 'text-primary'}`}>bolt</span>
+            <h3 className={`font-title-md text-base font-bold ${smartMode ? 'text-on-primary-fixed' : 'text-on-surface'}`}>BioCore AI</h3>
           </div>
           {/* Switch Toggle */}
           <div className="relative inline-flex items-center touch-target-min">
             <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
-              ${smartMode ? 'bg-primary/20 border-primary' : 'bg-surface-container-highest border-outline'}
+              ${smartMode 
+                ? 'bg-on-primary-fixed/20 border-on-primary-fixed/40' 
+                : 'bg-surface-container-highest border-outline'
+              }
             `}>
               <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
-                ${smartMode ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' : 'bg-outline left-0.5'}
+                ${smartMode 
+                  ? 'bg-on-primary-fixed right-0.5 shadow-[0_0_8px_#ffffff]' 
+                  : 'bg-outline left-0.5'
+                }
               `}></div>
             </div>
           </div>
@@ -76,29 +82,29 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
 
         <div>
           {smartMode ? (
-            <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
+            <p className="text-xs text-on-primary-fixed/80 mb-4 leading-relaxed">
               A inteligência autônoma está ativa. O BioCore AI cuida da luz, água e nutrientes do seu cultivo para você não se preocupar.
             </p>
           ) : (
-            <p className="text-xs text-error mb-4 leading-relaxed">
+            <p className="text-xs text-error mb-4 leading-relaxed font-semibold">
               O modo autônomo está desativado. Você precisa controlar tudo manualmente.
             </p>
           )}
 
           {smartMode && (
-            <div className="flex justify-between items-center bg-primary/10 border border-primary/20 rounded-xl p-3">
+            <div className="flex justify-between items-center bg-on-primary-fixed/10 border border-on-primary-fixed/20 rounded-2xl p-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-lg">auto_awesome</span>
+                <div className="w-8 h-8 rounded-full bg-on-primary-fixed/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-on-primary-fixed text-lg">auto_awesome</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-primary uppercase">Cultivo Perfeito</p>
-                  <p className="text-[10px] text-on-surface-variant">Ambiente 100% otimizado</p>
+                  <p className="text-xs font-bold text-on-primary-fixed uppercase">Cultivo Perfeito</p>
+                  <p className="text-[10px] text-on-primary-fixed/70">Ambiente 100% otimizado</p>
                 </div>
               </div>
               <span className="relative flex h-3 w-3 mr-1">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-on-primary-fixed opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-on-primary-fixed"></span>
               </span>
             </div>
           )}
@@ -108,14 +114,14 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
       {/* Simplified Bento Grid */}
       <div className="grid grid-cols-2 gap-4">
         {/* Umidade Card */}
-        <div className="bg-surface-container p-4 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm">
+        <div className="clay-card-dark p-4 rounded-3xl flex flex-col justify-between">
           <div className="flex items-center gap-2 mb-2">
             <span className="material-symbols-outlined text-blue-400 text-lg shadow-blue-400/20 drop-shadow-md">water_drop</span>
             <span className="font-label-caps text-[10px] text-outline uppercase font-semibold">Solo</span>
           </div>
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display-sm text-xl font-bold">{sensors?.u_solo ?? 65}</span>
+              <span className="font-display-sm text-xl font-bold text-on-surface">{sensors?.u_solo ?? 65}</span>
               <span className="font-body-sm text-xs text-outline">%</span>
             </div>
             <p className="text-[10px] text-on-surface-variant mt-1">
@@ -125,14 +131,14 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
         </div>
 
         {/* Luz Card */}
-        <div className="bg-surface-container p-4 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm">
+        <div className="clay-card-dark p-4 rounded-3xl flex flex-col justify-between">
           <div className="flex items-center gap-2 mb-2">
             <span className="material-symbols-outlined text-yellow-400 text-lg shadow-yellow-400/20 drop-shadow-md">light_mode</span>
             <span className="font-label-caps text-[10px] text-outline uppercase font-semibold">Luz Diária</span>
           </div>
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display-sm text-xl font-bold">{hortalica.fotoperiodo}</span>
+              <span className="font-display-sm text-xl font-bold text-on-surface">{hortalica.fotoperiodo}</span>
               <span className="font-body-sm text-xs text-outline">h</span>
             </div>
             <p className="text-[10px] text-on-surface-variant mt-1">

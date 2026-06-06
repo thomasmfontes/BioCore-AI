@@ -74,7 +74,7 @@ export function PwaInstallPrompt() {
     <>
       {/* Floating Banner */}
       {showBanner && !showModal && (
-        <div className="pointer-events-auto w-full bg-surface-container-high border border-primary/30 p-4 rounded-xl shadow-2xl animate-slideUp flex flex-col gap-3 glow-primary">
+        <div className="pointer-events-auto w-full clay-card-dark p-4 rounded-2xl animate-slideUp flex flex-col gap-3 glow-primary">
           <div className="flex items-start gap-3">
             <span className="material-symbols-outlined text-primary text-3xl">
               install_mobile
@@ -97,7 +97,7 @@ export function PwaInstallPrompt() {
             </button>
             <button
               onClick={handleInstallClick}
-              className="px-4 py-2 bg-primary text-on-primary font-bold rounded-lg hover:shadow-lg transition-all active:scale-95 flex items-center gap-1"
+              className="px-4 py-2 clay-btn-primary font-bold rounded-xl active:scale-95 flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-sm">add</span>
               Instalar
@@ -110,7 +110,7 @@ export function PwaInstallPrompt() {
       {showModal && isIOS && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
           <div 
-            className="w-full max-w-md bg-surface-container border border-outline-variant rounded-2xl shadow-2xl p-6 overflow-hidden animate-slideUp flex flex-col gap-5"
+            className="w-full max-w-md clay-card-dark rounded-3xl p-6 overflow-hidden animate-slideUp flex flex-col gap-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center border-b border-outline-variant pb-3">
@@ -192,7 +192,7 @@ export function PwaInstallPrompt() {
 
             <button
               onClick={() => setShowModal(false)}
-              className="mt-2 w-full py-3 bg-primary text-on-primary font-bold rounded-xl hover:shadow-lg transition-all active:scale-[0.98] text-sm"
+              className="mt-2 w-full py-3 clay-btn-primary font-bold rounded-2xl active:scale-[0.98] text-sm"
             >
               Entendido
             </button>
