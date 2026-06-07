@@ -75,7 +75,7 @@ export default function App() {
       />
 
       {/* Container de Notificações Flutuantes do PWA - Empilha múltiplos banners sem sobreposição */}
-      <div className="fixed bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-24 md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] flex flex-col gap-3 pointer-events-none">
         <PwaUpdater />
         <PwaInstallPrompt />
       </div>
