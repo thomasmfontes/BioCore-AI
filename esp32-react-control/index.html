@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script>
+    // Bloquear pinch-to-zoom no iOS Safari
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    });
+  </script>
   <title>BioCore AI</title>
   <meta name="theme-color" content="#111417" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
