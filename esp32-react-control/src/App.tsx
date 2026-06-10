@@ -25,7 +25,7 @@ export default function App() {
       <TopAppBar status={status} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-20 pb-28 md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg overflow-y-auto md:overflow-y-visible">
+      <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg overflow-y-auto md:overflow-y-visible">
         
         <div className={activeTab === 'cultivo' ? 'block' : 'hidden'}>
           <CultivoTab 
@@ -75,7 +75,7 @@ export default function App() {
       />
 
       {/* Container de Notificações Flutuantes do PWA - Empilha múltiplos banners sem sobreposição */}
-      <div className="fixed bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] flex flex-col gap-3 pointer-events-none">
         <PwaUpdater />
         <PwaInstallPrompt />
       </div>

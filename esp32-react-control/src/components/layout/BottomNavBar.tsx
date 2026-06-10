@@ -16,7 +16,7 @@ export function BottomNavBar({ activeTab, setActiveTab }: BottomNavBarProps) {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 h-[68px] clay-card-dark rounded-t-3xl rounded-b-none flex justify-around items-center px-4 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 h-[calc(68px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] clay-card-dark rounded-t-3xl rounded-b-none flex justify-around items-center px-4 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
