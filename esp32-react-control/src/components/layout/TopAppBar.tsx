@@ -30,7 +30,7 @@ export function TopAppBar({ status, activeTab, setActiveTab }: TopAppBarProps) {
   ];
 
   return (
-    <header className="fixed top-0 w-full z-50 h-16 clay-card-dark rounded-b-3xl rounded-t-none flex items-center px-margin-mobile md:px-8 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+    <header className="fixed top-0 left-0 right-0 w-full z-50 h-16 clay-card-dark rounded-b-3xl rounded-t-none flex items-center px-margin-mobile md:px-8 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
       <div className="flex items-center gap-2">
         <img src="/biocore-logo.png" alt="BioCore AI Logo" className="h-10 w-10 object-contain" />
         <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface">

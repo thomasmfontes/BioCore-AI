@@ -29,7 +29,7 @@ const COLOR: Record<ConnectionStatus, string> = {
 
 export function Header({ status }: Props) {
   return (
-    <header className="sticky top-0 z-50 bg-bio-dark border-b border-bio-border px-4 py-3 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 w-full z-50 bg-bio-dark border-b border-bio-border px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-lg bg-bio-green/10 border border-bio-green/30 flex items-center justify-center shrink-0">
           <span className="text-bio-green text-[11px] font-black tracking-tight">BC</span>
