@@ -58,15 +58,26 @@ export function ControleTab({
                   navigator.vibrate?.([10, 30, 10]);
                   setLight(stage);
                 }}
-                className={`flex-1 py-2 px-1 rounded-full font-label-caps text-[10px] font-bold transition-all text-center
-                  disabled:opacity-40 disabled:cursor-not-allowed
-                  ${active 
-                    ? 'clay-btn-flat-active rounded-full font-bold' 
-                    : 'text-outline'
-                  }
-                `}
+                className="relative flex-1 py-2 px-1 rounded-full font-label-caps text-[10px] transition-all text-center disabled:opacity-40 disabled:cursor-not-allowed outline-none focus:outline-none flex items-center justify-center min-h-[36px]"
               >
-                {labels[stage]}
+                {/* Background Clay Pill (Navbar-like style) */}
+                <div
+                  className={`absolute inset-0.5 rounded-full transition-all duration-300
+                    ${active
+                      ? 'clay-card-primary opacity-100 scale-100 shadow-[0_4px_10px_rgba(44,184,116,0.15)]'
+                      : 'bg-transparent border border-transparent opacity-0 scale-90'
+                    }
+                  `}
+                />
+                
+                {/* Text overlay */}
+                <span
+                  className={`relative z-10 transition-colors duration-300 font-bold
+                    ${active ? 'text-[#00210f]' : 'text-outline'}
+                  `}
+                >
+                  {labels[stage]}
+                </span>
               </button>
             );
           })}
@@ -104,38 +115,38 @@ export function ControleTab({
                 togglePump(0);
               }
             }}
-            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl
+            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl clay-card-dark border
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[0] 
-                ? 'clay-card-primary' 
-                : 'clay-card-dark'
+                ? 'border-primary/30 shadow-[0_4px_16px_rgba(90,240,157,0.08)]' 
+                : 'border-transparent'
               }
             `}
           >
             <div className="flex justify-between items-start">
               <div>
-                <div className={`text-sm font-bold ${pumps[0] ? 'text-on-primary-fixed' : 'text-on-surface'}`}>Nitrogênio (N)</div>
+                <div className={`text-sm font-bold transition-colors duration-300 ${pumps[0] ? 'text-primary' : 'text-on-surface'}`}>Nitrogênio (N)</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
                 ${pumps[0] 
-                  ? 'bg-on-primary-fixed/20 border-on-primary-fixed/40' 
+                  ? 'bg-primary/20 border-primary/40' 
                   : 'bg-surface-container-highest border-outline'
                 }
               `}>
                 <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
                   ${pumps[0] 
-                    ? 'bg-on-primary-fixed right-0.5 shadow-[0_0_8px_#ffffff]' 
+                    ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
                     : 'bg-outline left-0.5'
                   }
                 `}></div>
               </div>
             </div>
             <div className="flex items-end justify-between mt-auto">
-              <span className={`font-mono-data text-[10px] font-bold ${pumps[0] ? 'text-on-primary-fixed' : 'text-outline'}`}>
+              <span className={`font-mono-data text-[10px] font-bold transition-colors duration-300 ${pumps[0] ? 'text-primary' : 'text-outline'}`}>
                 {pumps[0] ? 'ATIVO' : 'STANDBY'}
               </span>
-              <span className={`material-symbols-outlined text-base ${pumps[0] ? 'text-on-primary-fixed/80' : 'text-on-surface-variant'}`}>valve</span>
+              <span className={`material-symbols-outlined text-base transition-colors duration-300 ${pumps[0] ? 'text-primary/80' : 'text-on-surface-variant'}`}>valve</span>
             </div>
           </div>
 
@@ -147,38 +158,38 @@ export function ControleTab({
                 togglePump(1);
               }
             }}
-            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl
+            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl clay-card-dark border
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[1] 
-                ? 'clay-card-primary' 
-                : 'clay-card-dark'
+                ? 'border-primary/30 shadow-[0_4px_16px_rgba(90,240,157,0.08)]' 
+                : 'border-transparent'
               }
             `}
           >
             <div className="flex justify-between items-start">
               <div>
-                <div className={`text-sm font-bold ${pumps[1] ? 'text-on-primary-fixed' : 'text-on-surface'}`}>Fósforo (P)</div>
+                <div className={`text-sm font-bold transition-colors duration-300 ${pumps[1] ? 'text-primary' : 'text-on-surface'}`}>Fósforo (P)</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
                 ${pumps[1] 
-                  ? 'bg-on-primary-fixed/20 border-on-primary-fixed/40' 
+                  ? 'bg-primary/20 border-primary/40' 
                   : 'bg-surface-container-highest border-outline'
                 }
               `}>
                 <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
                   ${pumps[1] 
-                    ? 'bg-on-primary-fixed right-0.5 shadow-[0_0_8px_#ffffff]' 
+                    ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
                     : 'bg-outline left-0.5'
                   }
                 `}></div>
               </div>
             </div>
             <div className="flex items-end justify-between mt-auto">
-              <span className={`font-mono-data text-[10px] font-bold ${pumps[1] ? 'text-on-primary-fixed' : 'text-outline'}`}>
+              <span className={`font-mono-data text-[10px] font-bold transition-colors duration-300 ${pumps[1] ? 'text-primary' : 'text-outline'}`}>
                 {pumps[1] ? 'ATIVO' : 'STANDBY'}
               </span>
-              <span className={`material-symbols-outlined text-base ${pumps[1] ? 'text-on-primary-fixed/80' : 'text-on-surface-variant'}`}>valve</span>
+              <span className={`material-symbols-outlined text-base transition-colors duration-300 ${pumps[1] ? 'text-primary/80' : 'text-on-surface-variant'}`}>valve</span>
             </div>
           </div>
 
@@ -190,38 +201,38 @@ export function ControleTab({
                 togglePump(2);
               }
             }}
-            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl
+            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl clay-card-dark border
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[2] 
-                ? 'clay-card-primary' 
-                : 'clay-card-dark'
+                ? 'border-primary/30 shadow-[0_4px_16px_rgba(90,240,157,0.08)]' 
+                : 'border-transparent'
               }
             `}
           >
             <div className="flex justify-between items-start">
               <div>
-                <div className={`text-sm font-bold ${pumps[2] ? 'text-on-primary-fixed' : 'text-on-surface'}`}>Potássio (K)</div>
+                <div className={`text-sm font-bold transition-colors duration-300 ${pumps[2] ? 'text-primary' : 'text-on-surface'}`}>Potássio (K)</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
                 ${pumps[2] 
-                  ? 'bg-on-primary-fixed/20 border-on-primary-fixed/40' 
+                  ? 'bg-primary/20 border-primary/40' 
                   : 'bg-surface-container-highest border-outline'
                 }
               `}>
                 <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
                   ${pumps[2] 
-                    ? 'bg-on-primary-fixed right-0.5 shadow-[0_0_8px_#ffffff]' 
+                    ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
                     : 'bg-outline left-0.5'
                   }
                 `}></div>
               </div>
             </div>
             <div className="flex items-end justify-between mt-auto">
-              <span className={`font-mono-data text-[10px] font-bold ${pumps[2] ? 'text-on-primary-fixed' : 'text-outline'}`}>
+              <span className={`font-mono-data text-[10px] font-bold transition-colors duration-300 ${pumps[2] ? 'text-primary' : 'text-outline'}`}>
                 {pumps[2] ? 'ATIVO' : 'STANDBY'}
               </span>
-              <span className={`material-symbols-outlined text-base ${pumps[2] ? 'text-on-primary-fixed/80' : 'text-on-surface-variant'}`}>valve</span>
+              <span className={`material-symbols-outlined text-base transition-colors duration-300 ${pumps[2] ? 'text-primary/80' : 'text-on-surface-variant'}`}>valve</span>
             </div>
           </div>
 
@@ -233,38 +244,38 @@ export function ControleTab({
                 togglePump(3);
               }
             }}
-            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl
+            className={`p-stack-md flex flex-col gap-3 transition-all duration-300 cursor-pointer select-none rounded-3xl clay-card-dark border
               ${(offline || smartMode) ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'active:scale-95'}
               ${pumps[3] 
-                ? 'clay-card-primary' 
-                : 'clay-card-dark'
+                ? 'border-primary/30 shadow-[0_4px_16px_rgba(90,240,157,0.08)]' 
+                : 'border-transparent'
               }
             `}
           >
             <div className="flex justify-between items-start">
               <div>
-                <div className={`text-sm font-bold ${pumps[3] ? 'text-on-primary-fixed' : 'text-on-surface'}`}>Água</div>
+                <div className={`text-sm font-bold transition-colors duration-300 ${pumps[3] ? 'text-primary' : 'text-on-surface'}`}>Água</div>
               </div>
               {/* Visual toggle switch */}
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
                 ${pumps[3] 
-                  ? 'bg-on-primary-fixed/20 border-on-primary-fixed/40' 
+                  ? 'bg-primary/20 border-primary/40' 
                   : 'bg-surface-container-highest border-outline'
                 }
               `}>
                 <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
                   ${pumps[3] 
-                    ? 'bg-on-primary-fixed right-0.5 shadow-[0_0_8px_#ffffff]' 
+                    ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
                     : 'bg-outline left-0.5'
                   }
                 `}></div>
               </div>
             </div>
             <div className="flex items-end justify-between mt-auto">
-              <span className={`font-mono-data text-[10px] font-bold ${pumps[3] ? 'text-on-primary-fixed' : 'text-outline'}`}>
+              <span className={`font-mono-data text-[10px] font-bold transition-colors duration-300 ${pumps[3] ? 'text-primary' : 'text-outline'}`}>
                 {pumps[3] ? 'ATIVO' : 'STANDBY'}
               </span>
-              <span className={`material-symbols-outlined text-base ${pumps[3] ? 'text-on-primary-fixed/80' : 'text-on-surface-variant'}`}>valve</span>
+              <span className={`material-symbols-outlined text-base transition-colors duration-300 ${pumps[3] ? 'text-primary/80' : 'text-on-surface-variant'}`}>valve</span>
             </div>
           </div>
         </div>

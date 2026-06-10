@@ -50,29 +50,29 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           navigator.vibrate?.([10, 30, 10]);
           setSmartMode(!smartMode);
         }}
-        className={`p-4 relative overflow-hidden select-none transition-all duration-300 active:scale-[0.98] rounded-3xl cursor-pointer
+        className={`p-4 relative overflow-hidden select-none transition-all duration-300 active:scale-[0.98] rounded-3xl cursor-pointer clay-card-dark border
           ${smartMode 
-            ? 'clay-card-primary' 
-            : 'clay-card-dark'
+            ? 'border-primary/30 shadow-[0_4px_16px_rgba(90,240,157,0.08)]' 
+            : 'border-transparent'
           }
         `}
       >
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <span className={`material-symbols-outlined text-xl ${smartMode ? 'text-on-primary-fixed' : 'text-primary'}`}>bolt</span>
-            <h3 className={`font-title-md text-base font-bold ${smartMode ? 'text-on-primary-fixed' : 'text-on-surface'}`}>BioCore AI</h3>
+            <span className="material-symbols-outlined text-xl text-primary">bolt</span>
+            <h3 className={`font-title-md text-base font-bold transition-colors duration-300 ${smartMode ? 'text-primary' : 'text-on-surface'}`}>BioCore AI</h3>
           </div>
           {/* Switch Toggle */}
           <div className="relative inline-flex items-center touch-target-min">
             <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
               ${smartMode 
-                ? 'bg-on-primary-fixed/20 border-on-primary-fixed/40' 
+                ? 'bg-primary/20 border-primary/40' 
                 : 'bg-surface-container-highest border-outline'
               }
             `}>
               <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
                 ${smartMode 
-                  ? 'bg-on-primary-fixed right-0.5 shadow-[0_0_8px_#ffffff]' 
+                  ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
                   : 'bg-outline left-0.5'
                 }
               `}></div>
@@ -82,7 +82,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
 
         <div>
           {smartMode ? (
-            <p className="text-xs text-on-primary-fixed/80 mb-4 leading-relaxed">
+            <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
               A inteligência autônoma está ativa. O BioCore AI cuida da luz, água e nutrientes do seu cultivo para você não se preocupar.
             </p>
           ) : (
@@ -92,19 +92,19 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           )}
 
           {smartMode && (
-            <div className="flex justify-between items-center bg-on-primary-fixed/10 border border-on-primary-fixed/20 rounded-2xl p-3">
+            <div className="flex justify-between items-center bg-primary/5 border border-primary/20 rounded-2xl p-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-on-primary-fixed/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-primary-fixed text-lg">auto_awesome</span>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-lg">auto_awesome</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-on-primary-fixed uppercase">Cultivo Perfeito</p>
-                  <p className="text-[10px] text-on-primary-fixed/70">Ambiente 100% otimizado</p>
+                  <p className="text-xs font-bold text-primary uppercase">Cultivo Perfeito</p>
+                  <p className="text-[10px] text-on-surface-variant">Ambiente 100% otimizado</p>
                 </div>
               </div>
               <span className="relative flex h-3 w-3 mr-1">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-on-primary-fixed opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-on-primary-fixed"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
               </span>
             </div>
           )}

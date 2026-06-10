@@ -41,24 +41,24 @@ export function PlantSelector({
                   alterarHortalica(chave);
                   setShowSelector(false);
                 }}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl text-left min-h-[48px] transition-all duration-300 active:scale-[0.98]
+                className={`w-full flex items-center justify-between p-4 rounded-2xl text-left min-h-[48px] transition-all duration-300 active:scale-[0.98] clay-card-dark border
                   ${selecionado
-                    ? 'clay-card-primary'
-                    : 'clay-card-dark hover:opacity-90 text-on-surface'
+                    ? 'border-primary/30 shadow-[0_4px_16px_rgba(90,240,157,0.08)]'
+                    : 'border-transparent md:hover:opacity-90 text-on-surface'
                   }
                 `}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl select-none">{planta.emoji}</span>
                   <div>
-                    <div className={`text-sm font-bold ${selecionado ? 'text-on-primary-fixed' : 'text-on-surface'}`}>{planta.nome}</div>
-                    <div className={`text-[10px] mt-0.5 ${selecionado ? 'text-on-primary-fixed/70' : 'text-on-surface-variant'}`}>
+                    <div className={`text-sm font-bold transition-colors duration-300 ${selecionado ? 'text-primary' : 'text-on-surface'}`}>{planta.nome}</div>
+                    <div className={`text-[10px] mt-0.5 transition-colors duration-300 ${selecionado ? 'text-primary/70' : 'text-on-surface-variant'}`}>
                       Solo: {planta.u_solo}% • Luz: {planta.fotoperiodo}h
                     </div>
                   </div>
                 </div>
                 {selecionado && (
-                  <span className="material-symbols-outlined text-on-primary-fixed text-xl">check_circle</span>
+                  <span className="material-symbols-outlined text-primary text-xl">check_circle</span>
                 )}
               </button>
             );
@@ -66,7 +66,7 @@ export function PlantSelector({
         </div>
         <button
           onClick={() => setShowSelector(false)}
-          className="w-full py-3 clay-card-dark hover:bg-surface-container-highest font-bold rounded-2xl text-xs active:scale-[0.98] border border-outline-variant/20"
+          className="w-full py-3 clay-card-dark md:hover:bg-surface-container-highest font-bold rounded-2xl text-xs active:scale-[0.98] border border-outline-variant/20"
         >
           Cancelar
         </button>
