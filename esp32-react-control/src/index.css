@@ -157,6 +157,28 @@
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes slideUpSpring {
+  0% {
+    transform: translateY(100%);
+  }
+  60% {
+    transform: translateY(-12px); /* ultrapassa um pouco para cima */
+  }
+  78% {
+    transform: translateY(4px);   /* volta um pouco para baixo */
+  }
+  90% {
+    transform: translateY(-2px);  /* ajuste fino */
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUpSpring {
+  animation: slideUpSpring 0.5s cubic-bezier(0.25, 1, 0.50, 1) forwards;
+}
+
 /* Custom Premium Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

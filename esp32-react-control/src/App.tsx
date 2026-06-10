@@ -20,46 +20,71 @@ export default function App() {
 
   const offline = status !== 'connected'
 
+  const tabsOrder: Tab[] = ['cultivo', 'telemetria', 'controle', 'historico']
+  const activeIndex = tabsOrder.indexOf(activeTab)
+
+  const getTabClass = (tabId: Tab) => {
+    const isActive = activeTab === tabId
+    return `w-1/4 md:w-full shrink-0 h-full overflow-y-auto px-0.5 flex flex-col gap-stack-lg transition-all duration-300
+      ${isActive 
+        ? 'opacity-100 md:h-auto md:overflow-visible' 
+        : 'opacity-100 md:opacity-0 md:h-0 md:overflow-hidden md:pointer-events-none'
+      }
+    `
+  }
+
   return (
     <div className="bg-background text-on-surface h-dvh md:h-auto md:min-h-screen flex flex-col font-body-lg overflow-hidden md:overflow-visible">
       <TopAppBar status={status} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col gap-stack-lg overflow-y-auto md:overflow-y-visible">
+      <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-hidden md:overflow-visible">
         
-        <div className={activeTab === 'cultivo' ? 'block' : 'hidden'}>
-          <CultivoTab 
-            hortalica={hortalica}
-            smartMode={smartMode}
-            setSmartMode={setSmartMode}
-            sensors={sensors}
-            setShowSelector={setShowSelector}
-          />
-        </div>
+        {/* Sliding Carousel Container */}
+        <div className="flex-1 w-full overflow-hidden flex flex-col h-full md:overflow-visible">
+          <div 
+            className="flex flex-row h-full transition-transform duration-300 ease-out w-[400%] md:w-full md:flex-col md:!transform-none"
+            style={{ transform: `translateX(-${activeIndex * 25}%)` }}
+          >
+            {/* Tab: Cultivo */}
+            <div className={getTabClass('cultivo')}>
+              <CultivoTab 
+                hortalica={hortalica}
+                smartMode={smartMode}
+                setSmartMode={setSmartMode}
+                sensors={sensors}
+                setShowSelector={setShowSelector}
+              />
+            </div>
 
-        <div className={activeTab === 'telemetria' ? 'block' : 'hidden'}>
-          <TelemetriaTab 
-            sensors={sensors}
-            status={status}
-          />
-        </div>
+            {/* Tab: Telemetria */}
+            <div className={getTabClass('telemetria')}>
+              <TelemetriaTab 
+                sensors={sensors}
+                status={status}
+              />
+            </div>
 
-        <div className={activeTab === 'controle' ? 'block' : 'hidden'}>
-          <ControleTab 
-            smartMode={smartMode}
-            offline={offline}
-            lightStage={lightStage}
-            setLight={setLight}
-            pumps={pumps}
-            togglePump={togglePump}
-            hortalica={hortalica}
-          />
-        </div>
+            {/* Tab: Controle */}
+            <div className={getTabClass('controle')}>
+              <ControleTab 
+                smartMode={smartMode}
+                offline={offline}
+                lightStage={lightStage}
+                setLight={setLight}
+                pumps={pumps}
+                togglePump={togglePump}
+                hortalica={hortalica}
+              />
+            </div>
 
-        <div className={activeTab === 'historico' ? 'block' : 'hidden'}>
-          <HistoricoTab 
-            logs={logs}
-          />
+            {/* Tab: Historico */}
+            <div className={getTabClass('historico')}>
+              <HistoricoTab 
+                logs={logs}
+              />
+            </div>
+          </div>
         </div>
 
       </main>

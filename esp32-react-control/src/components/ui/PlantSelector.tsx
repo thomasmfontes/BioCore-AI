@@ -26,7 +26,7 @@ export function PlantSelector({
         onClick={() => setShowSelector(false)}
       />
       {/* Sheet */}
-      <div className="relative clay-card-dark w-full max-w-md rounded-t-3xl border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 shadow-2xl z-10 animate-slideUp">
+      <div className="relative clay-card-dark w-full max-w-md rounded-t-3xl border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 shadow-2xl z-10 animate-slideUpSpring">
         {/* Handle */}
         <div className="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mb-2" />
         <h3 className="text-center font-title-md font-bold tracking-tight text-on-surface">O que você vai cultivar?</h3>
