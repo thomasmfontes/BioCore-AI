@@ -86,12 +86,14 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.clay-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 
-    inset 3px 3px 5px rgba(255, 255, 255, 0.6),
-    inset -4px -4px 8px rgba(0, 0, 0, 0.3),
-    0 8px 16px rgba(90, 240, 157, 0.3);
+@media (hover: hover) {
+  .clay-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      inset 3px 3px 5px rgba(255, 255, 255, 0.6),
+      inset -4px -4px 8px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(90, 240, 157, 0.3);
+  }
 }
 
 .clay-btn-primary:active {
