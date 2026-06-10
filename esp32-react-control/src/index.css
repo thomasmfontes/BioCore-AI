@@ -29,6 +29,7 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
 
   body {
@@ -41,6 +42,9 @@
   }
 
   @media (min-width: 768px) {
+    html, body, #root {
+      overflow: visible;
+    }
     body {
       min-height: max(884px, 100dvh);
     }
