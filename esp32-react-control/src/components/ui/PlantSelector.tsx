@@ -19,16 +19,16 @@ export function PlantSelector({
   if (!showSelector) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={() => setShowSelector(false)}
       />
       {/* Sheet */}
-      <div className="relative clay-card-dark w-full max-w-md rounded-t-3xl border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 shadow-2xl z-10 animate-slideUpSpring">
+      <div className="relative clay-card-dark w-full max-w-md rounded-t-3xl md:rounded-3xl border-0 md:border md:border-outline-variant/10 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom)+40px)] -mb-10 md:mb-0 md:pb-6 space-y-4 shadow-2xl z-10 animate-slideUpSpring md:animate-zoomIn">
         {/* Handle */}
-        <div className="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mb-2" />
+        <div className="w-12 h-1 bg-outline-variant/30 rounded-full mx-auto mb-2 md:hidden" />
         <h3 className="text-center font-title-md font-bold tracking-tight text-on-surface">O que você vai cultivar?</h3>
         <div className="space-y-2.5">
           {(Object.keys(bancoHortalicas) as ChavePlanta[]).map((chave) => {

@@ -151,6 +151,22 @@
 .switch-input:checked + .switch-rail .switch-knob {
   transform: translateX(24px);
   background-color: #00210f;
+}@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-zoomIn {
+  animation: zoomIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes slideUp {
@@ -170,22 +186,16 @@
   0% {
     transform: translateY(100%);
   }
-  60% {
-    transform: translateY(-12px); /* ultrapassa um pouco para cima */
-  }
-  78% {
-    transform: translateY(4px);   /* volta um pouco para baixo */
-  }
-  90% {
-    transform: translateY(-2px);  /* ajuste fino */
+  65% {
+    transform: translateY(-8px); /* Single, elegant overshoot */
   }
   100% {
-    transform: translateY(0);
+    transform: translateY(0); /* Smooth settle */
   }
 }
 
 .animate-slideUpSpring {
-  animation: slideUpSpring 0.5s cubic-bezier(0.25, 1, 0.50, 1) forwards;
+  animation: slideUpSpring 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 /* Custom Premium Scrollbar */
