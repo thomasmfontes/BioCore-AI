@@ -44,9 +44,6 @@ export default defineConfig({
             handler: 'NetworkOnly',
           }
         ]
-      },
-      devOptions: {
-        enabled: true,
       }
     })
   ],

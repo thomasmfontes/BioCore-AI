@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function PwaUpdater() {
@@ -8,73 +7,32 @@ export function PwaUpdater() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('Service Worker registrado:', r)
+      if (r) {
+        // Verificar atualizações de forma estável a cada 60 minutos
+        setInterval(() => {
+          r.update().catch(() => {});
+        }, 60 * 60 * 1000);
+      }
     },
     onRegisterError(error) {
-      console.error('Erro no registro do Service Worker:', error)
+      console.error('Erro no registro do Service Worker:', error);
     },
-  })
-
-  // Check for updates on mount, visibility change, focus, and online status
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-      return
-    }
-
-    const checkUpdate = async () => {
-      try {
-        const registration = await navigator.serviceWorker.getRegistration()
-        if (registration) {
-          console.log('Checking for service worker updates...')
-          await registration.update()
-        }
-      } catch (err) {
-        console.error('Failed to check SW update:', err)
-      }
-    }
-
-    // 1. Check on mount after 2 seconds
-    const timer = setTimeout(checkUpdate, 2000)
-
-    // 2. Check on visibility change (re-opening app, unlocking device, tab change)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        checkUpdate()
-      }
-    }
-
-    // 3. Check on window focus
-    const handleFocus = () => {
-      checkUpdate()
-    }
-
-    // 4. Check on internet connection restored
-    const handleOnline = () => {
-      checkUpdate()
-    }
-
-    // 5. Check every 10 minutes
-    const interval = setInterval(checkUpdate, 10 * 60 * 1000)
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('online', handleOnline)
-
-    return () => {
-      clearTimeout(timer)
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('online', handleOnline)
-    }
-  }, [])
+  });
 
   const close = () => {
-    setOfflineReady(false)
-    setNeedRefresh(false)
-  }
+    setOfflineReady(false);
+    setNeedRefresh(false);
+  };
 
-  if (!needRefresh && !offlineReady) return null
+  const handleUpdate = () => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    // Ativa o novo Service Worker e permite que o vite-plugin-pwa gerencie a recarga limpa
+    updateServiceWorker(true);
+  };
+
+  if (!needRefresh && !offlineReady) return null;
 
   return (
     <div className="pointer-events-auto w-full clay-card-dark p-4 rounded-2xl animate-slideUp flex flex-col gap-3">
@@ -102,13 +60,7 @@ export function PwaUpdater() {
         </button>
         {needRefresh && (
           <button
-            onClick={async () => {
-              if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
-                history.scrollRestoration = 'manual';
-              }
-              await updateServiceWorker(true);
-              window.location.reload();
-            }}
+            onClick={handleUpdate}
             className="px-4 py-2 clay-btn-primary font-bold rounded-xl active:scale-95"
           >
             Atualizar
@@ -116,6 +68,6 @@ export function PwaUpdater() {
         )}
       </div>
     </div>
-  )
+  );
 }
 export default PwaUpdater;
