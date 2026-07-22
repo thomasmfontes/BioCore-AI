@@ -50,12 +50,15 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     }
   }, [isPoweredOn]);
 
-  // Fullscreen API aplicada no mesmo elemento existente
+  // Fullscreen API aplicada no mesmo elemento existente com suporte a rotação horizontal
   const handleFullscreen = async () => {
     if (!containerRef.current) return;
 
     if (document.fullscreenElement) {
       try {
+        if (screen.orientation && 'unlock' in screen.orientation) {
+          try { screen.orientation.unlock(); } catch (e) {}
+        }
         await document.exitFullscreen();
         setIsFullscreen(false);
       } catch (err) {
@@ -66,6 +69,10 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
         try {
           await containerRef.current.requestFullscreen();
           setIsFullscreen(true);
+          // Desbloquear orientação no celular para rotação horizontal fluida
+          if (screen.orientation && 'unlock' in screen.orientation) {
+            try { screen.orientation.unlock(); } catch (e) {}
+          }
         } catch (err) {
           console.warn('Fullscreen API rejected, falling back to new window:', err);
           window.open(baseUrl, '_blank', 'noopener,noreferrer');
@@ -78,7 +85,11 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const active = !!document.fullscreenElement;
+      setIsFullscreen(active);
+      if (!active && screen.orientation && 'unlock' in screen.orientation) {
+        try { screen.orientation.unlock(); } catch (e) {}
+      }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
