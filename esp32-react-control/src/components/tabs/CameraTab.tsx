@@ -29,6 +29,14 @@ export function CameraTab() {
           </div>
         </div>
       </div>
+
+      {/* Card de Dica de Enquadramento da Câmera (Estilo Aviso do BioCore AI) */}
+      <div className="clay-card-dark rounded-2xl p-3.5 flex items-center gap-3 animate-fadeIn">
+        <span className="material-symbols-outlined text-primary text-xl shrink-0">center_focus_strong</span>
+        <p className="text-xs text-on-surface-variant leading-relaxed">
+          <b>Dica de Enquadramento:</b> Posicione a câmera em um ângulo levemente inclinado com foco direto na estrutura da planta e na superfície do vaso para garantir o melhor acompanhamento visual do desenvolvimento.
+        </p>
+      </div>
     </div>
   );
 }
