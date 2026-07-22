@@ -26,7 +26,7 @@ export default function App() {
 
   const getTabClass = (tabId: Tab) => {
     const isActive = activeTab === tabId
-    return `w-1/5 md:w-full shrink-0 h-full overflow-y-auto px-0.5 flex flex-col gap-stack-lg transition-all duration-300
+    return `w-1/5 md:w-full shrink-0 h-full overflow-y-auto overscroll-y-contain touch-pan-y px-0.5 flex flex-col gap-stack-lg transition-all duration-300
       ${isActive 
         ? 'opacity-100 md:h-auto md:overflow-visible' 
         : 'opacity-100 md:opacity-0 md:h-0 md:overflow-hidden md:pointer-events-none'

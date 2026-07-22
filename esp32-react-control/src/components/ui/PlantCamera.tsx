@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 type CameraStatus = 'connecting' | 'online' | 'offline' | 'off';
@@ -23,6 +23,97 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   // Horário da última tentativa gerenciado em estado separado
   const [lastAttemptTime, setLastAttemptTime] = useState<string>(() => new Date().toLocaleTimeString());
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Controle de visibilidade da barra de controles no modo Tela Cheia (Auto-hide após 3.5s)
+  const [showControls, setShowControls] = useState<boolean>(true);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Estados de Zoom por gestos (Pinch-to-zoom, Double Tap & Touch Pan)
+  const [zoomScale, setZoomScale] = useState<number>(1);
+  const [panPosition, setPanPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const touchStartDist = useRef<number | null>(null);
+  const touchStartScale = useRef<number>(1);
+  const lastTapTime = useRef<number>(0);
+  const isPinching = useRef<boolean>(false);
+  const lastTouchPos = useRef<{ x: number; y: number } | null>(null);
+
+  const resetControlsTimeout = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 3500);
+  };
+
+  useEffect(() => {
+    if (isFullscreen) {
+      resetControlsTimeout();
+    } else {
+      // Resetar zoom e pan ao sair de tela cheia
+      setZoomScale(1);
+      setPanPosition({ x: 0, y: 0 });
+    }
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
+  }, [isFullscreen]);
+
+  // Gestos de Toque em Tela Cheia (Pinch-to-zoom, Double-tap & Pan)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      isPinching.current = true;
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStartDist.current = dist;
+      touchStartScale.current = zoomScale;
+    } else if (e.touches.length === 1) {
+      isPinching.current = false;
+      lastTouchPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+      const now = Date.now();
+      if (now - lastTapTime.current < 300) {
+        // Double tap toggle zoom (2.2x / 1.0x)
+        if (zoomScale > 1) {
+          setZoomScale(1);
+          setPanPosition({ x: 0, y: 0 });
+        } else {
+          setZoomScale(2.2);
+        }
+        lastTapTime.current = 0;
+      } else {
+        lastTapTime.current = now;
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist.current !== null) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = currentDist / touchStartDist.current;
+      const newScale = Math.min(Math.max(touchStartScale.current * factor, 1), 3.5);
+      setZoomScale(newScale);
+      if (newScale === 1) setPanPosition({ x: 0, y: 0 });
+    } else if (e.touches.length === 1 && zoomScale > 1 && lastTouchPos.current) {
+      const deltaX = e.touches[0].clientX - lastTouchPos.current.x;
+      const deltaY = e.touches[0].clientY - lastTouchPos.current.y;
+      setPanPosition(prev => ({
+        x: Math.min(Math.max(prev.x + deltaX, -150 * zoomScale), 150 * zoomScale),
+        y: Math.min(Math.max(prev.y + deltaY, -150 * zoomScale), 150 * zoomScale)
+      }));
+      lastTouchPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartDist.current = null;
+    lastTouchPos.current = null;
+    isPinching.current = false;
+  };
 
   // Alterar streamUrl exclusivamente quando o usuário clica em "Tentar novamente" ou "Reconectar"
   const handleReconnect = () => {
@@ -49,79 +140,28 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     }
   }, [isPoweredOn]);
 
-  // Alternar o modo Tela Cheia com rotação automática para paisagem no celular
-  const toggleFullscreen = async () => {
+  // Alternar o modo Tela Cheia com animação ultra-suave
+  const toggleFullscreen = () => {
     const nextState = !isFullscreen;
+    setIsFullscreen(nextState);
 
-    if (nextState) {
-      setIsFullscreen(true);
-      // 1. Solicita permissão ao navegador para entrar em Fullscreen no documento
-      if (document.documentElement.requestFullscreen) {
-        try {
-          await document.documentElement.requestFullscreen();
-        } catch (e) {}
-      }
-
-      // 2. Desbloqueia ou solicita rotação para paisagem (horizontal)
-      const orientation = (screen as any).orientation;
-      if (orientation) {
-        try {
-          if ('unlock' in orientation) {
-            try { orientation.unlock(); } catch (e) {}
-          }
-          if ('lock' in orientation) {
-            try {
-              await orientation.lock('landscape-primary').catch(() => {
-                orientation.lock('landscape').catch(() => {
-                  if ('unlock' in orientation) orientation.unlock();
-                });
-              });
-            } catch (e) {}
-          }
-        } catch (e) {}
-      }
-    } else {
-      setIsFullscreen(false);
-      if (document.fullscreenElement) {
-        try {
-          await document.exitFullscreen();
-        } catch (e) {}
-      }
-      const orientation = (screen as any).orientation;
-      if (orientation && 'unlock' in orientation) {
-        try {
-          orientation.unlock();
-        } catch (e) {}
-      }
+    // Suporte à API de Orientação para liberar rotação no celular ao entrar em tela cheia
+    if (screen.orientation) {
+      try {
+        if (nextState) {
+          if ('unlock' in screen.orientation) screen.orientation.unlock();
+        } else {
+          if ('unlock' in screen.orientation) screen.orientation.unlock();
+        }
+      } catch (e) {}
     }
   };
-
-  // Escutar eventos de alteração de tela cheia nativos (botão voltar do Android / gesto)
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const active = !!document.fullscreenElement;
-      if (!active && isFullscreen) {
-        setIsFullscreen(false);
-        const orientation = (screen as any).orientation;
-        if (orientation && 'unlock' in orientation) {
-          try { orientation.unlock(); } catch (e) {}
-        }
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, [isFullscreen]);
 
   // Tecla ESC para fechar tela cheia no teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
-        toggleFullscreen();
+        setIsFullscreen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -270,54 +310,112 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
         )}
       </div>
 
-      {/* PORTAL DO MODAL DE TELA CHEIA (lightbox imersivo com zoom fluído estilo Apple iOS) */}
+      {/* PORTAL DO MODAL DE TELA CHEIA (Player Imersivo com Gestos de Zoom, Overlays e Minimizar) */}
       {isFullscreen && createPortal(
         <div 
-          className="fixed inset-0 z-[99999] bg-[#050708]/95 backdrop-blur-2xl flex items-center justify-center p-0 m-0 overflow-hidden animate-fadeIn select-none"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) toggleFullscreen();
+          className="fixed inset-0 z-[99999] bg-[#050708] flex items-center justify-center p-0 m-0 overflow-hidden animate-fadeIn select-none cursor-pointer touch-none"
+          onClick={() => {
+            if (showControls) {
+              setShowControls(false);
+            } else {
+              resetControlsTimeout();
+            }
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
-          {/* Barra Superior Flutuante Glass */}
-          <div className="absolute top-5 left-5 right-5 z-50 flex items-center justify-between pointer-events-auto">
-            {/* Badge AO VIVO */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 shadow-2xl">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-mono font-bold text-primary tracking-wider">AO VIVO</span>
+          {/* Top Cinema Gradient Overlay Header */}
+          <div className={`absolute top-0 left-0 right-0 z-50 p-4 sm:p-6 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/50 to-transparent transition-all duration-300 pointer-events-auto ${
+            showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
+          }`}>
+            {/* Badge AO VIVO Padronizado */}
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] px-2.5 py-1 rounded-full border font-mono font-bold bg-primary/10 text-primary border-primary/20 backdrop-blur-md shadow-lg">
+                AO VIVO
+              </span>
+              {zoomScale > 1 && (
+                <span className="text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold bg-white/10 text-white/80 border-white/20 backdrop-blur-md animate-fadeIn">
+                  {zoomScale.toFixed(1)}x
+                </span>
+              )}
             </div>
 
-            {/* Ações de Controle */}
+            {/* Ações de Controle Padronizadas */}
             <div className="flex items-center gap-2">
               <button
-                onClick={handleReconnect}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReconnect();
+                  resetControlsTimeout();
+                }}
                 title="Reconectar stream"
                 aria-label="Reconectar stream"
-                className="w-10 h-10 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all shadow-2xl hover:bg-black/80"
+                className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-xl hover:bg-black/80 active:scale-90 border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
               >
-                <span className="material-symbols-outlined text-base">refresh</span>
+                <span className="material-symbols-outlined text-sm">refresh</span>
               </button>
 
               <button
-                onClick={toggleFullscreen}
-                title="Sair da tela cheia"
-                aria-label="Sair da tela cheia"
-                className="w-10 h-10 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all shadow-2xl hover:bg-black/80"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFullscreen();
+                }}
+                title="Minimizar tela cheia"
+                aria-label="Minimizar tela cheia"
+                className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-xl hover:bg-black/80 active:scale-90 border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
               >
-                <span className="material-symbols-outlined text-lg">close</span>
+                <span className="material-symbols-outlined text-base">fullscreen_exit</span>
               </button>
             </div>
           </div>
 
-          {/* Viewport Central da Transmissão com Animação Fluida de Zoom Imersivo */}
-          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-6 animate-enterVideo">
+          {/* Viewport Central da Transmissão */}
+          <div className="relative w-full h-full flex items-center justify-center animate-enterVideo overflow-hidden">
             {isPoweredOn && (
               <img
                 src={streamUrl}
                 alt=""
                 onLoad={handleLoad}
                 onError={handleError}
-                className="w-full h-full object-contain max-h-screen max-w-screen"
+                style={{
+                  transform: `scale(${zoomScale}) translate(${panPosition.x / zoomScale}px, ${panPosition.y / zoomScale}px)`,
+                  transition: isPinching.current ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+                className={`w-full h-full object-contain max-h-screen max-w-screen ${
+                  status === 'offline' ? 'opacity-20 pointer-events-none' : 'opacity-100'
+                }`}
               />
+            )}
+
+            {/* Overlay CONECTANDO em Tela Cheia */}
+            {isPoweredOn && status === 'connecting' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/80 backdrop-blur-xs p-6 text-center animate-fadeIn z-40 pointer-events-none">
+                <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-primary/30 inset-shadow shadow-[0_0_20px_rgba(90,240,157,0.12)] mb-3 animate-pulse">
+                  <span className="material-symbols-outlined text-primary text-2xl drop-shadow-md">videocam</span>
+                </div>
+                <p className="text-xs font-bold text-on-surface tracking-wide">Carregando transmissão ao vivo...</p>
+              </div>
+            )}
+
+            {/* Overlay OFFLINE em Tela Cheia */}
+            {isPoweredOn && status === 'offline' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-6 text-center animate-fadeIn z-40 pointer-events-auto">
+                <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
+                  <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
+                </div>
+                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReconnect();
+                  }}
+                  className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
+                >
+                  <span className="material-symbols-outlined text-sm">refresh</span>
+                  Tentar Novamente
+                </button>
+              </div>
             )}
           </div>
         </div>,

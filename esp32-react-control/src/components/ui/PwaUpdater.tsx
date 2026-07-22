@@ -102,7 +102,13 @@ export function PwaUpdater() {
         </button>
         {needRefresh && (
           <button
-            onClick={() => updateServiceWorker(true)}
+            onClick={async () => {
+              if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+              }
+              await updateServiceWorker(true);
+              window.location.reload();
+            }}
             className="px-4 py-2 clay-btn-primary font-bold rounded-xl active:scale-95"
           >
             Atualizar
