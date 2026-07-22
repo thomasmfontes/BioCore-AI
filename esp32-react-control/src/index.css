@@ -242,27 +242,15 @@
   animation: slideUpSpring 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* Custom Premium Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent; 
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2d3337;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #5af09d; 
-}
-
-/* Firefox compatibility */
+/* Ocultar barra de rolagem globalmente em todos os navegadores e dispositivos */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: #2d3337 transparent;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }

@@ -222,10 +222,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
             <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
               <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
             </div>
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-1">Câmera Indisponível</h3>
-            <p className="text-[11px] text-on-surface-variant max-w-xs mb-4 leading-relaxed">
-              Não foi possível acessar a câmera no momento. Verifique se o vaso está energizado e conectado à internet.
-            </p>
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
             <button
               onClick={handleReconnect}
               className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"

@@ -39,7 +39,7 @@ export default function App() {
       <TopAppBar status={status} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-hidden md:overflow-visible">
+      <main className="flex-1 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-hidden md:overflow-visible">
         
         {/* Sliding Carousel Container */}
         <div className="flex-1 w-full overflow-hidden flex flex-col h-full md:overflow-visible">
