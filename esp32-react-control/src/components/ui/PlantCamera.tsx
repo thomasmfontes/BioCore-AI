@@ -37,7 +37,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   };
 
   const handleGrantNetworkPermission = () => {
-    window.open(baseUrl, '_blank', 'noopener,noreferrer');
     handleReconnect();
   };
 
