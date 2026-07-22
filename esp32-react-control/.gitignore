@@ -2,4 +2,8 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+dev-dist
+camera-build3
 *.local
+.env
+

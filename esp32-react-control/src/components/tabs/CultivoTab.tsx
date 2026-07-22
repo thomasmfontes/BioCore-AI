@@ -7,9 +7,10 @@ interface CultivoTabProps {
   setSmartMode: (mode: boolean) => void;
   sensors: any;
   setShowSelector: (show: boolean) => void;
+  onNavigateToCamera?: () => void;
 }
 
-export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setShowSelector }: CultivoTabProps) {
+export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setShowSelector, onNavigateToCamera }: CultivoTabProps) {
   return (
     <div className="space-y-stack-lg animate-fadeIn">
       {/* Active Crop Section */}
@@ -147,6 +148,33 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           </div>
         </div>
       </div>
+
+      {/* Live Camera Shortcut Card */}
+      {onNavigateToCamera && (
+        <section 
+          onClick={onNavigateToCamera}
+          className="clay-card-dark p-4 rounded-3xl flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all active:scale-[0.98] group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined text-xl">videocam</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-title-md text-sm font-bold text-on-surface">Câmera da Planta</h4>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+              </div>
+              <p className="text-xs text-on-surface-variant">Visualizar transmissão ao vivo</p>
+            </div>
+          </div>
+          <span className="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+            chevron_right
+          </span>
+        </section>
+      )}
     </div>
   );
 }

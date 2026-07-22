@@ -37,6 +37,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,ttf,jpg}'],
+        navigateFallbackDenylist: [/.*\.ts\.net.*/],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.hostname.includes('ts.net'),
+            handler: 'NetworkOnly',
+          }
+        ]
       },
       devOptions: {
         enabled: true,

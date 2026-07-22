@@ -4,13 +4,14 @@ import { TopAppBar } from './components/layout/TopAppBar'
 import { BottomNavBar } from './components/layout/BottomNavBar'
 import { CultivoTab } from './components/tabs/CultivoTab'
 import { TelemetriaTab } from './components/tabs/TelemetriaTab'
+import { CameraTab } from './components/tabs/CameraTab'
 import { ControleTab } from './components/tabs/ControleTab'
 import { HistoricoTab } from './components/tabs/HistoricoTab'
 import { PlantSelector } from './components/ui/PlantSelector'
 import { PwaUpdater } from './components/ui/PwaUpdater'
 import { PwaInstallPrompt } from './components/ui/PwaInstallPrompt'
 
-export type Tab = 'cultivo' | 'telemetria' | 'controle' | 'historico'
+export type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
 export default function App() {
   const { status, sensors, lightStage, pumps, logs, hortalica, setLight, togglePump, alterarHortalica } = useMqtt()
@@ -20,12 +21,12 @@ export default function App() {
 
   const offline = status !== 'connected'
 
-  const tabsOrder: Tab[] = ['cultivo', 'telemetria', 'controle', 'historico']
+  const tabsOrder: Tab[] = ['cultivo', 'telemetria', 'camera', 'controle', 'historico']
   const activeIndex = tabsOrder.indexOf(activeTab)
 
   const getTabClass = (tabId: Tab) => {
     const isActive = activeTab === tabId
-    return `w-1/4 md:w-full shrink-0 h-full overflow-y-auto px-0.5 flex flex-col gap-stack-lg transition-all duration-300
+    return `w-1/5 md:w-full shrink-0 h-full overflow-y-auto px-0.5 flex flex-col gap-stack-lg transition-all duration-300
       ${isActive 
         ? 'opacity-100 md:h-auto md:overflow-visible' 
         : 'opacity-100 md:opacity-0 md:h-0 md:overflow-hidden md:pointer-events-none'
@@ -43,8 +44,8 @@ export default function App() {
         {/* Sliding Carousel Container */}
         <div className="flex-1 w-full overflow-hidden flex flex-col h-full md:overflow-visible">
           <div 
-            className="flex flex-row h-full transition-transform duration-300 ease-out w-[400%] md:w-full md:flex-col md:!transform-none"
-            style={{ transform: `translateX(-${activeIndex * 25}%)` }}
+            className="flex flex-row h-full transition-transform duration-300 ease-out w-[500%] md:w-full md:flex-col md:!transform-none"
+            style={{ transform: `translateX(-${activeIndex * 20}%)` }}
           >
             {/* Tab: Cultivo */}
             <div className={getTabClass('cultivo')}>
@@ -54,6 +55,7 @@ export default function App() {
                 setSmartMode={setSmartMode}
                 sensors={sensors}
                 setShowSelector={setShowSelector}
+                onNavigateToCamera={() => setActiveTab('camera')}
               />
             </div>
 
@@ -63,6 +65,11 @@ export default function App() {
                 sensors={sensors}
                 status={status}
               />
+            </div>
+
+            {/* Tab: Câmera */}
+            <div className={getTabClass('camera')}>
+              <CameraTab />
             </div>
 
             {/* Tab: Controle */}

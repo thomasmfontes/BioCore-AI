@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Tab = 'cultivo' | 'telemetria' | 'controle' | 'historico';
+type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico';
 
 interface TopAppBarProps {
   status: string;
@@ -25,6 +25,7 @@ export function TopAppBar({ status, activeTab, setActiveTab }: TopAppBarProps) {
   const tabs = [
     { id: 'cultivo' as Tab, label: 'Cultivo' },
     { id: 'telemetria' as Tab, label: 'Telemetria' },
+    { id: 'camera' as Tab, label: 'Câmera' },
     { id: 'controle' as Tab, label: 'Controles' },
     { id: 'historico' as Tab, label: 'Histórico' }
   ];
