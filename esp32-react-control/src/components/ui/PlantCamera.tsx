@@ -199,18 +199,31 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
         {/* Overlay do estado OFFLINE (Posicionado sobre a imagem, sem desmontar a tag img) */}
         {isPoweredOn && status === 'offline' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-6 text-center animate-fadeIn z-10">
-            <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
-              <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-5 text-center animate-fadeIn z-10">
+            <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-2">
+              <span className="material-symbols-outlined text-error text-xl drop-shadow-md">videocam_off</span>
             </div>
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
-            <button
-              onClick={handleReconnect}
-              className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
-            >
-              <span className="material-symbols-outlined text-sm">refresh</span>
-              Tentar Novamente
-            </button>
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-1">Câmera Indisponível</h3>
+            <p className="text-[10px] text-on-surface-variant max-w-xs mb-3 leading-tight">
+              No PWA, autorize o acesso à <strong>Rede local</strong> nas configurações do Chrome se a transmissão não abrir.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleReconnect}
+                className="clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-md"
+              >
+                <span className="material-symbols-outlined text-xs">refresh</span>
+                Tentar Novamente
+              </button>
+
+              <button
+                onClick={() => window.open(baseUrl, '_blank', 'noopener,noreferrer')}
+                className="bg-surface-container-highest border border-outline-variant text-on-surface px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm hover:border-primary/40"
+              >
+                <span className="material-symbols-outlined text-xs">open_in_new</span>
+                Abrir no Navegador
+              </button>
+            </div>
           </div>
         )}
 
