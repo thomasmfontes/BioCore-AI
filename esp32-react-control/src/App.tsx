@@ -21,15 +21,12 @@ export default function App() {
 
   const offline = status !== 'connected'
 
-  const tabsOrder: Tab[] = ['cultivo', 'telemetria', 'camera', 'controle', 'historico']
-  const activeIndex = tabsOrder.indexOf(activeTab)
-
   const getTabClass = (tabId: Tab) => {
     const isActive = activeTab === tabId
-    return `w-1/5 md:w-full shrink-0 h-full overflow-y-auto overscroll-y-contain touch-pan-y px-0.5 flex flex-col gap-stack-lg transition-all duration-300
+    return `w-full h-full overflow-y-auto overscroll-y-contain touch-pan-y px-0.5 flex flex-col gap-stack-lg transition-opacity duration-200
       ${isActive 
-        ? 'opacity-100 md:h-auto md:overflow-visible' 
-        : 'opacity-100 md:opacity-0 md:h-0 md:overflow-hidden md:pointer-events-none'
+        ? 'flex opacity-100 animate-fadeIn md:h-auto md:overflow-visible' 
+        : 'hidden md:flex md:w-full md:opacity-100 md:h-auto'
       }
     `
   }
@@ -39,58 +36,53 @@ export default function App() {
       <TopAppBar status={status} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-hidden md:overflow-visible">
+      <main className="flex-1 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col min-h-0 overflow-hidden md:overflow-visible">
         
-        {/* Sliding Carousel Container */}
-        <div className="flex-1 w-full overflow-hidden flex flex-col h-full md:overflow-visible">
-          <div 
-            className="flex flex-row h-full transition-transform duration-300 ease-out w-[500%] md:w-full md:flex-col md:!transform-none"
-            style={{ transform: `translateX(-${activeIndex * 20}%)` }}
-          >
-            {/* Tab: Cultivo */}
-            <div className={getTabClass('cultivo')}>
-              <CultivoTab 
-                hortalica={hortalica}
-                smartMode={smartMode}
-                setSmartMode={setSmartMode}
-                sensors={sensors}
-                setShowSelector={setShowSelector}
-                onNavigateToCamera={() => setActiveTab('camera')}
-              />
-            </div>
+        {/* Contêiner de Abas Otimizado para PWA Standalone (Sem 500% transform que travava o toque) */}
+        <div className="flex-1 w-full h-full min-h-0 overflow-hidden flex flex-col md:overflow-visible">
+          {/* Tab: Cultivo */}
+          <div className={getTabClass('cultivo')}>
+            <CultivoTab 
+              hortalica={hortalica}
+              smartMode={smartMode}
+              setSmartMode={setSmartMode}
+              sensors={sensors}
+              setShowSelector={setShowSelector}
+              onNavigateToCamera={() => setActiveTab('camera')}
+            />
+          </div>
 
-            {/* Tab: Telemetria */}
-            <div className={getTabClass('telemetria')}>
-              <TelemetriaTab 
-                sensors={sensors}
-                status={status}
-              />
-            </div>
+          {/* Tab: Telemetria */}
+          <div className={getTabClass('telemetria')}>
+            <TelemetriaTab 
+              sensors={sensors}
+              status={status}
+            />
+          </div>
 
-            {/* Tab: Câmera */}
-            <div className={getTabClass('camera')}>
-              <CameraTab />
-            </div>
+          {/* Tab: Câmera */}
+          <div className={getTabClass('camera')}>
+            <CameraTab />
+          </div>
 
-            {/* Tab: Controle */}
-            <div className={getTabClass('controle')}>
-              <ControleTab 
-                smartMode={smartMode}
-                offline={offline}
-                lightStage={lightStage}
-                setLight={setLight}
-                pumps={pumps}
-                togglePump={togglePump}
-                hortalica={hortalica}
-              />
-            </div>
+          {/* Tab: Controle */}
+          <div className={getTabClass('controle')}>
+            <ControleTab 
+              smartMode={smartMode}
+              offline={offline}
+              lightStage={lightStage}
+              setLight={setLight}
+              pumps={pumps}
+              togglePump={togglePump}
+              hortalica={hortalica}
+            />
+          </div>
 
-            {/* Tab: Historico */}
-            <div className={getTabClass('historico')}>
-              <HistoricoTab 
-                logs={logs}
-              />
-            </div>
+          {/* Tab: Historico */}
+          <div className={getTabClass('historico')}>
+            <HistoricoTab 
+              logs={logs}
+            />
           </div>
         </div>
 
