@@ -80,13 +80,13 @@ export default function App() {
     <div className="bg-background text-on-surface h-dvh md:h-auto md:min-h-screen flex flex-col font-body-lg overflow-hidden md:overflow-visible">
       <TopAppBar status={status} activeTab={activeTab} setActiveTab={handleTabChange} />
 
-      {/* Main Content Area com rolagem inercial nativa PWA */}
-      <main className="flex-1 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-y-auto overscroll-y-contain touch-pan-y md:overflow-visible">
+      {/* Main Content Area com padding inferior ampliado (pb-32 / pb-[calc(7.5rem+env(safe-area-inset-bottom))]) para permitir rolagem completa sem cobrir o botão da câmera */}
+      <main className="flex-1 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-16 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-y-auto overscroll-y-contain touch-pan-y md:overflow-visible">
         
-        {/* Contêiner de Transição Lateral da Aba Ativa (Deslizando da direita ou da esquerda) */}
+        {/* Contêiner de Transição Lateral da Aba Ativa */}
         <div 
           key={activeTab} 
-          className={`w-full flex-1 flex flex-col gap-stack-lg pb-4 ${
+          className={`w-full flex-1 flex flex-col gap-stack-lg pb-8 ${
             slideDirection === 'right' ? 'animate-slideInFromRight' : 'animate-slideInFromLeft'
           }`}
         >
