@@ -10,7 +10,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
   const [isPoweredOn, setIsPoweredOn] = useState<boolean>(false);
-  const [status, setStatus] = useState<'online' | 'off'>('off');
+  const [hasError, setHasError] = useState<boolean>(false);
 
   // Inicializar a URL estável apenas uma vez na montagem (useState lazy)
   const [streamUrl, setStreamUrl] = useState<string>(() => `${baseUrl}?t=${Date.now()}`);
@@ -21,20 +21,22 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Alterar streamUrl exclusivamente quando o usuário clica em "Reconectar"
+  // Alterar streamUrl exclusivamente quando o usuário clica em "Reconectar" ou "Tentar Novamente"
   const handleReconnect = () => {
     if (!isPoweredOn) return;
-    setStatus('online');
+    setHasError(false);
     const now = new Date();
     setLastAttemptTime(now.toLocaleTimeString());
     setStreamUrl(`${baseUrl}?t=${now.getTime()}`);
   };
 
+  const handleError = () => {
+    setHasError(true);
+  };
+
   useEffect(() => {
     if (isPoweredOn) {
-      setStatus('online');
-    } else {
-      setStatus('off');
+      setHasError(false);
     }
   }, [isPoweredOn]);
 
@@ -95,12 +97,14 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           <span 
             aria-live="polite"
             className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold transition-all ${
-              isPoweredOn
+              isPoweredOn && !hasError
                 ? 'bg-primary/10 text-primary border-primary/20 animate-pulse'
+                : hasError && isPoweredOn
+                ? 'bg-error/10 text-error border-error/20'
                 : 'bg-outline/10 text-outline border-outline/20'
             }`}
           >
-            {isPoweredOn ? 'AO VIVO' : 'DESLIGADA'}
+            {isPoweredOn ? (hasError ? 'OFFLINE' : 'AO VIVO') : 'DESLIGADA'}
           </span>
         </header>
       )}
@@ -112,17 +116,18 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           : 'rounded-2xl bg-[#0a0c0e] border border-outline-variant/20 aspect-video'
       }`}>
         
-        {/* ÚNICA tag <img> conectada ao stream MJPEG. Atributo src absolutamente estável, sem bloqueios de overlay artificial no mobile */}
-        {isPoweredOn && (
+        {/* ÚNICA tag <img> conectada ao stream MJPEG. Alt vazio para evitar vazamento de texto quebrado no Android/iOS */}
+        {isPoweredOn && !hasError && (
           <img
             src={streamUrl}
-            alt="Transmissão ao vivo do cultivo BioCore AI"
+            alt=""
+            onError={handleError}
             className="w-full h-full object-contain"
           />
         )}
 
         {/* Top-Left Glass Badge (Only in Fullscreen when online) */}
-        {isFullscreen && isPoweredOn && (
+        {isFullscreen && isPoweredOn && !hasError && (
           <div className="absolute top-6 left-6 z-20">
             <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-bold animate-pulse backdrop-blur-md shadow-lg">
               AO VIVO
@@ -130,8 +135,8 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           </div>
         )}
 
-        {/* Floating Glass Actions Overlay (Top-Right, visible ONLY when powered on) */}
-        {isPoweredOn && (
+        {/* Floating Glass Actions Overlay (Top-Right, visible ONLY when powered on and no error) */}
+        {isPoweredOn && !hasError && (
           <div className={`absolute z-20 flex items-center gap-2 ${isFullscreen ? 'top-6 right-6' : 'top-3 right-3'}`}>
             <button
               onClick={handleReconnect}
@@ -157,6 +162,23 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
               <span className={`material-symbols-outlined ${isFullscreen ? 'text-lg' : 'text-sm'}`}>
                 {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
               </span>
+            </button>
+          </div>
+        )}
+
+        {/* Unavailable Overlay (Erro de Conexão no Celular) */}
+        {isPoweredOn && hasError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e] p-6 text-center animate-fadeIn z-10">
+            <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
+              <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
+            </div>
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
+            <button
+              onClick={handleReconnect}
+              className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
+            >
+              <span className="material-symbols-outlined text-sm">refresh</span>
+              Tentar Novamente
             </button>
           </div>
         )}
