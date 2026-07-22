@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LocalNetworkModal } from './LocalNetworkModal';
 
 type CameraStatus = 'connecting' | 'online' | 'offline' | 'off';
 
@@ -14,7 +13,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   const [isPoweredOn, setIsPoweredOn] = useState<boolean>(false);
   const [status, setStatus] = useState<CameraStatus>('off');
-  const [showNetworkModal, setShowNetworkModal] = useState<boolean>(false);
 
   // Inicializar a URL criada uma única vez por tentativa usando useState lazy com parâmetro connection
   const [streamUrl, setStreamUrl] = useState<string>(
@@ -34,10 +32,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     const now = new Date();
     setLastAttemptTime(now.toLocaleTimeString());
     setStreamUrl(`${baseUrl}?connection=${now.getTime()}`);
-  };
-
-  const handleGrantNetworkPermission = () => {
-    handleReconnect();
   };
 
   const handleLoad = () => {
@@ -109,29 +103,27 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
             Câmera da Planta
           </span>
 
-          <div className="flex items-center gap-2">
-            {/* Status Indicator Badge */}
-            <span 
-              aria-live="polite"
-              className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold transition-all ${
-                status === 'online'
-                  ? 'bg-primary/10 text-primary border-primary/20 animate-pulse'
-                  : status === 'connecting'
-                  ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse'
-                  : status === 'offline'
-                  ? 'bg-error/10 text-error border-error/20'
-                  : 'bg-outline/10 text-outline border-outline/20'
-              }`}
-            >
-              {status === 'online'
-                ? 'AO VIVO'
+          {/* Status Indicator Badge */}
+          <span 
+            aria-live="polite"
+            className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold transition-all ${
+              status === 'online'
+                ? 'bg-primary/10 text-primary border-primary/20 animate-pulse'
                 : status === 'connecting'
-                ? 'CONECTANDO...'
+                ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse'
                 : status === 'offline'
-                ? 'OFFLINE'
-                : 'DESLIGADA'}
-            </span>
-          </div>
+                ? 'bg-error/10 text-error border-error/20'
+                : 'bg-outline/10 text-outline border-outline/20'
+            }`}
+          >
+            {status === 'online'
+              ? 'AO VIVO'
+              : status === 'connecting'
+              ? 'CONECTANDO...'
+              : status === 'offline'
+              ? 'OFFLINE'
+              : 'DESLIGADA'}
+          </span>
         </header>
       )}
 
@@ -207,29 +199,18 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
         {/* Overlay do estado OFFLINE (Posicionado sobre a imagem, sem desmontar a tag img) */}
         {isPoweredOn && status === 'offline' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-5 text-center animate-fadeIn z-10">
-            <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-2">
-              <span className="material-symbols-outlined text-error text-xl drop-shadow-md">videocam_off</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-6 text-center animate-fadeIn z-10">
+            <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
+              <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
             </div>
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-3">Câmera Indisponível</h3>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleReconnect}
-                className="clay-btn-primary px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-md"
-              >
-                <span className="material-symbols-outlined text-xs">refresh</span>
-                Tentar Novamente
-              </button>
-
-              <button
-                onClick={() => setShowNetworkModal(true)}
-                className="bg-surface-container-highest border border-outline-variant text-on-surface px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm hover:border-primary/40"
-              >
-                <span className="material-symbols-outlined text-xs text-primary">router</span>
-                Rede Local
-              </button>
-            </div>
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
+            <button
+              onClick={handleReconnect}
+              className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
+            >
+              <span className="material-symbols-outlined text-sm">refresh</span>
+              Tentar Novamente
+            </button>
           </div>
         )}
 
@@ -252,37 +233,27 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
             <span>Última conexão: <strong className="text-on-surface font-mono">{isPoweredOn ? lastAttemptTime : '--:--:--'}</strong></span>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Minimalist Power Toggle Switch */}
-            <button
-              onClick={() => setIsPoweredOn(!isPoweredOn)}
-              title={isPoweredOn ? "Desligar câmera" : "Ligar câmera"}
-              aria-label={isPoweredOn ? "Desligar câmera" : "Ligar câmera"}
-              className="relative inline-flex items-center touch-target-min outline-none select-none cursor-pointer"
-            >
-              <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5 ${
+          {/* Minimalist Power Toggle Switch */}
+          <button
+            onClick={() => setIsPoweredOn(!isPoweredOn)}
+            title={isPoweredOn ? "Desligar câmera" : "Ligar câmera"}
+            aria-label={isPoweredOn ? "Desligar câmera" : "Ligar câmera"}
+            className="relative inline-flex items-center touch-target-min outline-none select-none cursor-pointer"
+          >
+            <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5 ${
+              isPoweredOn 
+                ? 'bg-primary/20 border-primary/40' 
+                : 'bg-surface-container-highest border-outline'
+            }`}>
+              <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5 ${
                 isPoweredOn 
-                  ? 'bg-primary/20 border-primary/40' 
-                  : 'bg-surface-container-highest border-outline'
-              }`}>
-                <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5 ${
-                  isPoweredOn 
-                    ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
-                    : 'bg-outline left-0.5'
-                }`} />
-              </div>
-            </button>
-          </div>
+                  ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
+                  : 'bg-outline left-0.5'
+              }`} />
+            </div>
+          </button>
         </div>
       )}
-
-      {/* Local Network Permission System Modal */}
-      <LocalNetworkModal
-        show={showNetworkModal}
-        onClose={() => setShowNetworkModal(false)}
-        onGrantPermission={handleGrantNetworkPermission}
-        streamUrl={baseUrl}
-      />
     </div>
   );
 }
