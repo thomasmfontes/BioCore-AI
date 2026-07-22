@@ -49,28 +49,79 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     }
   }, [isPoweredOn]);
 
-  // Alternar o modo Tela Cheia com animação ultra-suave
-  const toggleFullscreen = () => {
+  // Alternar o modo Tela Cheia com rotação automática para paisagem no celular
+  const toggleFullscreen = async () => {
     const nextState = !isFullscreen;
-    setIsFullscreen(nextState);
 
-    // Suporte à API de Orientação para liberar rotação no celular ao entrar em tela cheia
-    if (screen.orientation) {
-      try {
-        if (nextState) {
-          if ('unlock' in screen.orientation) screen.orientation.unlock();
-        } else {
-          if ('unlock' in screen.orientation) screen.orientation.unlock();
-        }
-      } catch (e) {}
+    if (nextState) {
+      setIsFullscreen(true);
+      // 1. Solicita permissão ao navegador para entrar em Fullscreen no documento
+      if (document.documentElement.requestFullscreen) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch (e) {}
+      }
+
+      // 2. Desbloqueia ou solicita rotação para paisagem (horizontal)
+      const orientation = (screen as any).orientation;
+      if (orientation) {
+        try {
+          if ('unlock' in orientation) {
+            try { orientation.unlock(); } catch (e) {}
+          }
+          if ('lock' in orientation) {
+            try {
+              await orientation.lock('landscape-primary').catch(() => {
+                orientation.lock('landscape').catch(() => {
+                  if ('unlock' in orientation) orientation.unlock();
+                });
+              });
+            } catch (e) {}
+          }
+        } catch (e) {}
+      }
+    } else {
+      setIsFullscreen(false);
+      if (document.fullscreenElement) {
+        try {
+          await document.exitFullscreen();
+        } catch (e) {}
+      }
+      const orientation = (screen as any).orientation;
+      if (orientation && 'unlock' in orientation) {
+        try {
+          orientation.unlock();
+        } catch (e) {}
+      }
     }
   };
+
+  // Escutar eventos de alteração de tela cheia nativos (botão voltar do Android / gesto)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const active = !!document.fullscreenElement;
+      if (!active && isFullscreen) {
+        setIsFullscreen(false);
+        const orientation = (screen as any).orientation;
+        if (orientation && 'unlock' in orientation) {
+          try { orientation.unlock(); } catch (e) {}
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, [isFullscreen]);
 
   // Tecla ESC para fechar tela cheia no teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
+        toggleFullscreen();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
