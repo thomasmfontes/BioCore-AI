@@ -38,9 +38,11 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     setLastAttemptTime(now.toLocaleTimeString());
     setStreamUrl(`${baseUrl}?t=${now.getTime()}`);
 
+    // Navegadores mobile (WebKit/iOS Safari/Android) não inflam o evento onLoad para streams MJPEG contínuos.
+    // Transiciona para 'online' após 1.5s a menos que ocorra um erro de rede real (onError).
     timeoutRef.current = setTimeout(() => {
-      setStatus((current) => (current === 'connecting' ? 'offline' : current));
-    }, 12000);
+      setStatus((current) => (current === 'connecting' ? 'online' : current));
+    }, 1500);
   };
 
   const handleLoad = () => {
@@ -53,12 +55,12 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     setStatus('offline');
   };
 
-  // Definição defensiva do timeout inicial ao ligar/montar o componente
+  // Transição defensiva para renderizar a imagem em navegadores mobile
   useEffect(() => {
     if (isPoweredOn) {
       timeoutRef.current = setTimeout(() => {
-        setStatus((current) => (current === 'connecting' ? 'offline' : current));
-      }, 12000);
+        setStatus((current) => (current === 'connecting' ? 'online' : current));
+      }, 1500);
     } else {
       clearTimeoutTimer();
       setStatus('off');
