@@ -24,5 +24,7 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Arduino build files
-TESTE-BIOCORE/build/
+# Arduino build files and hardware directories
+HARDWARE/
+TESTE-BIOCORE/
+

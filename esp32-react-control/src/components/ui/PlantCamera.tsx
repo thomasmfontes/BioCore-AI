@@ -175,8 +175,8 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           </div>
         )}
 
-        {/* Floating Glass Actions Overlay (Top-Right) */}
-        {isPoweredOn && (
+        {/* Floating Glass Actions Overlay (Top-Right, visible ONLY when online) */}
+        {isPoweredOn && status === 'online' && (
           <div className={`absolute z-20 flex items-center gap-2 ${isFullscreen ? 'top-6 right-6' : 'top-3 right-3'}`}>
             <button
               onClick={handleReconnect}
@@ -186,7 +186,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
                 isFullscreen ? 'w-10 h-10' : 'w-8 h-8'
               }`}
             >
-              <span className={`material-symbols-outlined ${isFullscreen ? 'text-lg' : 'text-sm'} ${status === 'connecting' ? 'animate-spin' : ''}`}>
+              <span className="material-symbols-outlined text-sm">
                 refresh
               </span>
             </button>

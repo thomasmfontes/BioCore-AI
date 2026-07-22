@@ -6,4 +6,4 @@ dev-dist
 camera-build3
 *.local
 .env
-
+HARDWARE/
