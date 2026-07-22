@@ -9,8 +9,8 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   const rawBaseUrl = import.meta.env.VITE_CAMERA_STREAM_URL || "https://thomas-q.tail6cf6eb.ts.net";
   const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
-  const [isPoweredOn, setIsPoweredOn] = useState<boolean>(true);
-  const [status, setStatus] = useState<'connecting' | 'online' | 'offline' | 'off'>('connecting');
+  const [isPoweredOn, setIsPoweredOn] = useState<boolean>(false);
+  const [status, setStatus] = useState<'online' | 'off'>('off');
 
   // Inicializar a URL estável apenas uma vez na montagem (useState lazy)
   const [streamUrl, setStreamUrl] = useState<string>(() => `${baseUrl}?t=${Date.now()}`);
@@ -20,55 +20,22 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const clearTimeoutTimer = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  };
-
-  // Alterar streamUrl exclusivamente quando o usuário clica em "Reconectar" / "Tentar Novamente"
+  // Alterar streamUrl exclusivamente quando o usuário clica em "Reconectar"
   const handleReconnect = () => {
     if (!isPoweredOn) return;
-    clearTimeoutTimer();
-    setStatus('connecting');
+    setStatus('online');
     const now = new Date();
     setLastAttemptTime(now.toLocaleTimeString());
     setStreamUrl(`${baseUrl}?t=${now.getTime()}`);
-
-    // Navegadores mobile (WebKit/iOS Safari/Android) não inflam o evento onLoad para streams MJPEG contínuos.
-    // Transiciona para 'online' após 1.5s a menos que ocorra um erro de rede real (onError).
-    timeoutRef.current = setTimeout(() => {
-      setStatus((current) => (current === 'connecting' ? 'online' : current));
-    }, 1500);
   };
 
-  const handleLoad = () => {
-    clearTimeoutTimer();
-    setStatus('online');
-  };
-
-  const handleError = () => {
-    clearTimeoutTimer();
-    setStatus('offline');
-  };
-
-  // Transição defensiva para renderizar a imagem em navegadores mobile
   useEffect(() => {
     if (isPoweredOn) {
-      timeoutRef.current = setTimeout(() => {
-        setStatus((current) => (current === 'connecting' ? 'online' : current));
-      }, 1500);
+      setStatus('online');
     } else {
-      clearTimeoutTimer();
       setStatus('off');
     }
-
-    return () => {
-      clearTimeoutTimer();
-    };
   }, [isPoweredOn]);
 
   // Fullscreen API aplicada no mesmo elemento existente (sem criar segunda tag img)
@@ -128,22 +95,12 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           <span 
             aria-live="polite"
             className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold transition-all ${
-              status === 'online'
+              isPoweredOn
                 ? 'bg-primary/10 text-primary border-primary/20 animate-pulse'
-                : status === 'connecting'
-                ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse'
-                : status === 'offline'
-                ? 'bg-error/10 text-error border-error/20'
                 : 'bg-outline/10 text-outline border-outline/20'
             }`}
           >
-            {status === 'online'
-              ? 'AO VIVO'
-              : status === 'connecting'
-              ? 'CONECTANDO...'
-              : status === 'offline'
-              ? 'OFFLINE'
-              : 'DESLIGADA'}
+            {isPoweredOn ? 'AO VIVO' : 'DESLIGADA'}
           </span>
         </header>
       )}
@@ -155,21 +112,17 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           : 'rounded-2xl bg-[#0a0c0e] border border-outline-variant/20 aspect-video'
       }`}>
         
-        {/* ÚNICA tag <img> conectada ao stream MJPEG. Atributo src absolutamente estável, sem propriedade key estática ou dinâmica */}
+        {/* ÚNICA tag <img> conectada ao stream MJPEG. Atributo src absolutamente estável, sem bloqueios de overlay artificial no mobile */}
         {isPoweredOn && (
           <img
             src={streamUrl}
             alt="Transmissão ao vivo do cultivo BioCore AI"
-            onLoad={handleLoad}
-            onError={handleError}
-            className={`w-full h-full object-contain transition-opacity duration-300 ${
-              status === 'online' ? 'opacity-100' : 'opacity-0 absolute pointer-events-none'
-            }`}
+            className="w-full h-full object-contain"
           />
         )}
 
         {/* Top-Left Glass Badge (Only in Fullscreen when online) */}
-        {isFullscreen && isPoweredOn && status === 'online' && (
+        {isFullscreen && isPoweredOn && (
           <div className="absolute top-6 left-6 z-20">
             <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-mono font-bold animate-pulse backdrop-blur-md shadow-lg">
               AO VIVO
@@ -177,8 +130,8 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           </div>
         )}
 
-        {/* Floating Glass Actions Overlay (Top-Right, visible ONLY when online) */}
-        {isPoweredOn && status === 'online' && (
+        {/* Floating Glass Actions Overlay (Top-Right, visible ONLY when powered on) */}
+        {isPoweredOn && (
           <div className={`absolute z-20 flex items-center gap-2 ${isFullscreen ? 'top-6 right-6' : 'top-3 right-3'}`}>
             <button
               onClick={handleReconnect}
@@ -204,33 +157,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
               <span className={`material-symbols-outlined ${isFullscreen ? 'text-lg' : 'text-sm'}`}>
                 {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
               </span>
-            </button>
-          </div>
-        )}
-
-        {/* Loading Overlay (Connecting State) */}
-        {isPoweredOn && status === 'connecting' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e] p-6 text-center animate-fadeIn pointer-events-none">
-            <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-primary/30 inset-shadow shadow-[0_0_20px_rgba(90,240,157,0.12)] mb-3 animate-pulse">
-              <span className="material-symbols-outlined text-primary text-2xl drop-shadow-md">videocam</span>
-            </div>
-            <p className="text-xs font-bold text-on-surface tracking-wide">Carregando transmissão ao vivo...</p>
-          </div>
-        )}
-
-        {/* Unavailable Overlay (Offline State) */}
-        {isPoweredOn && status === 'offline' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e] p-6 text-center animate-fadeIn z-10">
-            <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
-              <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
-            </div>
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
-            <button
-              onClick={handleReconnect}
-              className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
-            >
-              <span className="material-symbols-outlined text-sm">refresh</span>
-              Tentar Novamente
             </button>
           </div>
         )}
