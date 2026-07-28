@@ -114,7 +114,7 @@ export default function App() {
   }
 
   return (
-    <div className="bg-background text-on-surface h-dvh md:h-auto md:min-h-screen flex flex-col font-body-lg overflow-hidden md:overflow-visible">
+    <div className="bg-background text-on-surface min-h-screen min-h-dvh flex flex-col font-body-lg relative">
       <TopAppBar 
         status={status} 
         activeTab={activeTab} 
@@ -125,8 +125,8 @@ export default function App() {
         speakSummary={voice.speakSummary}
       />
 
-      {/* Main Content Area com padding inferior ampliado (pb-32 / pb-[calc(7.5rem+env(safe-area-inset-bottom))]) para permitir rolagem completa sem cobrir o botão da câmera */}
-      <main className="flex-1 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-16 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col overflow-y-auto overscroll-y-contain touch-pan-y md:overflow-visible">
+      {/* Main Content Area */}
+      <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-16 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col">
         
         {/* Contêiner de Transição Lateral da Aba Ativa */}
         <div 
@@ -150,7 +150,7 @@ export default function App() {
         bancoHortalicas={BANCO_HORTALICAS}
       />
 
-      {/* Toast Notificação de Fala da Planta (exibido apenas quando a planta está falando) */}
+      {/* Toast Notificação de Fala da Planta */}
       <VoiceWidget 
         isSpeaking={voice.isSpeaking}
         currentMessage={voice.currentMessage}
@@ -158,6 +158,18 @@ export default function App() {
         plantEmoji={hortalica.emoji}
       />
 
+      {/* Overlay de Bloqueio em Modo Paisagem para Celulares (Fora da Tela Cheia da Câmera) */}
+      <div className="fixed inset-0 z-[9990] bg-[#0b0f12] flex flex-col items-center justify-center p-6 text-center md:hidden landscape:flex portrait:hidden select-none animate-fadeIn">
+        <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 animate-pulse">
+          <span className="material-symbols-outlined text-primary text-3xl">screen_rotation</span>
+        </div>
+        <h2 className="text-sm font-bold text-on-surface uppercase tracking-wide mb-1">
+          Modo Retrato Recomendado
+        </h2>
+        <p className="text-xs text-on-surface-variant max-w-xs leading-relaxed">
+          Por favor, retorne o celular para a vertical (em pé) para navegar no <b>BioCore AI</b>.
+        </p>
+      </div>
 
       {/* Container de Notificações Flutuantes do PWA */}
       <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] flex flex-col gap-3 pointer-events-none">
