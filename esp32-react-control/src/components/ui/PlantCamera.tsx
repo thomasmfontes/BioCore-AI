@@ -10,7 +10,7 @@ interface PlantCameraProps {
 }
 
 export function PlantCamera({ className = '', showDetails = true }: PlantCameraProps) {
-  const defaultUrl = import.meta.env.DEV ? "/api/camera-proxy" : "https://thomas-q.tail6cf6eb.ts.net";
+  const defaultUrl = "/api/camera-proxy";
   const rawBaseUrl = import.meta.env.VITE_CAMERA_STREAM_URL || defaultUrl;
   const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
@@ -383,7 +383,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
             <img
               ref={cardImgRef}
               src={streamUrl}
-              crossOrigin="anonymous"
               alt="Transmissão ao vivo da planta"
               onLoad={handleLoad}
               onError={handleError}
@@ -588,7 +587,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
               <img
                 ref={fullscreenImgRef}
                 src={streamUrl}
-                crossOrigin="anonymous"
                 alt="Transmissão em tela cheia da planta"
                 onLoad={handleLoad}
                 onError={handleError}
