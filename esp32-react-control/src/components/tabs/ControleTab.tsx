@@ -40,7 +40,7 @@ export function ControleTab({
       )}
 
       {offline && !smartMode && (
-        <div className="clay-card-dark rounded-2xl p-3 flex items-center gap-3 animate-fadeIn border border-amber-500/20">
+        <div className="clay-card-dark rounded-2xl p-3 flex items-center gap-3 animate-fadeIn border border-amber-400/20">
           <span className={`material-symbols-outlined text-amber-400 text-xl ${isConnecting ? 'animate-spin [animation-direction:reverse]' : ''}`}>
             {isConnecting ? 'sync' : 'sensors_off'}
           </span>
@@ -62,7 +62,7 @@ export function ControleTab({
       <section className="clay-card-dark rounded-3xl p-stack-md">
         <div className="flex items-center justify-between mb-stack-md">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-yellow-400 text-xl drop-shadow-md">light_mode</span>
+            <span className="material-symbols-outlined text-amber-400 text-xl drop-shadow-md">light_mode</span>
             <span className="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold">Iluminação LED</span>
           </div>
           <span className="font-mono-data text-xs text-primary font-semibold">

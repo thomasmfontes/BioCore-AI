@@ -66,6 +66,9 @@ export default {
         'bio-red': '#FFA194',
         'bio-blue': '#92CCFF',
         'bio-gold': '#FFDAD5',
+        // Token de estado intermediário (conectando, carregando)
+        'warning': '#FFD54F',
+        'warning-container': '#FFE082',
       },
       borderRadius: {
         "DEFAULT": "0.125rem",

@@ -3,6 +3,17 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    host: true,
+    proxy: {
+      '/api/camera-proxy': {
+        target: 'https://thomas-q.tail6cf6eb.ts.net',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/camera-proxy/, ''),
+      }
+    }
+  },
   plugins: [
     react(),
     VitePWA({

@@ -23,7 +23,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
                 isLive 
                   ? 'bg-primary/10 text-primary border-primary/20 animate-pulse' 
                   : isConnecting
-                  ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse'
+                  ? 'bg-amber-400/10 text-amber-400 border-amber-400/20 animate-pulse'
                   : 'bg-error/10 text-error border-error/20'
               }`}
             >
@@ -94,7 +94,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           <div className="grid grid-cols-2 gap-4 pt-3 border-t border-outline-variant/30 mt-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-blue-400 text-xl shadow-blue-400/20 drop-shadow-md">water_drop</span>
+                <span className="material-symbols-outlined text-secondary text-xl shadow-secondary/20 drop-shadow-md">water_drop</span>
               </div>
               <div>
                 <span className="font-label-caps text-[9px] text-outline block uppercase font-bold">Umidade do Solo</span>
@@ -106,7 +106,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
 
             <div className="flex items-center gap-3 border-l border-outline-variant/30 pl-4">
               <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-orange-400 text-xl shadow-orange-400/20 drop-shadow-md">device_thermostat</span>
+                <span className="material-symbols-outlined text-amber-400 text-xl shadow-amber-400/20 drop-shadow-md">device_thermostat</span>
               </div>
               <div>
                 <span className="font-label-caps text-[9px] text-outline block uppercase font-bold">Temperatura Solo</span>
@@ -129,7 +129,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           <div className="clay-card-dark rounded-3xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-orange-400 text-xl drop-shadow-md">device_thermostat</span>
+                <span className="material-symbols-outlined text-amber-400 text-xl drop-shadow-md">device_thermostat</span>
               </div>
               <div>
                 <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Temperatura do Ar</p>
@@ -139,7 +139,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`font-mono-data text-xs ${isLive ? 'text-orange-400' : 'text-outline'}`}>
+              <span className={`font-mono-data text-xs ${isLive ? 'text-amber-400' : 'text-outline'}`}>
                 {isLive ? 'Estável' : '--'}
               </span>
             </div>
@@ -149,7 +149,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
           <div className="clay-card-dark rounded-3xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-sky-300 text-xl drop-shadow-md">air</span>
+                <span className="material-symbols-outlined text-secondary text-xl drop-shadow-md">air</span>
               </div>
               <div>
                 <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Umidade do Ar</p>
@@ -159,7 +159,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`font-mono-data text-xs ${isLive ? 'text-sky-300' : 'text-outline'}`}>
+              <span className={`font-mono-data text-xs ${isLive ? 'text-secondary' : 'text-outline'}`}>
                 {isLive ? 'Estável' : '--'}
               </span>
             </div>

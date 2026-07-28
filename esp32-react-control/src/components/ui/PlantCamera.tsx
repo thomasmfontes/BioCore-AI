@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { savePhotoToLocal, triggerDeviceDownload } from '../../utils/localPhotosDB';
 
 type CameraStatus = 'connecting' | 'online' | 'offline' | 'off';
 
@@ -9,26 +10,45 @@ interface PlantCameraProps {
 }
 
 export function PlantCamera({ className = '', showDetails = true }: PlantCameraProps) {
-  const rawBaseUrl = import.meta.env.VITE_CAMERA_STREAM_URL || "https://thomas-q.tail6cf6eb.ts.net";
+  const defaultUrl = import.meta.env.DEV ? "/api/camera-proxy" : "https://thomas-q.tail6cf6eb.ts.net";
+  const rawBaseUrl = import.meta.env.VITE_CAMERA_STREAM_URL || defaultUrl;
   const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
   const [isPoweredOn, setIsPoweredOn] = useState<boolean>(false);
   const [status, setStatus] = useState<CameraStatus>('off');
 
-  // Inicializar a URL criada uma única vez por tentativa usando useState lazy com parâmetro connection
   const [streamUrl, setStreamUrl] = useState<string>(
     () => `${baseUrl}?connection=${Date.now()}`
   );
 
-  // Horário da última tentativa gerenciado em estado separado
   const [lastAttemptTime, setLastAttemptTime] = useState<string>(() => new Date().toLocaleTimeString());
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Controle de visibilidade da barra de controles no modo Tela Cheia (Auto-hide após 3.5s)
+  const cardImgRef = useRef<HTMLImageElement | null>(null);
+  const fullscreenImgRef = useRef<HTMLImageElement | null>(null);
+
+  // Estados de feedback do obturador e toast do sistema
+  const [isShutterActive, setIsShutterActive] = useState<boolean>(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isToastExiting, setIsToastExiting] = useState<boolean>(false);
+  const [isVoiceWidgetVisible, setIsVoiceWidgetVisible] = useState<boolean>(false);
+  const toastExitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastAutoHideRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const handleVoiceStatus = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isVisible: boolean }>;
+      setIsVoiceWidgetVisible(!!customEvent.detail?.isVisible);
+    };
+    window.addEventListener('biocore-voicewidget-status', handleVoiceStatus);
+    return () => {
+      window.removeEventListener('biocore-voicewidget-status', handleVoiceStatus);
+    };
+  }, []);
+
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Estados de Zoom por gestos (Pinch-to-zoom, Double Tap & Touch Pan)
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [panPosition, setPanPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchStartDist = useRef<number | null>(null);
@@ -45,30 +65,131 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     }, 3500);
   };
 
+  // Helpers de toast unificados com animação de saída suave (padrão VoiceWidget)
+  const dismissToast = () => {
+    if (toastExitTimeoutRef.current) clearTimeout(toastExitTimeoutRef.current);
+    if (toastAutoHideRef.current) clearTimeout(toastAutoHideRef.current);
+    setIsToastExiting(true);
+    toastExitTimeoutRef.current = setTimeout(() => {
+      setToastMsg(null);
+      setIsToastExiting(false);
+    }, 300);
+  };
+
+  const showToast = (msg: string) => {
+    // Cancelar saída ou auto-hide anteriores
+    if (toastExitTimeoutRef.current) { clearTimeout(toastExitTimeoutRef.current); toastExitTimeoutRef.current = null; }
+    if (toastAutoHideRef.current) { clearTimeout(toastAutoHideRef.current); toastAutoHideRef.current = null; }
+    setToastMsg(msg);
+    setIsToastExiting(false);
+    // Auto-dismiss com animação de saída suave após 3s
+    toastAutoHideRef.current = setTimeout(() => dismissToast(), 3000);
+  };
+
   useEffect(() => {
     if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
       resetControlsTimeout();
       if (screen.orientation && 'unlock' in screen.orientation) {
         try { screen.orientation.unlock(); } catch { /* ignore */ }
       }
     } else {
-      // Resetar zoom e pan ao sair de tela cheia e travar a orientação em portrait
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
       setZoomScale(1);
       setPanPosition({ x: 0, y: 0 });
       if (screen.orientation && 'lock' in screen.orientation) {
         try { (screen.orientation as any).lock('portrait').catch(() => {}); } catch { /* ignore */ }
       }
-
     }
     return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
       if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     };
   }, [isFullscreen]);
 
-
   const lastVibratedStepRef = useRef<number>(100);
 
-  // Gestos de Toque em Tela Cheia (Pinch-to-zoom, Double-tap & Touch Pan)
+  // Capturar foto com disparo limpo e instantâneo
+  const handleCapturePhoto = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (status !== 'online') return;
+
+    const targetImg = isFullscreen ? fullscreenImgRef.current : cardImgRef.current;
+    if (!targetImg) return;
+
+    // Vibração tátil sutil
+    navigator.vibrate?.(20);
+
+    // Flash da tela piscando por 120ms ao tirar a foto
+    setIsShutterActive(true);
+    setTimeout(() => setIsShutterActive(false), 120);
+
+    try {
+      const canvas = document.createElement('canvas');
+      const w = targetImg.naturalWidth || targetImg.clientWidth || 1280;
+      const h = targetImg.naturalHeight || targetImg.clientHeight || 720;
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Não foi possível obter contexto 2D');
+
+      ctx.drawImage(targetImg, 0, 0, w, h);
+
+      const now = new Date();
+      const formattedDate = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      const filename = `biocore_planta_${dateStr}.jpg`;
+
+      let dataUrl = '';
+      try {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      } catch (taintErr) {
+        console.warn('Canvas com restrição de CORS, tentando fetch do frame:', taintErr);
+        try {
+          const res = await fetch(streamUrl);
+          const blob = await res.blob();
+          dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } catch {
+          triggerDeviceDownload(streamUrl, filename);
+          showToast('Foto salvando no dispositivo...');
+          return;
+        }
+      }
+
+      if (dataUrl) {
+        // 1. Download direto no dispositivo
+        triggerDeviceDownload(dataUrl, filename);
+
+        // 2. Salvar na galeria local (IndexedDB)
+        await savePhotoToLocal({
+          dataUrl,
+          timestamp: now.getTime(),
+          formattedDate,
+          filename,
+        });
+
+        // 3. Notificar galeria local para atualização
+        window.dispatchEvent(new CustomEvent('biocore-photo-captured'));
+
+        // 4. Notificação Toast no Padrão do Sistema
+        showToast('Foto salva no dispositivo!');
+      }
+    } catch (err) {
+      console.error('Erro ao capturar frame:', err);
+      showToast('Não foi possível capturar a foto.');
+    }
+  };
+
+  // Gestos de Toque em Tela Cheia
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       isPinching.current = true;
@@ -85,7 +206,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
       const now = Date.now();
       if (now - lastTapTime.current < 300) {
-        // Double tap toggle zoom (2.2x / 1.0x) com vibração
         navigator.vibrate?.([10, 20, 10]);
         if (zoomScale > 1) {
           setZoomScale(1);
@@ -111,7 +231,6 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
       const factor = currentDist / touchStartDist.current;
       const newScale = Math.min(Math.max(touchStartScale.current * factor, 1), 3.5);
 
-      // Micro-vibração a cada 0.01x de variação do zoom (ex: 1.01x, 1.02x, 1.03x...)
       const currentStep = Math.round(newScale * 100);
       if (currentStep !== lastVibratedStepRef.current) {
         lastVibratedStepRef.current = currentStep;
@@ -131,14 +250,12 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     }
   };
 
-
   const handleTouchEnd = () => {
     touchStartDist.current = null;
     lastTouchPos.current = null;
     isPinching.current = false;
   };
 
-  // Alterar streamUrl exclusivamente quando o usuário clica em "Tentar novamente" ou "Reconectar"
   const handleReconnect = () => {
     navigator.vibrate?.(15);
     if (!isPoweredOn) return;
@@ -164,26 +281,18 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     }
   }, [isPoweredOn]);
 
-  // Alternar o modo Tela Cheia com animação ultra-suave
   const toggleFullscreen = () => {
     navigator.vibrate?.(15);
     const nextState = !isFullscreen;
     setIsFullscreen(nextState);
 
-
-    // Suporte à API de Orientação para liberar rotação no celular ao entrar em tela cheia
     if (screen.orientation) {
       try {
-        if (nextState) {
-          if ('unlock' in screen.orientation) screen.orientation.unlock();
-        } else {
-          if ('unlock' in screen.orientation) screen.orientation.unlock();
-        }
+        if ('unlock' in screen.orientation) screen.orientation.unlock();
       } catch (e) {}
     }
   };
 
-  // Tecla ESC para fechar tela cheia no teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
@@ -196,6 +305,40 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   return (
     <>
+      {/* Toast Notification no Padrão do Sistema (Empilhado abaixo da Voz da Planta se ativa) */}
+      {toastMsg &&
+        createPortal(
+          <div className={`fixed left-4 right-4 md:left-auto md:right-8 md:w-[420px] z-40 pointer-events-auto transition-all duration-300 ${
+            isVoiceWidgetVisible
+              ? 'top-[calc(10.5rem+env(safe-area-inset-top))]'
+              : 'top-[calc(4.5rem+env(safe-area-inset-top))]'
+          }`}>
+            <div className={`bg-[#181c1f]/95 backdrop-blur-xl border border-primary/30 rounded-2xl p-3 shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(44,184,116,0.15)] flex items-center gap-3 transition-all duration-300 ${
+              isToastExiting ? 'animate-toastExit' : 'animate-toastEnter'
+            }`}>
+              <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-lg">check_circle</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-label-caps text-[10px] text-primary uppercase font-bold tracking-wider block">
+                  Galeria do Dispositivo
+                </span>
+                <p className="text-xs text-on-surface font-semibold leading-snug">
+                  {toastMsg}
+                </p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); dismissToast(); }}
+                className="w-8 h-8 rounded-xl bg-surface-container-highest/50 hover:bg-surface-container-highest text-outline hover:text-on-surface flex items-center justify-center transition-all active:scale-90 flex-shrink-0"
+                title="Fechar notificação"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
       {/* Card Principal Estático no Dashboard */}
       <div className={`clay-card-dark rounded-3xl p-stack-md relative overflow-hidden ${className}`}>
         {/* Header section estático */}
@@ -212,7 +355,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
                 status === 'online'
                   ? 'bg-primary/10 text-primary border-primary/20 animate-pulse'
                   : status === 'connecting'
-                  ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse'
+                  ? 'bg-amber-400/10 text-amber-400 border-amber-400/20 animate-pulse'
                   : status === 'offline'
                   ? 'bg-error/10 text-error border-error/20'
                   : 'bg-outline/10 text-outline border-outline/20'
@@ -231,14 +374,20 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
         {/* Janela do Vídeo do Card */}
         <div className="relative w-full overflow-hidden flex items-center justify-center rounded-2xl bg-[#0a0c0e] border border-outline-variant/20 aspect-video">
-          {/* ÚNICA tag <img> no card */}
+          {/* Flash da Câmera ao Tirar Foto (Tela Piscando) */}
+          {isShutterActive && (
+            <div className="absolute inset-0 bg-white/85 z-30 pointer-events-none transition-opacity duration-100" />
+          )}
+          {/* Tag <img> do card */}
           {isPoweredOn && (
             <img
+              ref={cardImgRef}
               src={streamUrl}
-              alt=""
+              crossOrigin="anonymous"
+              alt="Transmissão ao vivo da planta"
               onLoad={handleLoad}
               onError={handleError}
-              className={`w-full h-full object-contain transition-opacity duration-300 ${
+              className={`w-full h-full object-contain ${
                 status === 'offline' ? 'opacity-20 pointer-events-none' : 'opacity-100'
               }`}
             />
@@ -247,22 +396,32 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
           {/* Floating Action Overlay (Top-Right) */}
           {isPoweredOn && status === 'online' && (
             <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+              {/* Botão Capturar Foto */}
+              <button
+                onClick={handleCapturePhoto}
+                title="Capturar foto e salvar no dispositivo"
+                aria-label="Capturar foto"
+                className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-primary/30 text-primary hover:bg-primary/20 active:scale-90 flex items-center justify-center transition-all shadow-lg"
+              >
+                <span className="material-symbols-outlined text-base">photo_camera</span>
+              </button>
+
               <button
                 onClick={handleReconnect}
                 title="Reconectar câmera"
                 aria-label="Reconectar câmera"
-                className="w-8 h-8 rounded-xl bg-black/50 backdrop-blur-md hover:bg-black/80 active:scale-90 border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
+                className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 active:scale-90 flex items-center justify-center transition-all shadow-lg"
               >
-                <span className="material-symbols-outlined text-sm">refresh</span>
+                <span className="material-symbols-outlined text-base">refresh</span>
               </button>
 
               <button
                 onClick={toggleFullscreen}
                 title="Abrir em tela cheia"
                 aria-label="Abrir em tela cheia"
-                className="w-8 h-8 rounded-xl bg-black/50 backdrop-blur-md hover:bg-black/80 active:scale-90 border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
+                className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 active:scale-90 flex items-center justify-center transition-all shadow-lg"
               >
-                <span className="material-symbols-outlined text-sm">fullscreen</span>
+                <span className="material-symbols-outlined text-base">fullscreen</span>
               </button>
             </div>
           )}
@@ -313,7 +472,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
               <span>Última conexão: <strong className="text-on-surface font-mono">{isPoweredOn ? lastAttemptTime : '--:--:--'}</strong></span>
             </div>
 
-            {/* Minimalist Power Toggle Switch com vibração tátil ao clicar */}
+            {/* Minimalist Power Toggle Switch */}
             <button
               onClick={() => {
                 navigator.vibrate?.([10, 30, 10]);
@@ -335,12 +494,11 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
                 }`} />
               </div>
             </button>
-
           </div>
         )}
       </div>
 
-      {/* PORTAL DO MODAL DE TELA CHEIA (Player Imersivo com Gestos de Zoom, Overlays e Minimizar) */}
+      {/* PORTAL DO MODAL DE TELA CHEIA */}
       {isFullscreen && createPortal(
         <div 
           className="fixed inset-0 z-[99999] bg-[#050708] flex items-center justify-center p-0 m-0 overflow-hidden animate-fadeIn select-none cursor-pointer touch-none"
@@ -400,12 +558,38 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
             </div>
           </div>
 
-          {/* Viewport Central da Transmissão */}
+          {/* Botão Shutter Flutuante Central em Tela Cheia */}
+          {status === 'online' && (
+            <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 pointer-events-auto ${
+              showControls ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-90 pointer-events-none'
+            }`}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCapturePhoto(e);
+                  resetControlsTimeout();
+                }}
+                title="Tirar foto agora"
+                aria-label="Tirar foto agora"
+                className="w-14 h-14 rounded-full bg-primary text-[#00210f] border-4 border-black/40 shadow-[0_0_20px_rgba(90,240,157,0.35)] flex items-center justify-center active:scale-90 hover:scale-105 transition-all"
+              >
+                <span className="material-symbols-outlined text-2xl font-bold">photo_camera</span>
+              </button>
+            </div>
+          )}
+
+          {/* Viewport Central da Transmissão em Tela Cheia */}
           <div className="relative w-full h-full flex items-center justify-center animate-enterVideo overflow-hidden">
+            {/* Flash da Câmera ao Tirar Foto (Tela Piscando em Tela Cheia) */}
+            {isShutterActive && (
+              <div className="absolute inset-0 bg-white/85 z-30 pointer-events-none transition-opacity duration-100" />
+            )}
             {isPoweredOn && (
               <img
+                ref={fullscreenImgRef}
                 src={streamUrl}
-                alt=""
+                crossOrigin="anonymous"
+                alt="Transmissão em tela cheia da planta"
                 onLoad={handleLoad}
                 onError={handleError}
                 style={{

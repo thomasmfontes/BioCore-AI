@@ -1,11 +1,15 @@
 import React from 'react';
 import { PlantCamera } from '../ui/PlantCamera';
+import { LocalPhotosGallery } from '../ui/LocalPhotosGallery';
 
 export function CameraTab() {
   return (
     <div className="space-y-3 animate-fadeIn">
       {/* Live Stream Main View */}
       <PlantCamera />
+
+      {/* Galeria de Fotos Armazenadas Localmente no Dispositivo */}
+      <LocalPhotosGallery />
 
       {/* Minimalist Hardware Info Grid */}
       <div className="grid grid-cols-2 gap-3 text-xs">
@@ -30,11 +34,11 @@ export function CameraTab() {
         </div>
       </div>
 
-      {/* Card de Dica de Enquadramento da Câmera (Estilo Aviso do BioCore AI) */}
+      {/* Card de Dica de Enquadramento da Câmera */}
       <div className="clay-card-dark rounded-2xl p-3.5 flex items-center gap-3 animate-fadeIn">
         <span className="material-symbols-outlined text-primary text-xl shrink-0">center_focus_strong</span>
         <p className="text-xs text-on-surface-variant leading-relaxed">
-          <b>Dica de Enquadramento:</b> Posicione a câmera em um ângulo levemente inclinado com foco direto na estrutura da planta e na superfície do vaso para garantir o melhor acompanhamento visual do desenvolvimento.
+          <b>Dica de Enquadramento:</b> Posicione a câmera onde seja possível obter foco direto na estrutura da planta e na superfície do vaso para garantir o melhor acompanhamento visual do desenvolvimento.
         </p>
       </div>
     </div>

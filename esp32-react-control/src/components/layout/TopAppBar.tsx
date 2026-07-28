@@ -26,7 +26,7 @@ export function TopAppBar({
       case 'connected':
         return { icon: 'cloud_done', color: 'text-primary' };
       case 'connecting':
-        return { icon: 'cloud_sync', color: 'text-secondary animate-pulse' };
+        return { icon: 'cloud_sync', color: 'text-amber-400 animate-pulse' };
       default:
         return { icon: 'cloud_off', color: 'text-error' };
     }

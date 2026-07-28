@@ -42,6 +42,11 @@ export function VoiceWidget({
     }
   }, [isSpeaking, currentMessage, displayMessage, isExiting])
 
+  useEffect(() => {
+    const isVisible = !!displayMessage && !isExiting
+    window.dispatchEvent(new CustomEvent('biocore-voicewidget-status', { detail: { isVisible } }))
+  }, [displayMessage, isExiting])
+
   const handleClose = () => {
     setIsExiting(true)
     stopVoice()

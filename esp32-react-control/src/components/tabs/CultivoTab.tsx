@@ -117,7 +117,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
         {/* Umidade Card */}
         <div className="clay-card-dark p-4 rounded-3xl flex flex-col justify-between">
           <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-blue-400 text-lg shadow-blue-400/20 drop-shadow-md">water_drop</span>
+            <span className="material-symbols-outlined text-secondary text-lg shadow-secondary/20 drop-shadow-md">water_drop</span>
             <span className="font-label-caps text-[10px] text-outline uppercase font-semibold">Solo</span>
           </div>
           <div>
@@ -139,7 +139,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
         {/* Luz Card */}
         <div className="clay-card-dark p-4 rounded-3xl flex flex-col justify-between">
           <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-yellow-400 text-lg shadow-yellow-400/20 drop-shadow-md">light_mode</span>
+            <span className="material-symbols-outlined text-amber-400 text-lg drop-shadow-md">light_mode</span>
             <span className="font-label-caps text-[10px] text-outline uppercase font-semibold">Luz Diária</span>
           </div>
           <div>
