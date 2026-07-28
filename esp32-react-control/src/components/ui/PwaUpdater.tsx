@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function PwaUpdater() {
@@ -8,10 +9,30 @@ export function PwaUpdater() {
   } = useRegisterSW({
     onRegistered(r) {
       if (r) {
-        // Verificar atualizações de forma estável a cada 60 minutos
-        setInterval(() => {
+        // 1. Checagem imediata ao registrar
+        r.update().catch(() => {});
+
+        // 2. Checagem frequente a cada 15 segundos
+        const interval = setInterval(() => {
           r.update().catch(() => {});
-        }, 60 * 60 * 1000);
+        }, 15 * 1000);
+
+        // 3. Checagem sempre que o usuário voltar ao app (troca de aba / desbloqueio)
+        const handleFocus = () => {
+          r.update().catch(() => {});
+        };
+
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            r.update().catch(() => {});
+          }
+        });
+
+        return () => {
+          clearInterval(interval);
+          window.removeEventListener('focus', handleFocus);
+        };
       }
     },
     onRegisterError(error) {
@@ -28,16 +49,16 @@ export function PwaUpdater() {
     if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    // Ativa o novo Service Worker e permite que o vite-plugin-pwa gerencie a recarga limpa
+    // Ativa o novo Service Worker e realiza o reload da nova versão
     updateServiceWorker(true);
   };
 
   if (!needRefresh && !offlineReady) return null;
 
   return (
-    <div className="pointer-events-auto w-full clay-card-dark p-4 rounded-2xl animate-slideUp flex flex-col gap-3">
+    <div className="pointer-events-auto w-full clay-card-dark p-4 rounded-2xl animate-slideUp flex flex-col gap-3 shadow-[0_8px_30px_rgba(0,0,0,0.5)] border border-primary/20">
       <div className="flex items-start gap-3">
-        <span className="material-symbols-outlined text-primary text-3xl">
+        <span className="material-symbols-outlined text-primary text-3xl animate-bounce">
           {needRefresh ? 'update' : 'offline_pin'}
         </span>
         <div className="flex-1">
@@ -46,7 +67,7 @@ export function PwaUpdater() {
           </h4>
           <p className="text-body-sm text-on-surface-variant mt-1 leading-relaxed">
             {needRefresh
-              ? 'Uma nova versão do BioCore AI está disponível. Clique em atualizar para carregar as novidades.'
+              ? 'Uma nova versão do BioCore AI foi publicada. Clique em atualizar para carregar as novidades.'
               : 'O aplicativo foi baixado com sucesso e agora funciona totalmente sem internet.'}
           </p>
         </div>
@@ -63,11 +84,12 @@ export function PwaUpdater() {
             onClick={handleUpdate}
             className="px-4 py-2 clay-btn-primary font-bold rounded-xl active:scale-95"
           >
-            Atualizar
+            Atualizar Agora
           </button>
         )}
       </div>
     </div>
   );
 }
+
 export default PwaUpdater;

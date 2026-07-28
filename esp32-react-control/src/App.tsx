@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
 import { useMqtt, BANCO_HORTALICAS } from './hooks/useMqtt'
 import { usePlantVoice } from './hooks/usePlantVoice'
 import { TopAppBar } from './components/layout/TopAppBar'
@@ -113,6 +114,44 @@ export default function App() {
     }
   }
 
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement
+    // Ignora swipes que começam em elementos de controle interativos (sliders, botões, inputs, vídeos)
+    if (target.closest('.mechanical-track, button, input, textarea, video, canvas, [role="button"]')) {
+      touchStartRef.current = null
+      return
+    }
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+
+    const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x
+    const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y
+    touchStartRef.current = null
+
+    // Tolerância para navegação horizontal: deslize horizontal > 55px e desvio vertical < 45px
+    if (Math.abs(deltaX) > 55 && Math.abs(deltaY) < 45) {
+      if (deltaX < 0) {
+        // Deslize para a esquerda -> Próxima aba
+        if (activeIndex < tabsOrder.length - 1) {
+          handleTabChange(tabsOrder[activeIndex + 1])
+        }
+      } else {
+        // Deslize para a direita -> Aba anterior
+        if (activeIndex > 0) {
+          handleTabChange(tabsOrder[activeIndex - 1])
+        }
+      }
+    }
+  }
+
   return (
     <div className="bg-background text-on-surface min-h-dvh flex flex-col font-body-lg relative">
 
@@ -126,8 +165,13 @@ export default function App() {
         speakSummary={voice.speakSummary}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-16 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col">
+      {/* Main Content Area com suporte a navegação por gestos de swipe */}
+      <main 
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-16 px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto w-full flex flex-col"
+      >
+
         
         {/* Contêiner de Transição Lateral da Aba Ativa */}
         <div 
