@@ -48,15 +48,23 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   useEffect(() => {
     if (isFullscreen) {
       resetControlsTimeout();
+      if (screen.orientation && 'unlock' in screen.orientation) {
+        try { screen.orientation.unlock(); } catch { /* ignore */ }
+      }
     } else {
-      // Resetar zoom e pan ao sair de tela cheia
+      // Resetar zoom e pan ao sair de tela cheia e travar a orientação em portrait
       setZoomScale(1);
       setPanPosition({ x: 0, y: 0 });
+      if (screen.orientation && 'lock' in screen.orientation) {
+        try { (screen.orientation as any).lock('portrait').catch(() => {}); } catch { /* ignore */ }
+      }
+
     }
     return () => {
       if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     };
   }, [isFullscreen]);
+
 
   // Gestos de Toque em Tela Cheia (Pinch-to-zoom, Double-tap & Pan)
   const handleTouchStart = (e: React.TouchEvent) => {

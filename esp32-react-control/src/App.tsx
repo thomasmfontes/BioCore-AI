@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMqtt, BANCO_HORTALICAS } from './hooks/useMqtt'
 import { usePlantVoice } from './hooks/usePlantVoice'
 import { TopAppBar } from './components/layout/TopAppBar'
@@ -18,6 +18,15 @@ export type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico'
 export default function App() {
   const { status, sensors, lightStage, pumps, logs, hortalica, setLight, togglePump, alterarHortalica } = useMqtt()
   const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica })
+
+  // Garantir bloqueio em modo retrato (portrait) para o aplicativo PWA
+  useEffect(() => {
+    if (screen.orientation && 'lock' in screen.orientation) {
+      try { (screen.orientation as any).lock('portrait').catch(() => {}); } catch { /* ignore */ }
+    }
+  }, [])
+
+
 
   const [activeTab, setActiveTab] = useState<Tab>('cultivo')
   const [smartMode, setSmartModeState] = useState<boolean>(() => {
