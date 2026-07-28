@@ -66,7 +66,9 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   }, [isFullscreen]);
 
 
-  // Gestos de Toque em Tela Cheia (Pinch-to-zoom, Double-tap & Pan)
+  const lastVibratedStepRef = useRef<number>(100);
+
+  // Gestos de Toque em Tela Cheia (Pinch-to-zoom, Double-tap & Touch Pan)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       isPinching.current = true;
@@ -76,18 +78,22 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
       );
       touchStartDist.current = dist;
       touchStartScale.current = zoomScale;
+      lastVibratedStepRef.current = Math.round(zoomScale * 100);
     } else if (e.touches.length === 1) {
       isPinching.current = false;
       lastTouchPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 
       const now = Date.now();
       if (now - lastTapTime.current < 300) {
-        // Double tap toggle zoom (2.2x / 1.0x)
+        // Double tap toggle zoom (2.2x / 1.0x) com vibração
+        navigator.vibrate?.([10, 20, 10]);
         if (zoomScale > 1) {
           setZoomScale(1);
           setPanPosition({ x: 0, y: 0 });
+          lastVibratedStepRef.current = 100;
         } else {
           setZoomScale(2.2);
+          lastVibratedStepRef.current = 220;
         }
         lastTapTime.current = 0;
       } else {
@@ -104,6 +110,14 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
       );
       const factor = currentDist / touchStartDist.current;
       const newScale = Math.min(Math.max(touchStartScale.current * factor, 1), 3.5);
+
+      // Micro-vibração a cada 0.01x de variação do zoom (ex: 1.01x, 1.02x, 1.03x...)
+      const currentStep = Math.round(newScale * 100);
+      if (currentStep !== lastVibratedStepRef.current) {
+        lastVibratedStepRef.current = currentStep;
+        try { navigator.vibrate?.(5); } catch { /* ignore */ }
+      }
+
       setZoomScale(newScale);
       if (newScale === 1) setPanPosition({ x: 0, y: 0 });
     } else if (e.touches.length === 1 && zoomScale > 1 && lastTouchPos.current) {
@@ -116,6 +130,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
       lastTouchPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
   };
+
 
   const handleTouchEnd = () => {
     touchStartDist.current = null;
