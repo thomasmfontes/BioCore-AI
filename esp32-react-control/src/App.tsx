@@ -159,18 +159,7 @@ export default function App() {
         plantEmoji={hortalica.emoji}
       />
 
-      {/* Overlay de Bloqueio em Modo Paisagem APENAS para Celulares Virados de Lado (max-height <= 550px) */}
-      <div className="fixed inset-0 z-[9990] bg-[#0b0f12] items-center justify-center p-6 text-center select-none animate-fadeIn hidden [@media(max-height:550px)_and_(orientation:landscape)]:flex">
-        <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 animate-pulse">
-          <span className="material-symbols-outlined text-primary text-3xl">screen_rotation</span>
-        </div>
-        <h2 className="text-sm font-bold text-on-surface uppercase tracking-wide mb-1">
-          Modo Retrato Recomendado
-        </h2>
-        <p className="text-xs text-on-surface-variant max-w-xs leading-relaxed">
-          Por favor, retorne o celular para a vertical (em pé) para navegar no <b>BioCore AI</b>.
-        </p>
-      </div>
+
 
 
       {/* Container de Notificações Flutuantes do PWA */}
