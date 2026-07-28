@@ -125,6 +125,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   // Alterar streamUrl exclusivamente quando o usuário clica em "Tentar novamente" ou "Reconectar"
   const handleReconnect = () => {
+    navigator.vibrate?.(15);
     if (!isPoweredOn) return;
     setStatus('connecting');
     const now = new Date();
@@ -150,8 +151,10 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   // Alternar o modo Tela Cheia com animação ultra-suave
   const toggleFullscreen = () => {
+    navigator.vibrate?.(15);
     const nextState = !isFullscreen;
     setIsFullscreen(nextState);
+
 
     // Suporte à API de Orientação para liberar rotação no celular ao entrar em tela cheia
     if (screen.orientation) {
@@ -295,9 +298,12 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
               <span>Última conexão: <strong className="text-on-surface font-mono">{isPoweredOn ? lastAttemptTime : '--:--:--'}</strong></span>
             </div>
 
-            {/* Minimalist Power Toggle Switch */}
+            {/* Minimalist Power Toggle Switch com vibração tátil ao clicar */}
             <button
-              onClick={() => setIsPoweredOn(!isPoweredOn)}
+              onClick={() => {
+                navigator.vibrate?.([10, 30, 10]);
+                setIsPoweredOn(prev => !prev);
+              }}
               title={isPoweredOn ? "Desligar câmera" : "Ligar câmera"}
               aria-label={isPoweredOn ? "Desligar câmera" : "Ligar câmera"}
               className="relative inline-flex items-center touch-target-min outline-none select-none cursor-pointer"
@@ -314,6 +320,7 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
                 }`} />
               </div>
             </button>
+
           </div>
         )}
       </div>
