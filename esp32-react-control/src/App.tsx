@@ -114,7 +114,8 @@ export default function App() {
   }
 
   return (
-    <div className="bg-background text-on-surface min-h-screen min-h-dvh flex flex-col font-body-lg relative">
+    <div className="bg-background text-on-surface min-h-dvh flex flex-col font-body-lg relative">
+
       <TopAppBar 
         status={status} 
         activeTab={activeTab} 
@@ -158,8 +159,8 @@ export default function App() {
         plantEmoji={hortalica.emoji}
       />
 
-      {/* Overlay de Bloqueio em Modo Paisagem para Celulares (Fora da Tela Cheia da Câmera) */}
-      <div className="fixed inset-0 z-[9990] bg-[#0b0f12] flex flex-col items-center justify-center p-6 text-center md:hidden landscape:flex portrait:hidden select-none animate-fadeIn">
+      {/* Overlay de Bloqueio em Modo Paisagem APENAS para Celulares Virados de Lado (max-height <= 550px) */}
+      <div className="fixed inset-0 z-[9990] bg-[#0b0f12] items-center justify-center p-6 text-center select-none animate-fadeIn hidden [@media(max-height:550px)_and_(orientation:landscape)]:flex">
         <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 animate-pulse">
           <span className="material-symbols-outlined text-primary text-3xl">screen_rotation</span>
         </div>
@@ -170,6 +171,7 @@ export default function App() {
           Por favor, retorne o celular para a vertical (em pé) para navegar no <b>BioCore AI</b>.
         </p>
       </div>
+
 
       {/* Container de Notificações Flutuantes do PWA */}
       <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:w-96 z-[999] flex flex-col gap-3 pointer-events-none">
