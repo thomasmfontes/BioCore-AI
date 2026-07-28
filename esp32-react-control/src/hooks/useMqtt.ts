@@ -198,9 +198,13 @@ export function useMqtt(): MqttState {
       client.subscribe(TOPICS.data)
       client.subscribe(TOPICS.hortalica)
       client.subscribe(TOPICS.light)
-      client.subscribe('biocore/cmd/bomba+')
+      client.subscribe(TOPICS.pump(1))
+      client.subscribe(TOPICS.pump(2))
+      client.subscribe(TOPICS.pump(3))
+      client.subscribe(TOPICS.pump(4))
       setLogs(prev => pushLog(makeLog('Hardware online'), prev))
     })
+
 
     client.on('message', (topic, payload) => {
       const payloadStr = payload.toString()
