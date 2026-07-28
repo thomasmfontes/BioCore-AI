@@ -5,6 +5,7 @@ import type { DadosPlanta } from '../../hooks/useMqtt';
 interface ControleTabProps {
   smartMode: boolean;
   offline: boolean;
+  status: string;
   lightStage: LightStage;
   setLight: (stage: LightStage) => void;
   pumps: boolean[];
@@ -15,13 +16,18 @@ interface ControleTabProps {
 export function ControleTab({
   smartMode,
   offline,
+  status,
   lightStage,
   setLight,
   pumps,
   togglePump,
-  hortalica
+  hortalica,
 }: ControleTabProps) {
+  const isConnecting = status === 'connecting' || (status === 'connected' && offline);
+
+
   return (
+
     <div className="space-y-stack-lg animate-fadeIn">
 
       {smartMode && (
@@ -32,6 +38,25 @@ export function ControleTab({
           </p>
         </div>
       )}
+
+      {offline && !smartMode && (
+        <div className="clay-card-dark rounded-2xl p-3 flex items-center gap-3 animate-fadeIn border border-amber-500/20">
+          <span className={`material-symbols-outlined text-amber-400 text-xl ${isConnecting ? 'animate-spin [animation-direction:reverse]' : ''}`}>
+            {isConnecting ? 'sync' : 'sensors_off'}
+          </span>
+
+          <p className="text-xs text-on-surface-variant leading-relaxed">
+            {isConnecting ? (
+              <><b>Aguardando conexão...</b> Os controles serão liberados assim que a comunicação com o BioCore AI for estabelecida.</>
+            ) : (
+              <>Controles desativados. Ligue ou verifique a conexão do <b>BioCore AI</b> para habilitar os acionamentos.</>
+            )}
+          </p>
+        </div>
+      )}
+
+
+
 
       {/* Lighting Control Section */}
       <section className="clay-card-dark rounded-3xl p-stack-md">
@@ -283,3 +308,5 @@ export function ControleTab({
     </div>
   );
 }
+
+

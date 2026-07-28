@@ -80,36 +80,91 @@ function pushLog(entry: LogEntry, prev: LogEntry[]): LogEntry[] {
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
+const STORAGE_PLANTA_KEY = 'biocore_planta_ativa'
+const STORAGE_LUZ_KEY    = 'biocore_luz_ativa'
+const STORAGE_BOMBAS_KEY = 'biocore_bombas_ativas'
+
 export function useMqtt(): MqttState {
   const [status, setStatus]         = useState<ConnectionStatus>('disconnected')
   const [sensors, setSensors]       = useState<SensorData | null>(null)
-  const [lightStage, setLightStageState] = useState<LightStage>(0)
-  const [pumps, setPumps]           = useState<[boolean, boolean, boolean, boolean]>([false, false, false, false])
+  
+  const [lightStage, setLightStageState] = useState<LightStage>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_LUZ_KEY)
+      if (saved !== null) {
+        const parsed = Number(saved) as LightStage
+        if (!isNaN(parsed) && [0, 1, 2, 3].includes(parsed)) return parsed
+      }
+    } catch { /* ignore */ }
+    return 0
+  })
+
+  const [pumps, setPumpsState]       = useState<[boolean, boolean, boolean, boolean]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_BOMBAS_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length === 4) {
+          return parsed as [boolean, boolean, boolean, boolean]
+        }
+      }
+    } catch { /* ignore */ }
+    return [false, false, false, false]
+  })
+
   const [logs, setLogs]             = useState<LogEntry[]>([])
-  const [hortalica, setHortalica]   = useState<DadosPlanta>(BANCO_HORTALICAS.alface)
+  
+  const [hortalica, setHortalica]   = useState<DadosPlanta>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_PLANTA_KEY) as ChavePlanta | null
+      if (saved && BANCO_HORTALICAS[saved]) {
+        return BANCO_HORTALICAS[saved]
+      }
+    } catch {
+      /* ignore */
+    }
+    return BANCO_HORTALICAS.alface
+  })
+  
   const clientRef                   = useRef<mqtt.MqttClient | null>(null)
 
   const setLight = useCallback((stage: LightStage) => {
-    clientRef.current?.publish(TOPICS.light, String(stage))
+    clientRef.current?.publish(TOPICS.light, String(stage), { retain: true })
     setLightStageState(stage)
+    try {
+      localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
+    } catch { /* ignore */ }
+
     const labels = ['Desligada', '25%', '50%', '100%']
     setLogs(prev => pushLog(makeLog(`Luz → ${labels[stage]}`), prev))
   }, [])
 
   const togglePump = useCallback((index: 0 | 1 | 2 | 3) => {
-    const newValue = !pumps[index]
-    const next = [...pumps] as [boolean, boolean, boolean, boolean]
-    next[index] = newValue
-    setPumps(next)
+    setPumpsState(prev => {
+      const newValue = !prev[index]
+      const next = [...prev] as [boolean, boolean, boolean, boolean]
+      next[index] = newValue
 
-    clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0')
-    const names = ['Bomba N', 'Bomba P', 'Bomba K', 'Bomba Água']
-    setLogs(p => pushLog(makeLog(`${names[index]} → ${newValue ? 'ON' : 'OFF'}`), p))
-  }, [pumps])
+      clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0', { retain: true })
+      try {
+        localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
+      } catch { /* ignore */ }
+
+      const names = ['Bomba N', 'Bomba P', 'Bomba K', 'Bomba Água']
+      setLogs(p => pushLog(makeLog(`${names[index]} → ${newValue ? 'ON' : 'OFF'}`), p))
+      return next
+    })
+  }, [])
 
   const alterarHortalica = useCallback((chave: ChavePlanta) => {
     const planta = BANCO_HORTALICAS[chave]
     setHortalica(planta)
+
+    try {
+      localStorage.setItem(STORAGE_PLANTA_KEY, chave)
+    } catch {
+      /* ignore */
+    }
 
     // Publica config JSON completo para o ESP32
     const payload = JSON.stringify({
@@ -141,13 +196,69 @@ export function useMqtt(): MqttState {
     client.on('connect', () => {
       setStatus('connected')
       client.subscribe(TOPICS.data)
+      client.subscribe(TOPICS.hortalica)
+      client.subscribe(TOPICS.light)
+      client.subscribe('biocore/cmd/bomba+')
       setLogs(prev => pushLog(makeLog('Hardware online'), prev))
     })
 
-    client.on('message', (_topic, payload) => {
-      try {
-        setSensors(JSON.parse(payload.toString()) as SensorData)
-      } catch { /* payload malformado */ }
+    client.on('message', (topic, payload) => {
+      const payloadStr = payload.toString()
+
+      // 1. Hortaliça ativa
+      if (topic === TOPICS.hortalica) {
+        try {
+          const config = JSON.parse(payloadStr)
+          const chaveEncontrada = (Object.keys(BANCO_HORTALICAS) as ChavePlanta[]).find(
+            k => BANCO_HORTALICAS[k].nome.toLowerCase() === config.planta?.toLowerCase()
+          )
+          if (chaveEncontrada) {
+            setHortalica(BANCO_HORTALICAS[chaveEncontrada])
+            try {
+              localStorage.setItem(STORAGE_PLANTA_KEY, chaveEncontrada)
+            } catch { /* ignore */ }
+          }
+        } catch { /* payload malformado */ }
+        return
+      }
+
+      // 2. Iluminação LED
+      if (topic === TOPICS.light) {
+        const stage = Number(payloadStr) as LightStage
+        if (!isNaN(stage) && [0, 1, 2, 3].includes(stage)) {
+          setLightStageState(stage)
+          try {
+            localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
+          } catch { /* ignore */ }
+        }
+        return
+      }
+
+      // 3. Bombas Hidráulicas N, P, K, H2O (bomba1, bomba2, bomba3, bomba4)
+      if (topic.startsWith('biocore/cmd/bomba')) {
+        const numStr = topic.replace('biocore/cmd/bomba', '')
+        const idx = parseInt(numStr, 10) - 1
+        if (idx >= 0 && idx <= 3) {
+          const isON = payloadStr === '1'
+          setPumpsState(prev => {
+            if (prev[idx] === isON) return prev
+            const next = [...prev] as [boolean, boolean, boolean, boolean]
+            next[idx] = isON
+            try {
+              localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
+            } catch { /* ignore */ }
+            return next
+          })
+        }
+        return
+      }
+
+      // 4. Telemetria dos Sensores
+      if (topic === TOPICS.data) {
+        try {
+          setSensors(JSON.parse(payloadStr) as SensorData)
+        } catch { /* payload malformado */ }
+      }
     })
 
     client.on('offline',   () => { setStatus('offline');  setLogs(prev => pushLog(makeLog('Hardware offline'), prev)) })

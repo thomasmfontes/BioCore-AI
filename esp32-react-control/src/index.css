@@ -303,15 +303,58 @@
   animation: slideUpSpring 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* Ocultar barra de rolagem globalmente em todos os navegadores e dispositivos */
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+/* Animações Suaves de Entrada e Saída do Toast */
+@keyframes toastEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
+@keyframes toastExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.95);
+  }
 }
+
+.animate-toastEnter {
+  animation: toastEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toastExit {
+  animation: toastExit 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Animação Fluida de Ondas Sonoras (Equalizador de Áudio Realista) */
+@keyframes soundWaveBar {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.4;
+  }
+  50% {
+    height: 16px;
+    opacity: 1;
+  }
+}
+
+.sound-wave-bar {
+  animation: soundWaveBar 1s ease-in-out infinite;
+  display: inline-block;
+  transform-origin: bottom;
+}
+
+.sound-wave-bar-1 { animation-delay: 0s; animation-duration: 0.75s; }
+.sound-wave-bar-2 { animation-delay: 0.2s; animation-duration: 1.1s; }
+.sound-wave-bar-3 { animation-delay: 0.4s; animation-duration: 0.85s; }
+.sound-wave-bar-4 { animation-delay: 0.15s; animation-duration: 1.2s; }
+
+

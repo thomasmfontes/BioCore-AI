@@ -6,9 +6,21 @@ interface TopAppBarProps {
   status: string;
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  voiceEnabled?: boolean;
+  isSpeaking?: boolean;
+  toggleVoice?: () => void;
+  speakSummary?: () => void;
 }
 
-export function TopAppBar({ status, activeTab, setActiveTab }: TopAppBarProps) {
+export function TopAppBar({ 
+  status, 
+  activeTab, 
+  setActiveTab,
+  voiceEnabled = true,
+  isSpeaking = false,
+  toggleVoice,
+  speakSummary,
+}: TopAppBarProps) {
   const getStatusIndicator = () => {
     switch (status) {
       case 'connected':
@@ -71,7 +83,41 @@ export function TopAppBar({ status, activeTab, setActiveTab }: TopAppBarProps) {
         })}
       </nav>
 
-      <div className="flex items-center gap-3 ml-auto">
+      <div className="flex items-center gap-2.5 ml-auto">
+        {/* Botão minimalista de atalho de voz */}
+        {toggleVoice && (
+          <button
+            onClick={() => {
+              if (isSpeaking) {
+                // Se estiver falando, um clique silencia a fala atual
+                speakSummary?.() // ou stop
+              } else {
+                // Alterna voz ativada/desativada
+                toggleVoice()
+              }
+            }}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all border active:scale-95 ${
+              isSpeaking
+                ? 'bg-primary/20 border-primary/50 text-primary animate-pulse'
+                : voiceEnabled
+                ? 'bg-surface-container-high/40 border-white/10 text-outline hover:text-primary'
+                : 'bg-error/10 border-error/20 text-error/60'
+            }`}
+            title={
+              isSpeaking
+                ? 'Planta falando (Clique para silenciar)'
+                : voiceEnabled
+                ? 'Voz da planta ativada (Clique para desativar)'
+                : 'Voz da planta desativada (Clique para ativar)'
+            }
+          >
+            <span className="material-symbols-outlined text-lg">
+              {isSpeaking ? 'record_voice_over' : voiceEnabled ? 'volume_up' : 'volume_off'}
+            </span>
+          </button>
+        )}
+
+
         <span className={`text-xs font-mono tracking-wider uppercase opacity-60 hidden xs:inline`}>
           {status === 'connected' ? 'ONLINE' : status === 'connecting' ? 'CONECTANDO...' : 'DESCONECTADO'}
         </span>
@@ -82,3 +128,4 @@ export function TopAppBar({ status, activeTab, setActiveTab }: TopAppBarProps) {
     </header>
   );
 }
+

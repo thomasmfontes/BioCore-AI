@@ -122,12 +122,17 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
           </div>
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display-sm text-xl font-bold text-on-surface">{sensors?.u_solo ?? 65}</span>
-              <span className="font-body-sm text-xs text-outline">%</span>
+              <span className="font-display-sm text-xl font-bold text-on-surface">
+                {sensors?.u_solo !== undefined && sensors?.u_solo !== null ? sensors.u_solo : '--'}
+              </span>
+              {sensors?.u_solo !== undefined && sensors?.u_solo !== null && (
+                <span className="font-body-sm text-xs text-outline">%</span>
+              )}
             </div>
             <p className="text-[10px] text-on-surface-variant mt-1">
               Meta: {hortalica.u_solo}%
             </p>
+
           </div>
         </div>
 
