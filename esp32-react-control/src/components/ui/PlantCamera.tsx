@@ -112,7 +112,106 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   const lastVibratedStepRef = useRef<number>(100);
 
-  // Capturar foto com disparo limpo e instantâneo
+// Helper para carregar a imagem da logo PNG em um elemento HTMLImageElement
+const loadLogoImage = (src: string): Promise<HTMLImageElement | null> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+};
+
+// Helper para desenhar retângulo arredondado universal (suporte cross-browser)
+const drawRoundedRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) => {
+  if (typeof ctx.roundRect === 'function') {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+};
+
+// Helper para desenhar a logo PNG com fundo escuro oficial no padrão do sistema (#181c1f e borda primary #5af09d)
+const renderCleanLogoWatermark = (
+  ctx: CanvasRenderingContext2D,
+  canvasW: number,
+  canvasH: number,
+  logoImg: HTMLImageElement | null
+) => {
+  if (!logoImg) return;
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // Fator de escala baseado na resolução 1920px (Full HD)
+  const scale = canvasW / 1920;
+  const paddingRight = Math.round(44 * scale);
+  const paddingTop = Math.round(40 * scale);
+
+  // Tamanho ampliado da logo (~165px de altura em Full HD)
+  const logoHeight = Math.round(165 * scale);
+  const logoWidth = (logoImg.naturalHeight > 0)
+    ? Math.round(logoHeight * (logoImg.naturalWidth / logoImg.naturalHeight))
+    : logoHeight;
+
+  // Dimensões do fundo escuro (Padrão Oficial do Sistema: #181c1f / borda primary #5af09d)
+  const innerPaddingX = Math.round(24 * scale);
+  const innerPaddingY = Math.round(20 * scale);
+  const badgeW = logoWidth + (innerPaddingX * 2);
+  const badgeH = logoHeight + (innerPaddingY * 2);
+
+  const badgeX = canvasW - badgeW - paddingRight;
+  const badgeY = paddingTop;
+
+  // 1. Sombra projetada no padrão do sistema
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+  ctx.shadowBlur = Math.round(20 * scale);
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = Math.round(6 * scale);
+
+  // 2. Desenhar Fundo Escuro Oficial do Sistema (#181c1f com 92% de opacidade)
+  const radius = Math.round(24 * scale);
+  ctx.fillStyle = 'rgba(24, 28, 31, 0.92)';
+  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, radius);
+  ctx.fill();
+
+  // Reset Sombra
+  ctx.shadowColor = 'transparent';
+
+  // 3. Borda Oficial do Sistema (Primary #5af09d com 35% de opacidade)
+  ctx.lineWidth = Math.max(2, Math.round(2.5 * scale));
+  ctx.strokeStyle = 'rgba(90, 240, 157, 0.35)';
+  ctx.stroke();
+
+  // 4. Desenhar Logo PNG ampliada dentro do fundo oficial do sistema
+  const logoX = badgeX + innerPaddingX;
+  const logoY = badgeY + innerPaddingY;
+  ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
+
+  ctx.restore();
+};
+
+  // Capturar foto com disparo limpo e instantâneo em Alta Resolução (Full HD)
   const handleCapturePhoto = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (status !== 'online') return;
@@ -128,16 +227,29 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
     setTimeout(() => setIsShutterActive(false), 120);
 
     try {
+      // Garantir resolução HD (mínimo de 1920px de largura)
+      const nativeW = targetImg.naturalWidth || targetImg.clientWidth || 1280;
+      const nativeH = targetImg.naturalHeight || targetImg.clientHeight || 720;
+      const aspect = nativeW / nativeH || (16 / 9);
+
+      const targetW = Math.max(1920, nativeW * 2);
+      const targetH = Math.round(targetW / aspect);
+
       const canvas = document.createElement('canvas');
-      const w = targetImg.naturalWidth || targetImg.clientWidth || 1280;
-      const h = targetImg.naturalHeight || targetImg.clientHeight || 720;
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = targetW;
+      canvas.height = targetH;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Não foi possível obter contexto 2D');
 
-      ctx.drawImage(targetImg, 0, 0, w, h);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Carregar logo PNG (/biocore-logo.png)
+      const logoImg = await loadLogoImage('/biocore-logo.png');
+
+      ctx.drawImage(targetImg, 0, 0, targetW, targetH);
+      renderCleanLogoWatermark(ctx, targetW, targetH, logoImg);
 
       const now = new Date();
       const formattedDate = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -147,21 +259,42 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
       let dataUrl = '';
       try {
-        dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        dataUrl = canvas.toDataURL('image/jpeg', 0.95);
       } catch (taintErr) {
-        console.warn('Canvas com restrição de CORS, tentando fetch do frame:', taintErr);
+        console.warn('Canvas com restrição de CORS, tentando fetch do frame HD:', taintErr);
         try {
           const res = await fetch(streamUrl);
           const blob = await res.blob();
-          dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
+          const objectUrl = URL.createObjectURL(blob);
+          const fetchedImg = await new Promise<HTMLImageElement | null>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = objectUrl;
           });
-        } catch {
-          triggerDeviceDownload(streamUrl, filename);
-          showToast('Foto salvando no dispositivo...');
-          return;
+
+          if (fetchedImg) {
+            const cleanCanvas = document.createElement('canvas');
+            const cleanNativeW = fetchedImg.naturalWidth || targetW;
+            const cleanNativeH = fetchedImg.naturalHeight || targetH;
+            const cleanAspect = cleanNativeW / cleanNativeH || (16 / 9);
+            const cleanW = Math.max(1920, cleanNativeW * 2);
+            const cleanH = Math.round(cleanW / cleanAspect);
+
+            cleanCanvas.width = cleanW;
+            cleanCanvas.height = cleanH;
+            const cleanCtx = cleanCanvas.getContext('2d');
+            if (cleanCtx) {
+              cleanCtx.imageSmoothingEnabled = true;
+              cleanCtx.imageSmoothingQuality = 'high';
+              cleanCtx.drawImage(fetchedImg, 0, 0, cleanW, cleanH);
+              renderCleanLogoWatermark(cleanCtx, cleanW, cleanH, logoImg);
+              dataUrl = cleanCanvas.toDataURL('image/jpeg', 0.95);
+            }
+          }
+          URL.revokeObjectURL(objectUrl);
+        } catch (fallbackErr) {
+          console.error('Erro no fallback ao processar imagem HD:', fallbackErr);
         }
       }
 

@@ -58,8 +58,8 @@ export function usePlantVoice({
 
     const dryThreshold = hortalica.u_solo - 12
     const isDry = sensors.u_solo < dryThreshold
-    const isHot = sensors.temp > 35
-    const isCold = sensors.temp < 12
+    const isHot = sensors.temp >= 35
+    const isCold = sensors.temp <= 15
 
     if (isHot) {
       plantVoiceService.speakKey('temp_hot')
@@ -186,7 +186,7 @@ export function usePlantVoice({
 
     // Transição de Temperatura Extrema
     const currentTempState: 'hot' | 'cold' | 'normal' = 
-      sensors.temp > 35 ? 'hot' : sensors.temp < 12 ? 'cold' : 'normal'
+      sensors.temp >= 35 ? 'hot' : sensors.temp <= 15 ? 'cold' : 'normal'
     const prevTempState = prevTempStateRef.current
 
     if (prevTempState !== 'unknown' && prevTempState !== currentTempState) {

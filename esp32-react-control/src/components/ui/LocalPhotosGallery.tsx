@@ -426,17 +426,17 @@ export function LocalPhotosGallery() {
 
             {/* Viewport da Foto (Navegação por cliques de seta ou toque no celular) */}
             <div
-              className="relative w-full max-w-5xl mx-auto flex-1 flex items-center justify-center my-auto overflow-hidden"
+              className="relative w-full max-w-5xl mx-auto flex-1 flex items-center justify-center my-auto overflow-hidden px-12 md:px-16"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Seta Esquerda (Apenas no Desktop: hidden md:flex) */}
               {selectedIndex > 0 && (
                 <button
                   onClick={handlePrev}
-                  className="hidden md:flex absolute left-4 z-40 w-10 h-10 rounded-xl bg-surface-container-lowest/80 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-outline/20 active:scale-90 items-center justify-center transition-all shadow-xl select-none"
+                  className="hidden md:flex absolute left-1.5 z-40 w-11 h-11 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-primary/20 hover:text-primary active:scale-90 items-center justify-center transition-all shadow-2xl select-none"
                   title="Foto anterior"
                 >
-                  <span className="material-symbols-outlined text-xl leading-none flex items-center justify-center -ml-0.5">
+                  <span className="material-symbols-outlined text-2xl leading-none flex items-center justify-center -ml-0.5">
                     chevron_left
                   </span>
                 </button>
@@ -451,7 +451,7 @@ export function LocalPhotosGallery() {
                 {photos.map((photo) => (
                   <div
                     key={photo.id}
-                    className="w-full h-full min-w-full shrink-0 snap-center flex items-center justify-center px-2 select-none"
+                    className="w-full h-full min-w-full shrink-0 snap-center flex items-center justify-center px-1 select-none"
                   >
                     <img
                       src={photo.dataUrl}
@@ -471,10 +471,10 @@ export function LocalPhotosGallery() {
               {selectedIndex < photos.length - 1 && (
                 <button
                   onClick={handleNext}
-                  className="hidden md:flex absolute right-4 z-40 w-10 h-10 rounded-xl bg-surface-container-lowest/80 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-outline/20 active:scale-90 items-center justify-center transition-all shadow-xl select-none"
+                  className="hidden md:flex absolute right-1.5 z-40 w-11 h-11 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-primary/20 hover:text-primary active:scale-90 items-center justify-center transition-all shadow-2xl select-none"
                   title="Próxima foto"
                 >
-                  <span className="material-symbols-outlined text-xl leading-none flex items-center justify-center -mr-0.5">
+                  <span className="material-symbols-outlined text-2xl leading-none flex items-center justify-center -mr-0.5">
                     chevron_right
                   </span>
                 </button>
