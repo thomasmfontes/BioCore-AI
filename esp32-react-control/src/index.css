@@ -43,8 +43,16 @@
   }
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 .bio-glow {
+
   box-shadow: 0 0 15px rgba(90, 240, 157, 0.3);
 }
 
