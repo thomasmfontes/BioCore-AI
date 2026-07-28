@@ -56,25 +56,43 @@ export default function App() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isProgrammaticScrollRef = useRef<boolean>(false)
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeTabRef = useRef<Tab>(activeTab)
+
+  useEffect(() => {
+    activeTabRef.current = activeTab
+  }, [activeTab])
 
   const handleTabChange = (newTab: Tab) => {
     setActiveTab(newTab)
     const newIndex = tabsOrder.indexOf(newTab)
     if (scrollContainerRef.current) {
       isProgrammaticScrollRef.current = true
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+
       const width = scrollContainerRef.current.clientWidth
       scrollContainerRef.current.scrollTo({
         left: newIndex * width,
         behavior: 'smooth',
       })
-      setTimeout(() => {
+
+      scrollTimeoutRef.current = setTimeout(() => {
         isProgrammaticScrollRef.current = false
-      }, 350)
+      }, 700)
     }
   }
 
   const handleScroll = () => {
-    if (isProgrammaticScrollRef.current || !scrollContainerRef.current) return
+    if (!scrollContainerRef.current) return
+
+    if (isProgrammaticScrollRef.current) {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false
+      }, 150)
+      return
+    }
+
     const { scrollLeft, clientWidth } = scrollContainerRef.current
     if (clientWidth <= 0) return
     const newIndex = Math.round(scrollLeft / clientWidth)
@@ -84,12 +102,16 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      const index = tabsOrder.indexOf(activeTab)
-      const width = scrollContainerRef.current.clientWidth
-      scrollContainerRef.current.scrollLeft = index * width
+    const handleResize = () => {
+      if (scrollContainerRef.current) {
+        const index = tabsOrder.indexOf(activeTabRef.current)
+        const width = scrollContainerRef.current.clientWidth
+        scrollContainerRef.current.scrollLeft = index * width
+      }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div className="bg-background text-on-surface min-h-dvh flex flex-col font-body-lg relative">
@@ -110,47 +132,57 @@ export default function App() {
         className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-16 w-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
       >
         {/* Aba 1: Cultivo */}
-        <div className="w-full shrink-0 snap-center px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto flex flex-col">
-          <CultivoTab 
-            hortalica={hortalica}
-            smartMode={smartMode}
-            setSmartMode={setSmartMode}
-            sensors={sensors}
-            setShowSelector={setShowSelector}
-            onNavigateToCamera={() => handleTabChange('camera')}
-          />
+        <div className="w-full min-w-full shrink-0 snap-start">
+          <div className="w-full max-w-md md:max-w-5xl mx-auto px-margin-mobile md:px-8 flex flex-col">
+            <CultivoTab 
+              hortalica={hortalica}
+              smartMode={smartMode}
+              setSmartMode={setSmartMode}
+              sensors={sensors}
+              setShowSelector={setShowSelector}
+              onNavigateToCamera={() => handleTabChange('camera')}
+            />
+          </div>
         </div>
 
         {/* Aba 2: Telemetria */}
-        <div className="w-full shrink-0 snap-center px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto flex flex-col">
-          <TelemetriaTab 
-            sensors={sensors}
-            status={status}
-          />
+        <div className="w-full min-w-full shrink-0 snap-start">
+          <div className="w-full max-w-md md:max-w-5xl mx-auto px-margin-mobile md:px-8 flex flex-col">
+            <TelemetriaTab 
+              sensors={sensors}
+              status={status}
+            />
+          </div>
         </div>
 
         {/* Aba 3: Câmera */}
-        <div className="w-full shrink-0 snap-center px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto flex flex-col">
-          <CameraTab />
+        <div className="w-full min-w-full shrink-0 snap-start">
+          <div className="w-full max-w-md md:max-w-5xl mx-auto px-margin-mobile md:px-8 flex flex-col">
+            <CameraTab />
+          </div>
         </div>
 
         {/* Aba 4: Controles */}
-        <div className="w-full shrink-0 snap-center px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto flex flex-col">
-          <ControleTab 
-            smartMode={smartMode}
-            offline={offline}
-            status={status}
-            lightStage={lightStage}
-            setLight={setLight}
-            pumps={pumps}
-            togglePump={togglePump}
-            hortalica={hortalica}
-          />
+        <div className="w-full min-w-full shrink-0 snap-start">
+          <div className="w-full max-w-md md:max-w-5xl mx-auto px-margin-mobile md:px-8 flex flex-col">
+            <ControleTab 
+              smartMode={smartMode}
+              offline={offline}
+              status={status}
+              lightStage={lightStage}
+              setLight={setLight}
+              pumps={pumps}
+              togglePump={togglePump}
+              hortalica={hortalica}
+            />
+          </div>
         </div>
 
         {/* Aba 5: Histórico */}
-        <div className="w-full shrink-0 snap-center px-margin-mobile md:px-8 max-w-md md:max-w-5xl mx-auto flex flex-col">
-          <HistoricoTab logs={logs} />
+        <div className="w-full min-w-full shrink-0 snap-start">
+          <div className="w-full max-w-md md:max-w-5xl mx-auto px-margin-mobile md:px-8 flex flex-col">
+            <HistoricoTab logs={logs} />
+          </div>
         </div>
       </main>
 
