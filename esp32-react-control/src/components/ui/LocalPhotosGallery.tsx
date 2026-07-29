@@ -17,6 +17,7 @@ export function LocalPhotosGallery() {
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const isProgrammaticScroll = useRef<boolean>(false);
+  const isUserScrolling = useRef<boolean>(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Controle de arrasto com o mouse para o Modo Fila (Carrossel no Card)
@@ -56,26 +57,50 @@ export function LocalPhotosGallery() {
 
   const prevSelectedIndexRef = useRef<number | null>(null);
 
-  // Ao abrir o modal, posiciona INSTANTANEAMENTE (0ms) na foto clicada. Nas setas, desliza suavemente (smooth).
+  // Ao abrir o modal ou clicar nas setas, posiciona no slide selecionado.
+  // Se o índice mudou devido ao swipe touch do usuário, ignora o scrollTo para evitar engasgos.
   useEffect(() => {
     if (selectedIndex !== null && sliderRef.current) {
-      isProgrammaticScroll.current = true;
-      const width = sliderRef.current.clientWidth;
-      if (width > 0) {
-        const isInitialOpen = prevSelectedIndexRef.current === null;
-        sliderRef.current.scrollTo({
-          left: selectedIndex * width,
-          behavior: isInitialOpen ? 'instant' : 'smooth',
-        });
+      if (!isUserScrolling.current) {
+        isProgrammaticScroll.current = true;
+        const container = sliderRef.current;
+        const width = container.clientWidth;
+        const gap = 16; // gap-4 entre os slides (16px)
+        if (width > 0) {
+          const isInitialOpen = prevSelectedIndexRef.current === null;
+          container.scrollTo({
+            left: selectedIndex * (width + gap),
+            behavior: isInitialOpen ? 'instant' : 'smooth',
+          });
+        }
+        const timer = setTimeout(() => {
+          isProgrammaticScroll.current = false;
+        }, 350);
+      } else {
+        isUserScrolling.current = false;
       }
-      const timer = setTimeout(() => {
-        isProgrammaticScroll.current = false;
-      }, 350);
       prevSelectedIndexRef.current = selectedIndex;
-      return () => clearTimeout(timer);
     } else {
       prevSelectedIndexRef.current = null;
     }
+  }, [selectedIndex]);
+
+  // Recalcula o scroll ao redimensionar a tela/orientação
+  useEffect(() => {
+    const handleResize = () => {
+      if (selectedIndex !== null && sliderRef.current) {
+        const width = sliderRef.current.clientWidth;
+        const gap = 16;
+        if (width > 0) {
+          sliderRef.current.scrollTo({
+            left: selectedIndex * (width + gap),
+            behavior: 'instant',
+          });
+        }
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [selectedIndex]);
 
   // Sincroniza o índice selecionado no mobile durante o touch swipe no modal
@@ -85,25 +110,22 @@ export function LocalPhotosGallery() {
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
 
     scrollTimeoutRef.current = setTimeout(() => {
-      if (!sliderRef.current) return;
+      if (!sliderRef.current || isProgrammaticScroll.current) return;
       const { scrollLeft, clientWidth } = sliderRef.current;
       if (clientWidth <= 0) return;
-      const newIdx = Math.round(scrollLeft / clientWidth);
+      const gap = 16;
+      const newIdx = Math.round(scrollLeft / (clientWidth + gap));
       if (newIdx !== selectedIndex && newIdx >= 0 && newIdx < photos.length) {
-        isProgrammaticScroll.current = true;
+        isUserScrolling.current = true;
         setSelectedIndex(newIdx);
         setIsDeleting(false);
-        setTimeout(() => {
-          isProgrammaticScroll.current = false;
-        }, 50);
       }
-    }, 40);
+    }, 30);
   };
 
   // Manipulação de clique e arrasto contínuo em cima de qualquer foto no Modo Fila (Desktop)
   const handleReelMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!reelRef.current) return;
-    // Previne a seleção nativa do navegador para permitir arrasto direto sobre as fotos
     e.preventDefault();
     isReelMouseDownRef.current = true;
     isDraggingReelRef.current = false;
@@ -138,10 +160,8 @@ export function LocalPhotosGallery() {
     if (selectedIndex === null || !selectedPhoto || deletingPhotoId !== null) return;
     navigator.vibrate?.([15, 30]);
 
-    // 1. Ativa a animação visual de exclusão (shrink + fade + brilho vermelho)
     setDeletingPhotoId(selectedPhoto.id);
 
-    // 2. Aguarda a conclusão da animação cinematográfica (550ms) para efetivar a remoção do banco
     setTimeout(async () => {
       await deleteLocalPhoto(selectedPhoto.id);
       const remaining = photos.filter((_, idx) => idx !== selectedIndex);
@@ -162,14 +182,9 @@ export function LocalPhotosGallery() {
     if (selectedIndex === null || selectedIndex <= 0 || !sliderRef.current) return;
     navigator.vibrate?.(10);
     setIsDeleting(false);
+    isUserScrolling.current = false;
     const newIdx = selectedIndex - 1;
-    const width = sliderRef.current.clientWidth;
-    isProgrammaticScroll.current = true;
     setSelectedIndex(newIdx);
-    sliderRef.current.scrollTo({ left: newIdx * width, behavior: 'smooth' });
-    setTimeout(() => {
-      isProgrammaticScroll.current = false;
-    }, 300);
   };
 
   const handleNext = (e?: React.MouseEvent) => {
@@ -177,14 +192,9 @@ export function LocalPhotosGallery() {
     if (selectedIndex === null || selectedIndex >= photos.length - 1 || !sliderRef.current) return;
     navigator.vibrate?.(10);
     setIsDeleting(false);
+    isUserScrolling.current = false;
     const newIdx = selectedIndex + 1;
-    const width = sliderRef.current.clientWidth;
-    isProgrammaticScroll.current = true;
     setSelectedIndex(newIdx);
-    sliderRef.current.scrollTo({ left: newIdx * width, behavior: 'smooth' });
-    setTimeout(() => {
-      isProgrammaticScroll.current = false;
-    }, 300);
   };
 
   const handleDownload = (photo: CapturedPhoto, e?: React.MouseEvent) => {
@@ -221,19 +231,10 @@ export function LocalPhotosGallery() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (selectedIndex === null || !sliderRef.current) return;
-      const width = sliderRef.current.clientWidth;
       if (e.key === 'ArrowLeft' && selectedIndex > 0) {
-        isProgrammaticScroll.current = true;
-        const newIdx = selectedIndex - 1;
-        setSelectedIndex(newIdx);
-        sliderRef.current.scrollTo({ left: newIdx * width, behavior: 'smooth' });
-        setTimeout(() => { isProgrammaticScroll.current = false; }, 300);
+        handlePrev();
       } else if (e.key === 'ArrowRight' && selectedIndex < photos.length - 1) {
-        isProgrammaticScroll.current = true;
-        const newIdx = selectedIndex + 1;
-        setSelectedIndex(newIdx);
-        sliderRef.current.scrollTo({ left: newIdx * width, behavior: 'smooth' });
-        setTimeout(() => { isProgrammaticScroll.current = false; }, 300);
+        handleNext();
       } else if (e.key === 'Escape') {
         setSelectedIndex(null);
         setIsDeleting(false);
@@ -331,6 +332,7 @@ export function LocalPhotosGallery() {
               key={`carousel-${photo.id}`}
               onClick={() => {
                 if (!isDraggingReelRef.current) {
+                  isUserScrolling.current = false;
                   setSelectedIndex(idx);
                 }
               }}
@@ -357,7 +359,10 @@ export function LocalPhotosGallery() {
           {photos.map((photo, idx) => (
             <div
               key={`grid-${photo.id}`}
-              onClick={() => setSelectedIndex(idx)}
+              onClick={() => {
+                isUserScrolling.current = false;
+                setSelectedIndex(idx);
+              }}
               style={{ animationDelay: `${idx * 40}ms` }}
               className="animate-accordion-item group relative rounded-2xl overflow-hidden bg-black/60 border border-outline-variant/20 aspect-[4/3] cursor-pointer active:scale-95 hover:scale-[1.02] hover:border-primary/40 transition-all shadow-md"
             >
@@ -386,11 +391,11 @@ export function LocalPhotosGallery() {
         </footer>
       )}
 
-      {/* MODAL DE VISUALIZAÇÃO */}
+      {/* MODAL DE VISUALIZAÇÃO (TIPO GOOGLE FOTOS) */}
       {selectedPhoto !== null && selectedIndex !== null &&
         createPortal(
           <div
-            className="fixed inset-0 z-[99999] bg-[#111417]/95 backdrop-blur-xl flex flex-col items-center justify-between p-4 sm:p-6 animate-fadeIn select-none touch-none"
+            className="fixed inset-0 z-[99999] bg-[#0d0f12]/95 backdrop-blur-2xl flex flex-col items-center justify-between p-3 sm:p-6 py-4 animate-fadeIn select-none touch-none overflow-hidden"
             onClick={() => {
               setSelectedIndex(null);
               setIsDeleting(false);
@@ -398,7 +403,7 @@ export function LocalPhotosGallery() {
           >
             {/* Header no Padrão do Sistema */}
             <div
-              className="w-full max-w-4xl mx-auto clay-card-dark rounded-2xl px-4 py-2.5 flex items-center justify-between z-30"
+              className="w-full max-w-4xl mx-auto clay-card-dark rounded-2xl px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between z-30 shrink-0 shadow-lg border border-outline-variant/20"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 font-mono text-xs font-bold text-on-surface">
@@ -406,7 +411,7 @@ export function LocalPhotosGallery() {
                 <span>{selectedPhoto.formattedDate}</span>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-mono font-bold">
                   {selectedIndex + 1} / {photos.length}
                 </span>
@@ -424,16 +429,16 @@ export function LocalPhotosGallery() {
               </div>
             </div>
 
-            {/* Viewport da Foto (Navegação por cliques de seta ou toque no celular) */}
+            {/* Viewport da Foto (Estilo Google Fotos: Gap sutil + deslize instantâneo + snap-always) */}
             <div
-              className="relative w-full max-w-5xl mx-auto flex-1 flex items-center justify-center my-auto overflow-hidden px-12 md:px-16"
+              className="relative w-full max-w-5xl mx-auto flex-1 flex items-center justify-center my-auto overflow-hidden px-0 md:px-14"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Seta Esquerda (Apenas no Desktop: hidden md:flex) */}
+              {/* Seta Esquerda (Desktop) */}
               {selectedIndex > 0 && (
                 <button
                   onClick={handlePrev}
-                  className="hidden md:flex absolute left-1.5 z-40 w-11 h-11 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-primary/20 hover:text-primary active:scale-90 items-center justify-center transition-all shadow-2xl select-none"
+                  className="hidden md:flex absolute left-2 z-40 w-11 h-11 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-primary/20 hover:text-primary active:scale-90 items-center justify-center transition-all shadow-2xl select-none"
                   title="Foto anterior"
                 >
                   <span className="material-symbols-outlined text-2xl leading-none flex items-center justify-center -ml-0.5">
@@ -442,24 +447,24 @@ export function LocalPhotosGallery() {
                 </button>
               )}
 
-              {/* Container de Imagens (Abertura instantânea e transição por setas ou touch swipe) */}
+              {/* Container de Imagens (Com gap entre fotos e aceleração por hardware nativa) */}
               <div
                 ref={sliderRef}
                 onScroll={handleSliderScroll}
-                className="w-full h-full flex items-center overflow-x-auto snap-x snap-mandatory no-scrollbar py-3 touch-pan-x select-none md:pointer-events-none"
+                className="w-full h-full flex items-center gap-4 overflow-x-auto snap-x snap-mandatory overscroll-contain no-scrollbar touch-pan-x select-none md:pointer-events-none"
               >
                 {photos.map((photo) => (
                   <div
                     key={photo.id}
-                    className="w-full h-full min-w-full shrink-0 snap-center flex items-center justify-center px-1 select-none"
+                    className="w-full h-full min-w-full shrink-0 snap-center snap-always flex items-center justify-center p-2 sm:p-4 select-none"
                   >
                     <img
                       src={photo.dataUrl}
                       alt=""
                       draggable={false}
-                      className={`max-h-[75vh] max-w-full object-contain rounded-2xl border border-outline-variant/20 shadow-2xl pointer-events-none select-none ${
+                      className={`max-h-[calc(100vh-160px)] sm:max-h-[78vh] max-w-full object-contain rounded-2xl border border-outline-variant/20 shadow-2xl pointer-events-none select-none ${
                         deletingPhotoId === photo.id
-                          ? 'animate-photo-delete'
+                          ? 'animate-photo-delete transition-all duration-500'
                           : 'scale-100 opacity-100'
                       }`}
                     />
@@ -467,11 +472,11 @@ export function LocalPhotosGallery() {
                 ))}
               </div>
 
-              {/* Seta Direita (Apenas no Desktop: hidden md:flex) */}
+              {/* Seta Direita (Desktop) */}
               {selectedIndex < photos.length - 1 && (
                 <button
                   onClick={handleNext}
-                  className="hidden md:flex absolute right-1.5 z-40 w-11 h-11 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-primary/20 hover:text-primary active:scale-90 items-center justify-center transition-all shadow-2xl select-none"
+                  className="hidden md:flex absolute right-2 z-40 w-11 h-11 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/30 text-on-surface hover:bg-primary/20 hover:text-primary active:scale-90 items-center justify-center transition-all shadow-2xl select-none"
                   title="Próxima foto"
                 >
                   <span className="material-symbols-outlined text-2xl leading-none flex items-center justify-center -mr-0.5">
@@ -483,12 +488,12 @@ export function LocalPhotosGallery() {
 
             {/* Barra de Ações Necessárias no Padrão do Sistema */}
             <div
-              className="w-full max-w-md mx-auto clay-card-dark rounded-2xl px-4 py-3 flex items-center justify-between gap-3 z-30 pointer-events-auto"
+              className="w-full max-w-md mx-auto clay-card-dark rounded-2xl px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 z-30 shrink-0 pointer-events-auto shadow-lg border border-outline-variant/20"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={(e) => handleDownload(selectedPhoto, e)}
-                className="clay-btn-primary flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all"
+                className="clay-btn-primary flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
                 Baixar Foto
