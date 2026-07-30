@@ -4,6 +4,40 @@ import { savePhotoToLocal, triggerDeviceDownload } from '../../utils/localPhotos
 
 type CameraStatus = 'connecting' | 'online' | 'offline' | 'off';
 
+export type CameraFilterMode = 'normal' | 'plant_green' | 'vivid' | 'low_light' | 'high_contrast' | 'custom';
+
+export interface CustomFilterValues {
+  brightness: number;
+  contrast: number;
+  saturate: number;
+}
+
+const FILTER_OPTIONS: { id: CameraFilterMode; label: string; icon: string; key: string }[] = [
+  { id: 'normal', label: 'Natural', icon: 'auto_awesome', key: '1' },
+  { id: 'plant_green', label: 'Verde Vivo', icon: 'eco', key: '2' },
+  { id: 'vivid', label: 'Vívido', icon: 'wb_sunny', key: '3' },
+  { id: 'low_light', label: 'Pouca Luz', icon: 'bedtime', key: '4' },
+  { id: 'high_contrast', label: 'Contraste', icon: 'contrast', key: '5' },
+  { id: 'custom', label: 'Ajuste', icon: 'tune', key: '6' },
+];
+
+const getCssFilter = (mode: CameraFilterMode, custom: CustomFilterValues): string => {
+  switch (mode) {
+    case 'plant_green':
+      return 'saturate(1.45) contrast(1.1) brightness(1.05)';
+    case 'vivid':
+      return 'saturate(1.65) contrast(1.15) brightness(1.02)';
+    case 'low_light':
+      return 'brightness(1.4) contrast(1.25) saturate(1.15)';
+    case 'high_contrast':
+      return 'contrast(1.35) saturate(1.2) brightness(0.95)';
+    case 'custom':
+      return `brightness(${custom.brightness}%) contrast(${custom.contrast}%) saturate(${custom.saturate}%)`;
+    default:
+      return 'none';
+  }
+};
+
 interface PlantCameraProps {
   className?: string;
   showDetails?: boolean;
@@ -26,6 +60,44 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
 
   const cardImgRef = useRef<HTMLImageElement | null>(null);
   const fullscreenImgRef = useRef<HTMLImageElement | null>(null);
+
+  // Estados dos filtros de cor e melhoria de imagem (Persistência Automática no localStorage)
+  const [filterMode, setFilterMode] = useState<CameraFilterMode>(() => {
+    try {
+      const saved = localStorage.getItem('biocore_camera_filter_mode');
+      return (saved as CameraFilterMode) || 'normal';
+    } catch {
+      return 'normal';
+    }
+  });
+
+  const [customFilters, setCustomFilters] = useState<CustomFilterValues>(() => {
+    try {
+      const saved = localStorage.getItem('biocore_camera_custom_filters');
+      return saved ? JSON.parse(saved) : { brightness: 100, contrast: 100, saturate: 100 };
+    } catch {
+      return { brightness: 100, contrast: 100, saturate: 100 };
+    }
+  });
+
+  // Salvar no localStorage automaticamente ao alterar
+  useEffect(() => {
+    try {
+      localStorage.setItem('biocore_camera_filter_mode', filterMode);
+    } catch (e) {
+      console.warn('Falha ao salvar modo de filtro no localStorage:', e);
+    }
+  }, [filterMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('biocore_camera_custom_filters', JSON.stringify(customFilters));
+    } catch (e) {
+      console.warn('Falha ao salvar ajustes customizados no localStorage:', e);
+    }
+  }, [customFilters]);
+
+  const [showFilterMenu, setShowFilterMenu] = useState<boolean>(false);
 
   // Estados de feedback do obturador e toast do sistema
   const [isShutterActive, setIsShutterActive] = useState<boolean>(false);
@@ -60,10 +132,22 @@ export function PlantCamera({ className = '', showDetails = true }: PlantCameraP
   const resetControlsTimeout = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    // Se o menu de filtros estiver aberto, NÃO inicia o timer de ocultação automática
+    if (showFilterMenu) return;
     controlsTimeoutRef.current = setTimeout(() => {
       setShowControls(false);
     }, 3500);
   };
+
+  // Se o menu de filtros for aberto, trava os controles visíveis e cancela qualquer timer de auto-hide
+  useEffect(() => {
+    if (showFilterMenu) {
+      setShowControls(true);
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    } else if (isFullscreen) {
+      resetControlsTimeout();
+    }
+  }, [showFilterMenu]);
 
   // Helpers de toast unificados com animação de saída suave (padrão VoiceWidget)
   const dismissToast = () => {
@@ -248,7 +332,14 @@ const renderCleanLogoWatermark = (
       // Carregar logo PNG (/biocore-logo.png)
       const logoImg = await loadLogoImage('/biocore-logo.png');
 
+      // Aplicar filtro de cor selecionado no Canvas antes de desenhar a imagem
+      const activeFilterCss = getCssFilter(filterMode, customFilters);
+      if (activeFilterCss !== 'none') {
+        ctx.filter = activeFilterCss;
+      }
       ctx.drawImage(targetImg, 0, 0, targetW, targetH);
+      ctx.filter = 'none'; // Reset para garantir marca d'água limpa
+
       renderCleanLogoWatermark(ctx, targetW, targetH, logoImg);
 
       const now = new Date();
@@ -287,7 +378,11 @@ const renderCleanLogoWatermark = (
             if (cleanCtx) {
               cleanCtx.imageSmoothingEnabled = true;
               cleanCtx.imageSmoothingQuality = 'high';
+              if (activeFilterCss !== 'none') {
+                cleanCtx.filter = activeFilterCss;
+              }
               cleanCtx.drawImage(fetchedImg, 0, 0, cleanW, cleanH);
+              cleanCtx.filter = 'none';
               renderCleanLogoWatermark(cleanCtx, cleanW, cleanH, logoImg);
               dataUrl = cleanCanvas.toDataURL('image/jpeg', 0.95);
             }
@@ -426,15 +521,336 @@ const renderCleanLogoWatermark = (
     }
   };
 
+  // Atalhos de Teclado no Desktop (1-6 para Filtros, P para Painel, C para Foto, F para Tela Cheia)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).isContentEditable)
+      ) {
+        return;
+      }
+
       if (e.key === 'Escape' && isFullscreen) {
         setIsFullscreen(false);
+        return;
+      }
+
+      if (status !== 'online') return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'p') {
+        setShowFilterMenu(prev => !prev);
+      } else if (key === 'c') {
+        handleCapturePhoto();
+      } else if (key === 'f') {
+        toggleFullscreen();
+      } else if (key === 'r') {
+        handleReconnect();
+      } else if (['1', '2', '3', '4', '5', '6'].includes(e.key)) {
+        const option = FILTER_OPTIONS.find(o => o.key === e.key);
+        if (option) {
+          navigator.vibrate?.(10);
+          setFilterMode(option.id);
+          setShowFilterMenu(true);
+        }
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [status, isFullscreen]);
+
+  // Helper para renderizar a barra de filtros em tela cheia (Desktop Vertical na Lateral vs Mobile Horizontal no Topo)
+  const renderFilterMenuPanel = (isFS: boolean = false) => {
+    if (!showFilterMenu || status !== 'online') return null;
+
+    if (isFS) {
+      return (
+        <>
+          {/* DESKTOP FULLSCREEN POPOVER VERTICAL (sm:block) */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="hidden sm:block absolute top-20 right-6 w-[168px] sm:w-[180px] z-[60] bg-[#181c1f]/95 backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-2 shadow-2xl animate-fadeIn pointer-events-auto"
+          >
+            {/* Header Desktop Squeezed */}
+            <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-outline-variant/20 px-0.5">
+              <span className="font-label-caps text-[8.5px] text-outline uppercase tracking-widest font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Filtros
+              </span>
+
+              <div className="flex items-center gap-1">
+                {filterMode !== 'normal' && (
+                  <button
+                    onClick={() => {
+                      navigator.vibrate?.(10);
+                      setFilterMode('normal');
+                      setCustomFilters({ brightness: 100, contrast: 100, saturate: 100 });
+                      resetControlsTimeout();
+                    }}
+                    className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-primary flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                    title="Resetar filtros"
+                    aria-label="Resetar filtros"
+                  >
+                    <span className="material-symbols-outlined text-[10px]">rotate_left</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilterMenu(false)}
+                  className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-on-surface flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                  title="Fechar"
+                >
+                  <span className="material-symbols-outlined text-[10px]">close</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Lista Vertical de Filtros no Desktop */}
+            <div className="space-y-0.5">
+              {FILTER_OPTIONS.map((opt) => {
+                const isActive = filterMode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      navigator.vibrate?.(10);
+                      setFilterMode(opt.id);
+                      resetControlsTimeout();
+                    }}
+                    className={`w-full px-2 py-1 rounded-xl text-[10.5px] font-medium flex items-center justify-between transition-all ${
+                      isActive
+                        ? 'bg-primary/20 text-primary border border-primary/40'
+                        : 'bg-surface-container-highest/20 hover:bg-surface-container-highest/60 text-on-surface-variant hover:text-on-surface border border-outline-variant/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-80">{opt.icon}</span>
+                      <span className="truncate">{opt.label}</span>
+                    </div>
+                    {isActive && (
+                      <span className="material-symbols-outlined text-xs text-primary shrink-0">check</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sliders Desktop */}
+            {filterMode === 'custom' && (
+              <div className="mt-1.5 pt-1.5 border-t border-outline-variant/20 space-y-1 text-xs animate-fadeIn px-0.5">
+                <div>
+                  <div className="flex justify-between items-center text-[8.5px] font-label-caps text-outline uppercase tracking-wider mb-0.5 font-bold">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[10px] opacity-70">wb_sunny</span>
+                      Brilho
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.brightness}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value={customFilters.brightness}
+                    onChange={(e) => {
+                      setCustomFilters(prev => ({ ...prev, brightness: Number(e.target.value) }));
+                      resetControlsTimeout();
+                    }}
+                    className="w-full accent-primary h-1 bg-surface-container-highest/60 rounded-md appearance-none cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[8.5px] font-label-caps text-outline uppercase tracking-wider mb-0.5 font-bold">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[10px] opacity-70">contrast</span>
+                      Contraste
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.contrast}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value={customFilters.contrast}
+                    onChange={(e) => {
+                      setCustomFilters(prev => ({ ...prev, contrast: Number(e.target.value) }));
+                      resetControlsTimeout();
+                    }}
+                    className="w-full accent-primary h-1 bg-surface-container-highest/60 rounded-md appearance-none cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[8.5px] font-label-caps text-outline uppercase tracking-wider mb-0.5 font-bold">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[10px] opacity-70">palette</span>
+                      Saturação
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.saturate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="250"
+                    step="5"
+                    value={customFilters.saturate}
+                    onChange={(e) => {
+                      setCustomFilters(prev => ({ ...prev, saturate: Number(e.target.value) }));
+                      resetControlsTimeout();
+                    }}
+                    className="w-full accent-primary h-1 bg-surface-container-highest/60 rounded-md appearance-none cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* MOBILE FULLSCREEN PAINEL HORIZONTAL NO TOPO (block sm:hidden) */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="block sm:hidden absolute top-16 left-3 right-3 z-[60] bg-[#181c1f]/95 backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-2.5 shadow-2xl animate-fadeIn pointer-events-auto"
+          >
+            {/* Header Mobile */}
+            <div className="flex items-center justify-between mb-2 pb-1 px-0.5">
+              <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest font-bold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Filtros
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                {filterMode !== 'normal' && (
+                  <button
+                    onClick={() => {
+                      navigator.vibrate?.(10);
+                      setFilterMode('normal');
+                      setCustomFilters({ brightness: 100, contrast: 100, saturate: 100 });
+                      resetControlsTimeout();
+                    }}
+                    className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-primary flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                    title="Resetar filtros"
+                    aria-label="Resetar filtros"
+                  >
+                    <span className="material-symbols-outlined text-[10px]">rotate_left</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilterMenu(false)}
+                  className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-on-surface flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                  title="Fechar"
+                >
+                  <span className="material-symbols-outlined text-[10px]">close</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Pílulas Horizontais Mobile (Com limite simétrico à esquerda e à direita) */}
+            <div className="-mx-2.5 px-2.5 flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar snap-x snap-mandatory scroll-px-2.5">
+              {FILTER_OPTIONS.map((opt) => {
+                const isActive = filterMode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      navigator.vibrate?.(10);
+                      setFilterMode(opt.id);
+                      resetControlsTimeout();
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 shrink-0 snap-start transition-all touch-target-min ${
+                      isActive
+                        ? 'bg-primary/20 text-primary border border-primary/40'
+                        : 'bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-on-surface-variant hover:text-on-surface border border-outline-variant/20'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xs opacity-80">{opt.icon}</span>
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sliders Mobile Empilhados */}
+            {filterMode === 'custom' && (
+              <div className="mt-2 pt-2 border-t border-outline-variant/20 space-y-2.5 text-xs animate-fadeIn px-0.5">
+                <div>
+                  <div className="flex justify-between items-center text-[9px] font-label-caps text-outline uppercase tracking-wider mb-1 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-70">wb_sunny</span>
+                      Brilho
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.brightness}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value={customFilters.brightness}
+                    onChange={(e) => {
+                      setCustomFilters(prev => ({ ...prev, brightness: Number(e.target.value) }));
+                      resetControlsTimeout();
+                    }}
+                    className="w-full accent-primary h-1.5 bg-surface-container-highest/60 rounded-lg appearance-none cursor-pointer touch-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[9px] font-label-caps text-outline uppercase tracking-wider mb-1 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-70">contrast</span>
+                      Contraste
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.contrast}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value={customFilters.contrast}
+                    onChange={(e) => {
+                      setCustomFilters(prev => ({ ...prev, contrast: Number(e.target.value) }));
+                      resetControlsTimeout();
+                    }}
+                    className="w-full accent-primary h-1.5 bg-surface-container-highest/60 rounded-lg appearance-none cursor-pointer touch-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[9px] font-label-caps text-outline uppercase tracking-wider mb-1 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-70">palette</span>
+                      Saturação
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.saturate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="250"
+                    step="5"
+                    value={customFilters.saturate}
+                    onChange={(e) => {
+                      setCustomFilters(prev => ({ ...prev, saturate: Number(e.target.value) }));
+                      resetControlsTimeout();
+                    }}
+                    className="w-full accent-primary h-1.5 bg-surface-container-highest/60 rounded-lg appearance-none cursor-pointer touch-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <>
@@ -477,9 +893,17 @@ const renderCleanLogoWatermark = (
         {/* Header section estático */}
         {showDetails && (
           <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
-              Câmera da Planta
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
+                Câmera da Planta
+              </span>
+              {filterMode !== 'normal' && (
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-mono font-bold flex items-center gap-1 animate-fadeIn">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_6px_#5af09d]" />
+                  {FILTER_OPTIONS.find(o => o.id === filterMode)?.label}
+                </span>
+              )}
+            </div>
 
             {/* Status Indicator Badge */}
             <span 
@@ -505,96 +929,377 @@ const renderCleanLogoWatermark = (
           </header>
         )}
 
-        {/* Janela do Vídeo do Card */}
-        <div className="relative w-full overflow-hidden flex items-center justify-center rounded-2xl bg-[#0a0c0e] border border-outline-variant/20 aspect-video">
-          {/* Flash da Câmera ao Tirar Foto (Tela Piscando) */}
-          {isShutterActive && (
-            <div className="absolute inset-0 bg-white/85 z-30 pointer-events-none transition-opacity duration-100" />
-          )}
-          {/* Tag <img> do card */}
-          {isPoweredOn && (
-            <img
-              ref={cardImgRef}
-              src={streamUrl}
-              alt="Transmissão ao vivo da planta"
-              onLoad={handleLoad}
-              onError={handleError}
-              className={`w-full h-full object-contain ${
-                status === 'offline' ? 'opacity-20 pointer-events-none' : 'opacity-100'
-              }`}
-            />
-          )}
+        {/* Janela do Vídeo do Card Wrapper (sem overflow-hidden para não cortar o popover) */}
+        <div className="relative w-full">
+          <div className="relative w-full overflow-hidden flex items-center justify-center rounded-2xl bg-[#0a0c0e] border border-outline-variant/20 aspect-video">
+            {/* Flash da Câmera ao Tirar Foto (Tela Piscando) */}
+            {isShutterActive && (
+              <div className="absolute inset-0 bg-white/85 z-30 pointer-events-none transition-opacity duration-100" />
+            )}
+            {/* Tag <img> do card */}
+            {isPoweredOn && (
+              <img
+                ref={cardImgRef}
+                src={streamUrl}
+                alt="Transmissão ao vivo da planta"
+                onLoad={handleLoad}
+                onError={handleError}
+                style={{
+                  filter: getCssFilter(filterMode, customFilters),
+                  willChange: filterMode !== 'normal' ? 'filter' : 'auto',
+                }}
+                className={`w-full h-full object-contain ${
+                  status === 'offline' ? 'opacity-20 pointer-events-none' : 'opacity-100'
+                }`}
+              />
+            )}
 
-          {/* Floating Action Overlay (Top-Right) */}
-          {isPoweredOn && status === 'online' && (
-            <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
-              {/* Botão Capturar Foto */}
-              <button
-                onClick={handleCapturePhoto}
-                title="Capturar foto e salvar no dispositivo"
-                aria-label="Capturar foto"
-                className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-primary/30 text-primary hover:bg-primary/20 active:scale-90 flex items-center justify-center transition-all shadow-lg"
-              >
-                <span className="material-symbols-outlined text-base">photo_camera</span>
-              </button>
+            {/* Floating Action Overlay (Top-Right) */}
+            {isPoweredOn && status === 'online' && (
+              <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+                {/* Botão Filtros de Cor */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.vibrate?.(15);
+                    setShowFilterMenu(prev => !prev);
+                  }}
+                  title="Filtros de Cor da Câmera"
+                  aria-label="Filtros de Cor"
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all shadow-lg active:scale-90 ${
+                    filterMode !== 'normal' || showFilterMenu
+                      ? 'bg-primary/20 border-primary/50 text-primary shadow-[0_0_10px_rgba(90,240,157,0.2)]'
+                      : 'bg-[#111417]/90 border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">palette</span>
+                </button>
 
-              <button
-                onClick={handleReconnect}
-                title="Reconectar câmera"
-                aria-label="Reconectar câmera"
-                className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 active:scale-90 flex items-center justify-center transition-all shadow-lg"
-              >
-                <span className="material-symbols-outlined text-base">refresh</span>
-              </button>
+                {/* Botão Capturar Foto */}
+                <button
+                  onClick={handleCapturePhoto}
+                  title="Capturar foto e salvar no dispositivo"
+                  aria-label="Capturar foto"
+                  className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-primary/30 text-primary hover:bg-primary/20 active:scale-90 flex items-center justify-center transition-all shadow-lg"
+                >
+                  <span className="material-symbols-outlined text-base">photo_camera</span>
+                </button>
 
-              <button
-                onClick={toggleFullscreen}
-                title="Abrir em tela cheia"
-                aria-label="Abrir em tela cheia"
-                className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 active:scale-90 flex items-center justify-center transition-all shadow-lg"
-              >
-                <span className="material-symbols-outlined text-base">fullscreen</span>
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={handleReconnect}
+                  title="Reconectar câmera"
+                  aria-label="Reconectar câmera"
+                  className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 active:scale-90 flex items-center justify-center transition-all shadow-lg"
+                >
+                  <span className="material-symbols-outlined text-base">refresh</span>
+                </button>
 
-          {/* Overlay CONECTANDO */}
-          {isPoweredOn && status === 'connecting' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/80 backdrop-blur-xs p-6 text-center animate-fadeIn z-10 pointer-events-none">
-              <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-primary/30 inset-shadow shadow-[0_0_20px_rgba(90,240,157,0.12)] mb-3 animate-pulse">
-                <span className="material-symbols-outlined text-primary text-2xl drop-shadow-md">videocam</span>
+                <button
+                  onClick={toggleFullscreen}
+                  title="Abrir em tela cheia"
+                  aria-label="Abrir em tela cheia"
+                  className="w-9 h-9 rounded-xl bg-[#111417]/90 border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/50 active:scale-90 flex items-center justify-center transition-all shadow-lg"
+                >
+                  <span className="material-symbols-outlined text-base">fullscreen</span>
+                </button>
               </div>
-              <p className="text-xs font-bold text-on-surface tracking-wide">Carregando transmissão ao vivo...</p>
-            </div>
-          )}
+            )}
 
-          {/* Overlay OFFLINE */}
-          {isPoweredOn && status === 'offline' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-6 text-center animate-fadeIn z-10">
-              <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
-                <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
+            {/* Overlay CONECTANDO */}
+            {isPoweredOn && status === 'connecting' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/80 backdrop-blur-xs p-6 text-center animate-fadeIn z-10 pointer-events-none">
+                <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-primary/30 inset-shadow shadow-[0_0_20px_rgba(90,240,157,0.12)] mb-3 animate-pulse">
+                  <span className="material-symbols-outlined text-primary text-2xl drop-shadow-md">videocam</span>
+                </div>
+                <p className="text-xs font-bold text-on-surface tracking-wide">Carregando transmissão ao vivo...</p>
               </div>
-              <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
-              <button
-                onClick={handleReconnect}
-                className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
-              >
-                <span className="material-symbols-outlined text-sm">refresh</span>
-                Tentar Novamente
-              </button>
-            </div>
-          )}
+            )}
 
-          {/* Powered Off / Standby Screen */}
-          {!isPoweredOn && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e] p-6 text-center animate-fadeIn z-10">
-              <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow mb-3">
-                <span className="material-symbols-outlined text-outline text-2xl">videocam_off</span>
+            {/* Overlay OFFLINE */}
+            {isPoweredOn && status === 'offline' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e]/90 backdrop-blur-sm p-6 text-center animate-fadeIn z-10">
+                <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-error/30 inset-shadow shadow-[0_0_15px_rgba(255,84,73,0.15)] mb-3">
+                  <span className="material-symbols-outlined text-error text-2xl drop-shadow-md">videocam_off</span>
+                </div>
+                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">Câmera Indisponível</h3>
+                <button
+                  onClick={handleReconnect}
+                  className="clay-btn-primary px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
+                >
+                  <span className="material-symbols-outlined text-sm">refresh</span>
+                  Tentar Novamente
+                </button>
               </div>
-              <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Câmera Desligada</h3>
+            )}
+
+            {/* Powered Off / Standby Screen */}
+            {!isPoweredOn && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0c0e] p-6 text-center animate-fadeIn z-10">
+                <div className="w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow mb-3">
+                  <span className="material-symbols-outlined text-outline text-2xl">videocam_off</span>
+                </div>
+                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Câmera Desligada</h3>
+              </div>
+            )}
+          </div>
+
+          {/* DESKTOP POPOVER VERTICAL (sm:block) - Largura exata entre botão filtro (esquerda) e tela cheia (direita) */}
+          {showFilterMenu && status === 'online' && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="hidden sm:block absolute top-14 right-3 w-[168px] z-30 bg-[#181c1f]/95 backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-2 shadow-2xl animate-fadeIn pointer-events-auto"
+            >
+              {/* Header Desktop Squeezed */}
+              <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-outline-variant/20 px-0.5">
+                <span className="font-label-caps text-[8.5px] text-outline uppercase tracking-widest font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  Filtros
+                </span>
+
+                <div className="flex items-center gap-1">
+                  {filterMode !== 'normal' && (
+                    <button
+                      onClick={() => {
+                        navigator.vibrate?.(10);
+                        setFilterMode('normal');
+                        setCustomFilters({ brightness: 100, contrast: 100, saturate: 100 });
+                      }}
+                      className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-primary flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                      title="Resetar filtros"
+                      aria-label="Resetar filtros"
+                    >
+                      <span className="material-symbols-outlined text-[10px]">rotate_left</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowFilterMenu(false)}
+                    className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-on-surface flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                    title="Fechar"
+                  >
+                    <span className="material-symbols-outlined text-[10px]">close</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista Vertical de Filtros no Desktop (Mesmo Arredondamento rounded-xl dos botões do topo) */}
+              <div className="space-y-0.5">
+                {FILTER_OPTIONS.map((opt) => {
+                  const isActive = filterMode === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        navigator.vibrate?.(10);
+                        setFilterMode(opt.id);
+                      }}
+                      className={`w-full px-2 py-1 rounded-xl text-[10.5px] font-medium flex items-center justify-between transition-all ${
+                        isActive
+                          ? 'bg-primary/20 text-primary border border-primary/40'
+                          : 'bg-surface-container-highest/20 hover:bg-surface-container-highest/60 text-on-surface-variant hover:text-on-surface border border-outline-variant/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-xs opacity-80">{opt.icon}</span>
+                        <span className="truncate">{opt.label}</span>
+                      </div>
+                      {isActive && (
+                        <span className="material-symbols-outlined text-xs text-primary shrink-0">check</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sliders Desktop (Ultra-Compactos) */}
+              {filterMode === 'custom' && (
+                <div className="mt-1.5 pt-1.5 border-t border-outline-variant/20 space-y-1 text-xs animate-fadeIn px-0.5">
+                  <div>
+                    <div className="flex justify-between items-center text-[8.5px] font-label-caps text-outline uppercase tracking-wider mb-0.5 font-bold">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[10px] opacity-70">wb_sunny</span>
+                        Brilho
+                      </span>
+                      <span className="font-mono text-on-surface-variant font-medium">{customFilters.brightness}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="200"
+                      step="5"
+                      value={customFilters.brightness}
+                      onChange={(e) => setCustomFilters(prev => ({ ...prev, brightness: Number(e.target.value) }))}
+                      className="w-full accent-primary h-1 bg-surface-container-highest/60 rounded-md appearance-none cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-[8.5px] font-label-caps text-outline uppercase tracking-wider mb-0.5 font-bold">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[10px] opacity-70">contrast</span>
+                        Contraste
+                      </span>
+                      <span className="font-mono text-on-surface-variant font-medium">{customFilters.contrast}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="200"
+                      step="5"
+                      value={customFilters.contrast}
+                      onChange={(e) => setCustomFilters(prev => ({ ...prev, contrast: Number(e.target.value) }))}
+                      className="w-full accent-primary h-1 bg-surface-container-highest/60 rounded-md appearance-none cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-[8.5px] font-label-caps text-outline uppercase tracking-wider mb-0.5 font-bold">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[10px] opacity-70">palette</span>
+                        Saturação
+                      </span>
+                      <span className="font-mono text-on-surface-variant font-medium">{customFilters.saturate}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="250"
+                      step="5"
+                      value={customFilters.saturate}
+                      onChange={(e) => setCustomFilters(prev => ({ ...prev, saturate: Number(e.target.value) }))}
+                      className="w-full accent-primary h-1 bg-surface-container-highest/60 rounded-md appearance-none cursor-pointer"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* MOBILE INLINE PANEL (block sm:hidden) - Renderizado FORA da janela do vídeo */}
+        {showFilterMenu && status === 'online' && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="block sm:hidden relative mt-3 bg-[#181c1f]/95 backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-3 animate-fadeIn shadow-lg pointer-events-auto"
+          >
+            {/* Header Mobile */}
+            <div className="flex items-center justify-between mb-2.5 pb-1 px-0.5">
+              <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest font-bold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Filtros
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                {filterMode !== 'normal' && (
+                  <button
+                    onClick={() => {
+                      navigator.vibrate?.(10);
+                      setFilterMode('normal');
+                      setCustomFilters({ brightness: 100, contrast: 100, saturate: 100 });
+                    }}
+                    className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-primary flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                    title="Resetar filtros"
+                    aria-label="Resetar filtros"
+                  >
+                    <span className="material-symbols-outlined text-[10px]">rotate_left</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilterMenu(false)}
+                  className="w-4.5 h-4.5 rounded-lg bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-outline hover:text-on-surface flex items-center justify-center transition-all border border-outline-variant/20 active:scale-95"
+                  title="Fechar"
+                >
+                  <span className="material-symbols-outlined text-[10px]">close</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Pílulas de Filtro Horizontais Mobile (Com limite simétrico à esquerda e à direita) */}
+            <div className="-mx-2.5 px-2.5 flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar snap-x snap-mandatory scroll-px-2.5">
+              {FILTER_OPTIONS.map((opt) => {
+                const isActive = filterMode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      navigator.vibrate?.(10);
+                      setFilterMode(opt.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 shrink-0 snap-start transition-all touch-target-min ${
+                      isActive
+                        ? 'bg-primary/20 text-primary border border-primary/40'
+                        : 'bg-surface-container-highest/40 hover:bg-surface-container-highest/80 text-on-surface-variant hover:text-on-surface border border-outline-variant/20'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xs opacity-80">{opt.icon}</span>
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sliders Mobile (Layout Empilhado sem Sobreposição de Texto) */}
+            {filterMode === 'custom' && (
+              <div className="mt-2 pt-2 border-t border-outline-variant/20 space-y-2.5 text-xs animate-fadeIn px-0.5">
+                <div>
+                  <div className="flex justify-between items-center text-[9px] font-label-caps text-outline uppercase tracking-wider mb-1 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-70">wb_sunny</span>
+                      Brilho
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.brightness}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value={customFilters.brightness}
+                    onChange={(e) => setCustomFilters(prev => ({ ...prev, brightness: Number(e.target.value) }))}
+                    className="w-full accent-primary h-1.5 bg-surface-container-highest/60 rounded-lg appearance-none cursor-pointer touch-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[9px] font-label-caps text-outline uppercase tracking-wider mb-1 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-70">contrast</span>
+                      Contraste
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.contrast}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value={customFilters.contrast}
+                    onChange={(e) => setCustomFilters(prev => ({ ...prev, contrast: Number(e.target.value) }))}
+                    className="w-full accent-primary h-1.5 bg-surface-container-highest/60 rounded-lg appearance-none cursor-pointer touch-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[9px] font-label-caps text-outline uppercase tracking-wider mb-1 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-xs opacity-70">palette</span>
+                      Saturação
+                    </span>
+                    <span className="font-mono text-on-surface-variant font-medium">{customFilters.saturate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="250"
+                    step="5"
+                    value={customFilters.saturate}
+                    onChange={(e) => setCustomFilters(prev => ({ ...prev, saturate: Number(e.target.value) }))}
+                    className="w-full accent-primary h-1.5 bg-surface-container-highest/60 rounded-lg appearance-none cursor-pointer touch-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Footer / Controls bar */}
         {showDetails && (
@@ -635,7 +1340,7 @@ const renderCleanLogoWatermark = (
         <div 
           className="fixed inset-0 z-[99999] bg-[#050708] flex items-center justify-center p-0 m-0 overflow-hidden animate-fadeIn select-none cursor-pointer touch-none"
           onClick={() => {
-            if (showControls) {
+            if (showControls && !showFilterMenu) {
               setShowControls(false);
             } else {
               resetControlsTimeout();
@@ -666,6 +1371,23 @@ const renderCleanLogoWatermark = (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  setShowFilterMenu(prev => !prev);
+                  resetControlsTimeout();
+                }}
+                title="Filtros de Cor da Câmera"
+                aria-label="Filtros de Cor"
+                className={`w-9 h-9 rounded-xl backdrop-blur-xl active:scale-90 border flex items-center justify-center transition-all shadow-lg ${
+                  filterMode !== 'normal' || showFilterMenu
+                    ? 'bg-primary/20 border-primary/50 text-primary shadow-[0_0_10px_rgba(90,240,157,0.2)]'
+                    : 'bg-black/60 border-white/20 text-white hover:bg-black/80'
+                }`}
+              >
+                <span className="material-symbols-outlined text-sm">palette</span>
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
                   handleReconnect();
                   resetControlsTimeout();
                 }}
@@ -689,6 +1411,9 @@ const renderCleanLogoWatermark = (
               </button>
             </div>
           </div>
+
+          {/* Painel de Filtros Flutuante em Tela Cheia */}
+          {showControls && renderFilterMenuPanel(true)}
 
           {/* Botão Shutter Flutuante Central em Tela Cheia */}
           {status === 'online' && (
@@ -724,6 +1449,8 @@ const renderCleanLogoWatermark = (
                 onLoad={handleLoad}
                 onError={handleError}
                 style={{
+                  filter: getCssFilter(filterMode, customFilters),
+                  willChange: filterMode !== 'normal' ? 'filter, transform' : 'transform',
                   transform: `scale(${zoomScale}) translate(${panPosition.x / zoomScale}px, ${panPosition.y / zoomScale}px)`,
                   transition: isPinching.current ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
