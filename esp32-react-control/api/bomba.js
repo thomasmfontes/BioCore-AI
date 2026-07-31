@@ -15,7 +15,7 @@ export default function handler(req, res) {
   const { bomba = '4', acao = '1' } = req.query;
 
   // Credenciais HiveMQ Cloud do seu ESP32
-  const brokerUrl = 'wss://bbbf987f8d724af8a134f9d5e214d5ac.s1.eu.hivemq.cloud:8883';
+  const brokerUrl = 'mqtts://bbbf987f8d724af8a134f9d5e214d5ac.s1.eu.hivemq.cloud:8883';
   const options = {
     username: 'esp32_user',
     password: '7879Tmf73@',
