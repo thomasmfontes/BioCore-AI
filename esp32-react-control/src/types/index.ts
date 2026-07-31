@@ -3,8 +3,10 @@ export interface SensorData {
   P: number
   K: number
   temp: number
+  temp_solo?: number
   u_solo: number
   u_amb: number
+  ldr?: number
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'offline'

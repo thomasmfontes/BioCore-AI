@@ -16,7 +16,7 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
       <section>
         <div className="clay-card-dark rounded-3xl p-stack-md relative overflow-hidden">
           <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Solo (NPK e Sensores)</span>
+            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Solo (NPK-TH)</span>
             <span 
               aria-live="polite"
               className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold transition-all ${
@@ -106,12 +106,16 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
 
             <div className="flex items-center gap-3 border-l border-outline-variant/30 pl-4">
               <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-amber-400 text-xl shadow-amber-400/20 drop-shadow-md">device_thermostat</span>
+                <span className="material-symbols-outlined text-red-400 text-xl shadow-red-400/20 drop-shadow-md">device_thermostat</span>
               </div>
               <div>
                 <span className="font-label-caps text-[9px] text-outline block uppercase font-bold">Temperatura Solo</span>
                 <span className="text-base font-bold text-on-surface">
-                  {sensors?.temp !== undefined && sensors?.temp !== null ? `${(sensors.temp - 1.5).toFixed(1)}°C` : '--'}
+                  {sensors?.temp_solo !== undefined && sensors?.temp_solo !== null 
+                    ? `${Number(sensors.temp_solo).toFixed(1)}°C` 
+                    : sensors?.temp !== undefined && sensors?.temp !== null 
+                    ? `${(sensors.temp - 1.5).toFixed(1)}°C` 
+                    : '--'}
                 </span>
               </div>
             </div>
@@ -124,45 +128,56 @@ export function TelemetriaTab({ sensors, status }: TelemetriaTabProps) {
         <header className="flex justify-between items-center">
           <h2 className="font-title-md text-base text-on-surface font-bold uppercase tracking-wide">Sensores de Ambiente</h2>
         </header>
-        <div className="grid grid-cols-1 gap-2.5">
-          {/* Temperature Card */}
-          <div className="clay-card-dark rounded-3xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-amber-400 text-xl drop-shadow-md">device_thermostat</span>
-              </div>
-              <div>
-                <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Temperatura do Ar</p>
-                <p className="text-lg font-bold text-on-surface">
-                  {sensors?.temp !== undefined && sensors?.temp !== null ? `${sensors.temp}°C` : '--'}
-                </p>
+
+        <div className="grid grid-cols-3 gap-2.5 items-stretch">
+          {/* Left Column: Temperature & Humidity Cards */}
+          <div className="col-span-2 flex flex-col gap-2.5">
+            {/* Temperature Card */}
+            <div className="clay-card-dark rounded-3xl p-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
+                  <span className="material-symbols-outlined text-red-400 text-lg drop-shadow-md">device_thermostat</span>
+                </div>
+                <div>
+                  <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Temperatura do Ar</p>
+                  <p className="text-base font-bold text-on-surface">
+                    {sensors?.temp !== undefined && sensors?.temp !== null ? `${sensors.temp}°C` : '--'}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className={`font-mono-data text-xs ${isLive ? 'text-amber-400' : 'text-outline'}`}>
-                {isLive ? 'Estável' : '--'}
-              </span>
+
+            {/* Air Humidity Card */}
+            <div className="clay-card-dark rounded-3xl p-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
+                  <span className="material-symbols-outlined text-secondary text-lg drop-shadow-md">air</span>
+                </div>
+                <div>
+                  <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Umidade do Ar</p>
+                  <p className="text-base font-bold text-on-surface">
+                    {sensors?.u_amb !== undefined && sensors?.u_amb !== null ? `${sensors.u_amb}%` : '--'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Air Humidity Card */}
-          <div className="clay-card-dark rounded-3xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow">
-                <span className="material-symbols-outlined text-secondary text-xl drop-shadow-md">air</span>
-              </div>
-              <div>
-                <p className="font-label-caps text-[9px] text-outline uppercase font-bold">Umidade do Ar</p>
-                <p className="text-lg font-bold text-on-surface">
-                  {sensors?.u_amb !== undefined && sensors?.u_amb !== null ? `${sensors.u_amb}%` : '--'}
-                </p>
+          {/* Right Column: Minimalist Vertical LDR Light Card */}
+          <div className="col-span-1 clay-card-dark rounded-3xl p-3 flex flex-col items-center justify-between text-center relative overflow-hidden h-full">
+            <span className="font-label-caps text-[9px] text-outline uppercase font-bold tracking-wider">Luz (LDR)</span>
+
+            <div className="my-auto flex items-center justify-center py-2">
+              <div className={`w-14 h-14 rounded-2xl bg-surface-container-lowest flex items-center justify-center border border-outline-variant/30 inset-shadow transition-all ${
+                sensors?.ldr === 0 ? 'text-amber-400' : sensors?.ldr === 1 ? 'text-[#d2d7e1]' : 'text-outline'
+              }`}>
+                <span className="material-symbols-outlined text-3xl">
+                  {sensors?.ldr === 0 ? 'wb_sunny' : sensors?.ldr === 1 ? 'dark_mode' : 'light_mode'}
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className={`font-mono-data text-xs ${isLive ? 'text-secondary' : 'text-outline'}`}>
-                {isLive ? 'Estável' : '--'}
-              </span>
-            </div>
+
+            <div className="h-2"></div>
           </div>
 
         </div>
