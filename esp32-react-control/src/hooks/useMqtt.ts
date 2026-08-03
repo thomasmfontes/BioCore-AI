@@ -235,9 +235,12 @@ export function useMqtt(): MqttState {
 
       // 0. Chave SmartMode
       if (topic === TOPICS.smart) {
-        setSmartModeState(payloadStr === '1' || payloadStr === 'true')
+        const isSmart = payloadStr === '1' || payloadStr === 'true'
+        setSmartModeState(isSmart)
+        try { localStorage.setItem('biocore_smart_mode', String(isSmart)) } catch { /* ignore */ }
         return
       }
+
 
       // 1. Hortaliça ativa
       if (topic === TOPICS.hortalica) {
