@@ -47,14 +47,7 @@ export function usePlantVoice({
 
   // Gerador da fala de resumo do estado atual
   const speakCurrentSummary = useCallback(() => {
-    if (!sensors) {
-      if (status !== 'connected') {
-        plantVoiceService.speakKey('connection_error')
-      } else {
-        plantVoiceService.speakKey('connecting')
-      }
-      return
-    }
+    if (!sensors) return
 
     const dryThreshold = hortalica.u_solo - 12
     const isDry = sensors.u_solo < dryThreshold
@@ -70,28 +63,10 @@ export function usePlantVoice({
     } else {
       plantVoiceService.speakKey('greeting_ok')
     }
-  }, [sensors, status, hortalica])
+  }, [sensors, hortalica])
 
-  // 1. Reação a Mudanças no Status de Conexão (Connecting, Connected, Offline, Error, Disconnected)
+  // 1. Atualização do Status de Conexão
   useEffect(() => {
-    const prevStatus = prevStatusRef.current
-
-    if (status === 'connecting' && prevStatus !== 'connecting') {
-      // Só fala "Conectando..." se a conexão demorar mais de 2.5s (evita cortar/interromper o áudio na conexão rápida)
-      const timer = setTimeout(() => {
-        if (prevStatusRef.current === 'connecting') {
-          plantVoiceService.speakKey('connecting')
-        }
-      }, 2500)
-
-      return () => clearTimeout(timer)
-    } else if (
-      (status === 'offline' || status === 'error' || status === 'disconnected') &&
-      prevStatus !== status
-    ) {
-      plantVoiceService.speakKey('connection_error')
-    }
-
     prevStatusRef.current = status
   }, [status])
 

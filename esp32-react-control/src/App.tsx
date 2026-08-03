@@ -16,7 +16,7 @@ import { VoiceWidget } from './components/ui/VoiceWidget'
 export type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
 export default function App() {
-  const { status, sensors, lightStage, pumps, logs, hortalica, setLight, togglePump, alterarHortalica } = useMqtt()
+  const { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode } = useMqtt()
   const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica })
 
   // Garantir bloqueio em modo retrato (portrait) para o aplicativo PWA
@@ -43,26 +43,10 @@ export default function App() {
     setActiveTab(newTab)
   }
 
-  const [smartMode, setSmartModeState] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('biocore_smart_mode')
-      if (saved !== null) {
-        return saved === 'true'
-      }
-    } catch {
-      /* ignore */
-    }
-    return true
-  })
-
   const setSmartMode = (mode: boolean) => {
-    setSmartModeState(mode)
-    try {
-      localStorage.setItem('biocore_smart_mode', String(mode))
-    } catch {
-      /* ignore */
-    }
+    toggleSmartMode(mode)
   }
+
 
   const [showSelector, setShowSelector] = useState<boolean>(false)
 

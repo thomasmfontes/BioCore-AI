@@ -9,4 +9,6 @@ export const TOPICS = {
   light:     'biocore/cmd/luz',
   pump:      (n: 1 | 2 | 3 | 4) => `biocore/cmd/bomba${n}`,
   hortalica: 'biocore/config/hortalica',
+  smart:     'biocore/cmd/smart',
 } as const
+

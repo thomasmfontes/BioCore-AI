@@ -265,32 +265,6 @@ export const AUDIO_PHRASES: Record<VoiceAudioKey, AudioPhraseDefinition> = {
       },
     ],
   },
-  connection_error: {
-    key: 'connection_error',
-    priority: 'critical',
-    variations: [
-      {
-        text: 'Não estou conseguindo me comunicar com os sensores.',
-        audioUrl: '/audio/connection_error_1.wav',
-        legacyAudioUrl: '/audio/connection_error.wav',
-      },
-      {
-        text: 'Ops, perdi o sinal dos sensores! Verifique a conexão do dispositivo.',
-        audioUrl: '/audio/connection_error_2.wav',
-      },
-    ],
-  },
-  connecting: {
-    key: 'connecting',
-    priority: 'info',
-    variations: [
-      {
-        text: 'Olá! Conectando aos meus sensores para ler meu estado.',
-        audioUrl: '/audio/connecting_1.wav',
-        legacyAudioUrl: '/audio/connecting.wav',
-      },
-    ],
-  },
 }
 
 type VoiceStateListener = (state: VoiceState) => void

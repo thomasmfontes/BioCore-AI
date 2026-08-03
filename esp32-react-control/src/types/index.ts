@@ -37,8 +37,6 @@ export type VoiceAudioKey =
   | 'light_off'
   | 'temp_hot'
   | 'temp_cold'
-  | 'connection_error'
-  | 'connecting'
 
 
 

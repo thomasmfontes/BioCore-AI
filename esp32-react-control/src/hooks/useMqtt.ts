@@ -60,10 +60,13 @@ export interface MqttState {
   pumps: [boolean, boolean, boolean, boolean]
   logs: LogEntry[]
   hortalica: DadosPlanta
+  smartMode: boolean
   setLight: (stage: LightStage) => void
   togglePump: (index: 0 | 1 | 2 | 3) => void
   alterarHortalica: (chave: ChavePlanta) => void
+  toggleSmartMode: (mode: boolean) => void
 }
+
 
 let _id = 0
 
@@ -113,6 +116,24 @@ export function useMqtt(): MqttState {
   })
 
   const [logs, setLogs]             = useState<LogEntry[]>([])
+
+  const [smartMode, setSmartModeState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('biocore_smart_mode')
+      if (saved !== null) return saved === 'true'
+    } catch { /* ignore */ }
+    return true
+  })
+
+
+  const toggleSmartMode = useCallback((mode: boolean) => {
+    clientRef.current?.publish(TOPICS.smart, mode ? '1' : '0', { retain: true })
+    setSmartModeState(mode)
+    try {
+      localStorage.setItem('biocore_smart_mode', String(mode))
+    } catch { /* ignore */ }
+    setLogs(prev => pushLog(makeLog(`BioCore AI → ${mode ? 'ATIVADO' : 'DESATIVADO'}`), prev))
+  }, [])
   
   const [hortalica, setHortalica]   = useState<DadosPlanta>(() => {
     try {
@@ -202,12 +223,21 @@ export function useMqtt(): MqttState {
       client.subscribe(TOPICS.pump(2))
       client.subscribe(TOPICS.pump(3))
       client.subscribe(TOPICS.pump(4))
+      client.subscribe(TOPICS.smart)
+      // Publica estados iniciais retidos
+      client.publish(TOPICS.smart, smartMode ? '1' : '0', { retain: true })
       setLogs(prev => pushLog(makeLog('Hardware online'), prev))
     })
 
 
     client.on('message', (topic, payload) => {
       const payloadStr = payload.toString()
+
+      // 0. Chave SmartMode
+      if (topic === TOPICS.smart) {
+        setSmartModeState(payloadStr === '1' || payloadStr === 'true')
+        return
+      }
 
       // 1. Hortaliça ativa
       if (topic === TOPICS.hortalica) {
@@ -272,5 +302,6 @@ export function useMqtt(): MqttState {
     return () => { client.end(true) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { status, sensors, lightStage, pumps, logs, hortalica, setLight, togglePump, alterarHortalica }
+  return { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode }
 }
+
