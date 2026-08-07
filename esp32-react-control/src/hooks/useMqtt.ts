@@ -476,9 +476,9 @@ export function useMqtt(): MqttState {
           // O ESP32 físico acabou de responder! Atualiza para ONLINE no Supabase:
           atualizarStatusDispositivo('ONLINE')
           salvarTelemetria(dataParsed)
-          if (typeof dataParsed.sol_ms === 'number') {
-            const solMs = dataParsed.sol_ms
-            const ledMs = Math.round(getTempoLedMs())
+          if (typeof dataParsed.sol_ms === 'number' || typeof dataParsed.led_ms === 'number') {
+            const solMs = dataParsed.sol_ms ?? 0
+            const ledMs = typeof dataParsed.led_ms === 'number' ? dataParsed.led_ms : Math.round(getTempoLedMs())
             const metaHs = hortalicaRef.current.fotoperiodo
             const metaMs = metaHs * 3600000
             const concluida = (solMs + ledMs) >= metaMs

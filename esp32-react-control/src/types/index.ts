@@ -8,6 +8,7 @@ export interface SensorData {
   u_amb: number
   ldr?: number
   sol_ms?: number
+  led_ms?: number
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'offline'
