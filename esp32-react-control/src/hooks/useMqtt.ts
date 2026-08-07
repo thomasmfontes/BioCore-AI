@@ -336,7 +336,10 @@ export function useMqtt(): MqttState {
     getCultivoAtivo().then(cultivo => {
       if (cultivo) {
         if (typeof cultivo.st_modo_inteligente === 'boolean') {
-          setSmartModeState(cultivo.st_modo_inteligente)
+          const mode = cultivo.st_modo_inteligente
+          setSmartModeState(mode)
+          try { localStorage.setItem('biocore_smart_mode', String(mode)) } catch { /* ignore */ }
+          clientRef.current?.publish(TOPICS.smart, mode ? '1' : '0', { retain: true })
         }
         if (cultivo.cd_hortalica) {
           const cd = cultivo.cd_hortalica.toUpperCase()
@@ -376,8 +379,6 @@ export function useMqtt(): MqttState {
       client.subscribe(TOPICS.pump(3))
       client.subscribe(TOPICS.pump(4))
       client.subscribe(TOPICS.smart)
-      // Publica estados iniciais retidos
-      client.publish(TOPICS.smart, smartMode ? '1' : '0', { retain: true })
       setLogs(prev => pushLog(makeLog('Hardware online'), prev))
     })
 
