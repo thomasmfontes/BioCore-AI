@@ -54,17 +54,29 @@ export async function getControleLuzHoje(deviceId: string = DEVICE_ID): Promise<
 }
 
 /**
- * Atualiza ou insere o registro de luz diária no Supabase
+ * Atualiza ou insere o registro de luz diária no Supabase com mesclagem segura
  */
 export async function salvarControleLuzHoje(dados: Partial<ControleLuzDiaria>, deviceId: string = DEVICE_ID) {
   const hoje = new Date().toISOString().split('T')[0]
 
   try {
+    // 1. Busca linha existente do dia para não zerar fotoperíodo ou contadores acumulados
+    const { data: linhaExistente } = await supabase
+      .from('t_controle_luz_diaria')
+      .select('*')
+      .eq('id_device', deviceId)
+      .eq('dt_referencia', hoje)
+      .maybeSingle()
+
     const payload = {
       id_device: deviceId,
       dt_referencia: hoje,
+      vl_fotoperiodo_meta_hs: dados.vl_fotoperiodo_meta_hs ?? linhaExistente?.vl_fotoperiodo_meta_hs ?? 14,
+      vl_tempo_sol_acumulado_ms: dados.vl_tempo_sol_acumulado_ms ?? linhaExistente?.vl_tempo_sol_acumulado_ms ?? 0,
+      vl_tempo_led_acumulado_ms: dados.vl_tempo_led_acumulado_ms ?? linhaExistente?.vl_tempo_led_acumulado_ms ?? 0,
+      vl_estagio_luz_atual: dados.vl_estagio_luz_atual ?? linhaExistente?.vl_estagio_luz_atual ?? 0,
+      st_compensacao_concluida: dados.st_compensacao_concluida ?? linhaExistente?.st_compensacao_concluida ?? false,
       dt_ultima_atualizacao: new Date().toISOString(),
-      ...dados,
     }
 
     const { data, error } = await supabase
