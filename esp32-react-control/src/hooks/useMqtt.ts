@@ -2,6 +2,17 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import mqtt from 'mqtt'
 import { MQTT_CONFIG, TOPICS } from '../config/mqtt'
 import type { SensorData, ConnectionStatus, LightStage, LogEntry } from '../types'
+import { 
+  salvarTelemetria, 
+  salvarControleLuzHoje, 
+  registrarAtuacao, 
+  iniciarAtuacao,
+  finalizarAtuacao,
+  getCultivoAtivo, 
+  salvarCultivoAtivo, 
+  getHistoricoEventos,
+  atualizarStatusDispositivo
+} from '../services/supabaseService'
 
 // ─── Banco de Hortaliças ─────────────────────────────────────────────────────
 export type ChavePlanta = 'alface' | 'tomate' | 'manjericao'
@@ -15,6 +26,9 @@ export interface DadosPlanta {
   N: number            // mg/kg nitrogênio alvo
   P: number            // mg/kg fósforo alvo
   K: number            // mg/kg potássio alvo
+  temp_amb: number     // °C temperatura ambiente alvo
+  u_amb: number        // % umidade ambiente alvo
+  temp_solo: number    // °C temperatura solo alvo
   descricaoIA: string  // texto contextual exibido no Modo Inteligente
   imagemUrl: string    // foto real de fundo
 }
@@ -25,20 +39,26 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     nome: 'Alface Crespa',
     emoji: '🥬',
     imagemUrl: '/alface-crespa.jpg',
-    u_solo: 65,
-    fotoperiodo: 4,
-    N: 45, P: 12, K: 30,
-    descricaoIA: 'Meta de 4h de sol (ameno/filtrado). A IA monitora a luz solar diurna e aplica suplementação LED apenas se houver déficit.',
+    u_solo: 70,
+    fotoperiodo: 14,
+    N: 150, P: 40, K: 180,
+    temp_amb: 20.0,
+    u_amb: 65,
+    temp_solo: 18.0,
+    descricaoIA: 'Folhosa de clima ameno (20°C). Exige solo bem úmido (70%), NPK foliar (150-40-180 mg/kg) e fotoperíodo de 14h.',
   },
   tomate: {
     chave: 'tomate',
     nome: 'Tomate Cereja',
     emoji: '🍅',
     imagemUrl: '/tomate-cereja.jpg',
-    u_solo: 60,
-    fotoperiodo: 8,
-    N: 50, P: 20, K: 40,
-    descricaoIA: 'Meta de 8h de sol pleno. Suplementação LED inteligente calculada ao anoitecer para cobrir o déficit de luz do dia.',
+    u_solo: 65,
+    fotoperiodo: 16,
+    N: 180, P: 60, K: 250,
+    temp_amb: 25.0,
+    u_amb: 60,
+    temp_solo: 21.0,
+    descricaoIA: 'Frutífera de alto DLI (16h) e temperatura (25°C). Elevado consumo de Potássio e Nitrogênio (180-60-250 mg/kg).',
   },
   manjericao: {
     chave: 'manjericao',
@@ -46,9 +66,12 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     emoji: '🌿',
     imagemUrl: '/manjericao.jpg',
     u_solo: 55,
-    fotoperiodo: 6,
-    N: 35, P: 10, K: 25,
-    descricaoIA: 'Meta de 6h de sol direto (manhã/tarde). A IA calcula a iluminação solar recebida e completa com LED se necessário.',
+    fotoperiodo: 14,
+    N: 120, P: 35, K: 160,
+    temp_amb: 24.0,
+    u_amb: 60,
+    temp_solo: 22.0,
+    descricaoIA: 'Erva aromática termófila (24°C). Solo drenado (55%), NPK para óleos essenciais (120-35-160 mg/kg) e fotoperíodo de 14h.',
   },
 }
 
@@ -68,7 +91,6 @@ export interface MqttState {
   resetWifi: () => void
 }
 
-
 let _id = 0
 
 function makeLog(message: string): LogEntry {
@@ -79,53 +101,62 @@ function makeLog(message: string): LogEntry {
   }
 }
 
-function pushLog(entry: LogEntry, prev: LogEntry[]): LogEntry[] {
-  return [entry, ...prev].slice(0, 10)
+function pushLog(log: LogEntry, prev: LogEntry[]): LogEntry[] {
+  // Evita duplicatas consecutivas registradas no mesmo segundo com a mesma mensagem
+  if (prev.length > 0 && prev[0].time === log.time && prev[0].message === log.message) {
+    return prev
+  }
+  return [log, ...prev].slice(0, 50)
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+const STORAGE_LUZ_KEY    = 'biocore_luz_stage'
+const STORAGE_BOMBAS_KEY = 'biocore_bombas_state'
 const STORAGE_PLANTA_KEY = 'biocore_planta_ativa'
-const STORAGE_LUZ_KEY    = 'biocore_luz_ativa'
-const STORAGE_BOMBAS_KEY = 'biocore_bombas_ativas'
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useMqtt(): MqttState {
   const [status, setStatus]         = useState<ConnectionStatus>('disconnected')
   const [sensors, setSensors]       = useState<SensorData | null>(null)
   
-  const [lightStage, setLightStageState] = useState<LightStage>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_LUZ_KEY)
-      if (saved !== null) {
-        const parsed = Number(saved) as LightStage
-        if (!isNaN(parsed) && [0, 1, 2, 3].includes(parsed)) return parsed
-      }
-    } catch { /* ignore */ }
-    return 0
-  })
-
-  const [pumps, setPumpsState]       = useState<[boolean, boolean, boolean, boolean]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_BOMBAS_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length === 4) {
-          return parsed as [boolean, boolean, boolean, boolean]
-        }
-      }
-    } catch { /* ignore */ }
-    return [false, false, false, false]
-  })
-
-  const [logs, setLogs]             = useState<LogEntry[]>([])
-
   const [smartMode, setSmartModeState] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('biocore_smart_mode')
-      if (saved !== null) return saved === 'true'
-    } catch { /* ignore */ }
-    return true
+      return saved === null ? true : saved === 'true'
+    } catch {
+      return true
+    }
   })
 
+  const [lightStage, setLightStageState] = useState<LightStage>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_LUZ_KEY)
+      return saved !== null ? (Number(saved) as LightStage) : 0
+    } catch {
+      return 0
+    }
+  })
+
+  const [pumps, setPumpsState]      = useState<[boolean, boolean, boolean, boolean]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_BOMBAS_KEY)
+      return saved ? JSON.parse(saved) : [false, false, false, false]
+    } catch {
+      return [false, false, false, false]
+    }
+  })
+
+  const pumpsRef = useRef<[boolean, boolean, boolean, boolean]>(pumps)
+  const pumpStartTimesRef = useRef<(number | null)[]>([null, null, null, null])
+  const pumpActiveRowIdsRef = useRef<(number | null)[]>([null, null, null, null])
+
+  const activeLightRowIdRef = useRef<number | null>(null)
+  const activeLightStartTimeRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    pumpsRef.current = pumps
+  }, [pumps])
+
+  const [logs, setLogs]             = useState<LogEntry[]>([])
 
   const toggleSmartMode = useCallback((mode: boolean) => {
     clientRef.current?.publish(TOPICS.smart, mode ? '1' : '0', { retain: true })
@@ -133,6 +164,11 @@ export function useMqtt(): MqttState {
     try {
       localStorage.setItem('biocore_smart_mode', String(mode))
     } catch { /* ignore */ }
+
+    // Salva no Supabase (Garante que nunca resete ao abrir o app!)
+    salvarCultivoAtivo(mode)
+    registrarAtuacao('BIOCORE_AI', undefined, mode ? 'Modo Autônomo ATIVADO' : 'Modo Autônomo DESATIVADO')
+
     setLogs(prev => pushLog(makeLog(`BioCore AI → ${mode ? 'ATIVADO' : 'DESATIVADO'}`), prev))
   }, [])
   
@@ -157,25 +193,63 @@ export function useMqtt(): MqttState {
       localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
     } catch { /* ignore */ }
 
+    salvarControleLuzHoje({ vl_estagio_luz_atual: stage })
     const labels = ['Desligada', '25%', '50%', '100%']
+
+    // Se a luz estava ligada anteriormente, finaliza a atuação anterior preenchendo dt_fim e vl_duracao_ms
+    if (activeLightStartTimeRef.current) {
+      const duracao = Date.now() - activeLightStartTimeRef.current
+      finalizarAtuacao(activeLightRowIdRef.current, duracao, 'LED_PWM', `Manual - Brilho em ${labels[stage]}`, activeLightStartTimeRef.current)
+      activeLightRowIdRef.current = null
+      activeLightStartTimeRef.current = null
+    }
+
+    // Se o novo estágio for ligado (> 0), inicia nova atuação deixando dt_fim = NULL enquanto ativa
+    if (stage > 0) {
+      activeLightStartTimeRef.current = Date.now()
+      iniciarAtuacao('LED_PWM', `Manual - Brilho em ${labels[stage]}`).then(rowId => {
+        activeLightRowIdRef.current = rowId
+      })
+    }
+
     setLogs(prev => pushLog(makeLog(`Luz → ${labels[stage]}`), prev))
   }, [])
 
   const togglePump = useCallback((index: 0 | 1 | 2 | 3) => {
-    setPumpsState(prev => {
-      const newValue = !prev[index]
-      const next = [...prev] as [boolean, boolean, boolean, boolean]
-      next[index] = newValue
+    const currentValue = pumpsRef.current[index]
+    const newValue = !currentValue
 
-      clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0', { retain: true })
-      try {
-        localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
-      } catch { /* ignore */ }
+    const next = [...pumpsRef.current] as [boolean, boolean, boolean, boolean]
+    next[index] = newValue
+    setPumpsState(next)
 
-      const names = ['Bomba N', 'Bomba P', 'Bomba K', 'Bomba Água']
-      setLogs(p => pushLog(makeLog(`${names[index]} → ${newValue ? 'ON' : 'OFF'}`), p))
-      return next
-    })
+    clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0', { retain: true })
+    try {
+      localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
+    } catch { /* ignore */ }
+
+    const names = ['Bomba N', 'Bomba P', 'Bomba K', 'Bomba Água']
+    const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
+
+    if (newValue) {
+      // 🟢 LIGOU: Insere linha no Supabase com dt_inicio = NOW(), dt_fim = NULL enquanto ligada!
+      pumpStartTimesRef.current[index] = Date.now()
+      iniciarAtuacao(tpAtuadores[index], 'Manual (Aplicativo)').then(rowId => {
+        pumpActiveRowIdsRef.current[index] = rowId
+      })
+    } else {
+      // 🔴 DESLIGOU: Atualiza a linha existente no Supabase preenchendo dt_fim = NOW() e vl_duracao_ms!
+      const inicioMs = pumpStartTimesRef.current[index] || Date.now()
+      const duracaoMs = Date.now() - inicioMs
+      const activeRowId = pumpActiveRowIdsRef.current[index]
+
+      pumpStartTimesRef.current[index] = null
+      pumpActiveRowIdsRef.current[index] = null
+
+      finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[index], 'Manual (Aplicativo)', inicioMs)
+    }
+
+    setLogs(p => pushLog(makeLog(`${names[index]} → ${newValue ? 'ON' : 'OFF'}`), p))
   }, [])
 
   const alterarHortalica = useCallback((chave: ChavePlanta) => {
@@ -187,6 +261,16 @@ export function useMqtt(): MqttState {
     } catch {
       /* ignore */
     }
+
+    // Mapeamento correto com as chaves primárias da tabela t_hortalica no Supabase
+    const mapaSupabase: Record<ChavePlanta, string> = {
+      alface: 'ALFACE',
+      manjericao: 'MANJERICAO',
+      tomate: 'TOMATE_CEREJA'
+    }
+
+    // Salva a alteração no Supabase
+    salvarCultivoAtivo(smartMode, mapaSupabase[chave])
 
     // Publica config JSON completo para o ESP32
     const payload = JSON.stringify({
@@ -200,11 +284,36 @@ export function useMqtt(): MqttState {
 
     clientRef.current?.publish(TOPICS.hortalica, payload, { retain: true })
     setLogs(prev => pushLog(makeLog(`Hortaliça → ${planta.nome} (config enviada)`), prev))
-  }, [])
+  }, [smartMode])
 
   useEffect(() => {
     setStatus('connecting')
-    setLogs([makeLog('Conectando ao broker...')])
+    setLogs([makeLog('Sincronizando com Supabase e broker MQTT...')])
+
+    // 1. Restaura o estado persistente do Supabase no Boot
+    getCultivoAtivo().then(cultivo => {
+      if (cultivo) {
+        if (typeof cultivo.st_modo_inteligente === 'boolean') {
+          setSmartModeState(cultivo.st_modo_inteligente)
+        }
+        if (cultivo.cd_hortalica) {
+          const cd = cultivo.cd_hortalica.toUpperCase()
+          let keyFound: ChavePlanta = 'alface'
+          if (cd.includes('TOMATE')) keyFound = 'tomate'
+          else if (cd.includes('MANJERICAO')) keyFound = 'manjericao'
+          else if (cd.includes('ALFACE')) keyFound = 'alface'
+
+          setHortalica(BANCO_HORTALICAS[keyFound])
+        }
+      }
+    })
+
+    // 2. Restaura histórico persistente de eventos
+    getHistoricoEventos().then(eventos => {
+      if (eventos && eventos.length > 0) {
+        setLogs(eventos)
+      }
+    })
 
     const client = mqtt.connect(MQTT_CONFIG.url, {
       username:        MQTT_CONFIG.username,
@@ -264,7 +373,14 @@ export function useMqtt(): MqttState {
       if (topic === TOPICS.light) {
         const stage = Number(payloadStr) as LightStage
         if (!isNaN(stage) && [0, 1, 2, 3].includes(stage)) {
-          setLightStageState(stage)
+          setLightStageState(prev => {
+            if (prev !== stage) {
+              const labels = ['Desligada', '25%', '50%', '100%']
+              registrarAtuacao('LED_PWM', undefined, `Suplementação/Ajuste de Luz (${labels[stage]})`)
+              salvarControleLuzHoje({ vl_estagio_luz_atual: stage })
+            }
+            return stage
+          })
           try {
             localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
           } catch { /* ignore */ }
@@ -282,6 +398,21 @@ export function useMqtt(): MqttState {
             if (prev[idx] === isON) return prev
             const next = [...prev] as [boolean, boolean, boolean, boolean]
             next[idx] = isON
+
+            const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
+            
+            if (isON) {
+              pumpStartTimesRef.current[idx] = Date.now()
+            } else {
+              // Quando o ESP32 desliga a bomba, calcula duração e grava 1 evento completo no Supabase
+              const inicioMs = pumpStartTimesRef.current[idx] || Date.now()
+              const fimMs = Date.now()
+              const duracaoMs = fimMs - inicioMs
+              pumpStartTimesRef.current[idx] = null
+
+              registrarAtuacao(tpAtuadores[idx], duracaoMs, 'Acionamento Autônomo (BioCore AI)', inicioMs, fimMs)
+            }
+
             try {
               localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
             } catch { /* ignore */ }
@@ -291,16 +422,23 @@ export function useMqtt(): MqttState {
         return
       }
 
-      // 4. Telemetria dos Sensores
+      // 4. Telemetria dos Sensores do ESP32 Físico
       if (topic === TOPICS.data) {
         try {
-          setSensors(JSON.parse(payloadStr) as SensorData)
+          const dataParsed = JSON.parse(payloadStr) as SensorData
+          setSensors(dataParsed)
+          // O ESP32 físico acabou de responder! Atualiza para ONLINE no Supabase:
+          atualizarStatusDispositivo('ONLINE')
+          salvarTelemetria(dataParsed)
+          if (typeof dataParsed.sol_ms === 'number') {
+            salvarControleLuzHoje({ vl_tempo_sol_acumulado_ms: dataParsed.sol_ms })
+          }
         } catch { /* payload malformado */ }
       }
     })
 
-    client.on('offline',   () => { setStatus('offline');  setLogs(prev => pushLog(makeLog('Hardware offline'), prev)) })
-    client.on('error',     () => { setStatus('error');    setLogs(prev => pushLog(makeLog('Erro de conexão'), prev)) })
+    client.on('offline',   () => { setStatus('offline');  atualizarStatusDispositivo('OFFLINE'); setLogs(prev => pushLog(makeLog('Hardware offline'), prev)) })
+    client.on('error',     () => { setStatus('error');    atualizarStatusDispositivo('OFFLINE'); setLogs(prev => pushLog(makeLog('Erro de conexão'), prev)) })
     client.on('reconnect', () => { setStatus('connecting') })
 
     return () => { client.end(true) }
