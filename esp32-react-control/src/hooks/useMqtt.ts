@@ -183,6 +183,25 @@ export function useMqtt(): MqttState {
     }
     return BANCO_HORTALICAS.alface
   })
+
+  const hortalicaRef = useRef<DadosPlanta>(hortalica)
+  useEffect(() => {
+    hortalicaRef.current = hortalica
+  }, [hortalica])
+
+  const lightStageRef = useRef<LightStage>(lightStage)
+  useEffect(() => {
+    lightStageRef.current = lightStage
+  }, [lightStage])
+
+  // Rastreamento em tempo real do acúmulo de tempo de LED ativo
+  const ledStartTimeRef = useRef<number | null>(lightStage > 0 ? Date.now() : null)
+  const ledAccumulatedMsRef = useRef<number>(0)
+
+  const getTempoLedMs = useCallback(() => {
+    const decorrido = ledStartTimeRef.current ? (Date.now() - ledStartTimeRef.current) : 0
+    return ledAccumulatedMsRef.current + decorrido
+  }, [])
   
   const clientRef                   = useRef<mqtt.MqttClient | null>(null)
 
@@ -193,7 +212,25 @@ export function useMqtt(): MqttState {
       localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
     } catch { /* ignore */ }
 
-    salvarControleLuzHoje({ vl_estagio_luz_atual: stage })
+    // Atualiza contadores de tempo LED
+    if (stage > 0) {
+      if (ledStartTimeRef.current === null) {
+        ledStartTimeRef.current = Date.now()
+      }
+    } else {
+      if (ledStartTimeRef.current !== null) {
+        ledAccumulatedMsRef.current += (Date.now() - ledStartTimeRef.current)
+        ledStartTimeRef.current = null
+      }
+    }
+
+    const currentLedMs = getTempoLedMs()
+    salvarControleLuzHoje({
+      vl_estagio_luz_atual: stage,
+      vl_fotoperiodo_meta_hs: hortalicaRef.current.fotoperiodo,
+      vl_tempo_led_acumulado_ms: Math.round(currentLedMs),
+    })
+
     const labels = ['Desligada', '25%', '50%', '100%']
 
     // Se a luz estava ligada anteriormente, finaliza a atuação anterior preenchendo dt_fim e vl_duracao_ms
@@ -213,7 +250,7 @@ export function useMqtt(): MqttState {
     }
 
     setLogs(prev => pushLog(makeLog(`Luz → ${labels[stage]}`), prev))
-  }, [])
+  }, [getTempoLedMs])
 
   const togglePump = useCallback((index: 0 | 1 | 2 | 3) => {
     const currentValue = pumpsRef.current[index]
@@ -271,6 +308,11 @@ export function useMqtt(): MqttState {
 
     // Salva a alteração no Supabase
     salvarCultivoAtivo(smartMode, mapaSupabase[chave])
+    salvarControleLuzHoje({
+      vl_fotoperiodo_meta_hs: planta.fotoperiodo,
+      vl_tempo_led_acumulado_ms: Math.round(getTempoLedMs()),
+      vl_estagio_luz_atual: lightStageRef.current
+    })
 
     // Publica config JSON completo para o ESP32
     const payload = JSON.stringify({
@@ -284,7 +326,7 @@ export function useMqtt(): MqttState {
 
     clientRef.current?.publish(TOPICS.hortalica, payload, { retain: true })
     setLogs(prev => pushLog(makeLog(`Hortaliça → ${planta.nome} (config enviada)`), prev))
-  }, [smartMode])
+  }, [smartMode, getTempoLedMs])
 
   useEffect(() => {
     setStatus('connecting')
@@ -431,7 +473,19 @@ export function useMqtt(): MqttState {
           atualizarStatusDispositivo('ONLINE')
           salvarTelemetria(dataParsed)
           if (typeof dataParsed.sol_ms === 'number') {
-            salvarControleLuzHoje({ vl_tempo_sol_acumulado_ms: dataParsed.sol_ms })
+            const solMs = dataParsed.sol_ms
+            const ledMs = Math.round(getTempoLedMs())
+            const metaHs = hortalicaRef.current.fotoperiodo
+            const metaMs = metaHs * 3600000
+            const concluida = (solMs + ledMs) >= metaMs
+
+            salvarControleLuzHoje({
+              vl_tempo_sol_acumulado_ms: solMs,
+              vl_tempo_led_acumulado_ms: ledMs,
+              vl_fotoperiodo_meta_hs: metaHs,
+              st_compensacao_concluida: concluida,
+              vl_estagio_luz_atual: lightStageRef.current,
+            })
           }
         } catch { /* payload malformado */ }
       }
