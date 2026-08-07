@@ -16,7 +16,7 @@ import { VoiceWidget } from './components/ui/VoiceWidget'
 export type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
 export default function App() {
-  const { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode } = useMqtt()
+  const { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi } = useMqtt()
   const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica })
 
   // Garantir bloqueio em modo retrato (portrait) para o aplicativo PWA
@@ -62,6 +62,7 @@ export default function App() {
         isSpeaking={voice.isSpeaking}
         toggleVoice={voice.toggleVoice}
         speakSummary={voice.speakSummary}
+        resetWifi={resetWifi}
       />
 
       {/* Conteúdo Principal com Transição Direcional Suave */}
@@ -104,6 +105,7 @@ export default function App() {
               pumps={pumps}
               togglePump={togglePump}
               hortalica={hortalica}
+              resetWifi={resetWifi}
             />
           )}
 

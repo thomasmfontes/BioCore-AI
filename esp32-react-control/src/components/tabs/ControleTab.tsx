@@ -11,6 +11,7 @@ interface ControleTabProps {
   pumps: boolean[];
   togglePump: (index: 0 | 1 | 2 | 3) => void;
   hortalica: DadosPlanta;
+  resetWifi?: () => void;
 }
 
 export function ControleTab({
@@ -22,6 +23,7 @@ export function ControleTab({
   pumps,
   togglePump,
   hortalica,
+  resetWifi,
 }: ControleTabProps) {
   const isConnecting = status === 'connecting' || (status === 'connected' && offline);
 
@@ -308,5 +310,3 @@ export function ControleTab({
     </div>
   );
 }
-
-

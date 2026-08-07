@@ -10,5 +10,6 @@ export const TOPICS = {
   pump:      (n: 1 | 2 | 3 | 4) => `biocore/cmd/bomba${n}`,
   hortalica: 'biocore/config/hortalica',
   smart:     'biocore/cmd/smart',
+  resetWifi: 'biocore/cmd/reset_wifi',
 } as const
 

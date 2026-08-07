@@ -60,7 +60,7 @@ export function VoiceWidget({
   if (!displayMessage) return null
 
   return (
-    <div className="fixed top-[calc(4.5rem+env(safe-area-inset-top))] left-4 right-4 md:left-auto md:right-8 md:w-[420px] z-50 pointer-events-auto">
+    <div className="fixed top-[calc(5rem+env(safe-area-inset-top))] left-4 right-4 md:left-auto md:right-8 md:w-[420px] z-40 pointer-events-auto">
       <div
         className={`bg-[#181c1f]/95 backdrop-blur-xl border border-primary/30 rounded-2xl p-3 shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(44,184,116,0.15)] flex items-center gap-3.5 transition-all duration-300 ${
           isExiting ? 'animate-toastExit' : 'animate-toastEnter'

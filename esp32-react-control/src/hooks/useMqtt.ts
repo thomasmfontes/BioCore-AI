@@ -26,9 +26,9 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     emoji: '🥬',
     imagemUrl: '/alface-crespa.jpg',
     u_solo: 65,
-    fotoperiodo: 16,
+    fotoperiodo: 4,
     N: 45, P: 12, K: 30,
-    descricaoIA: 'Fotoperíodo de 16h ativo. Irrigação acionada ao atingir 55% de umidade. Dosagem NPK suave em andamento.',
+    descricaoIA: 'Meta de 4h de sol (ameno/filtrado). A IA monitora a luz solar diurna e aplica suplementação LED apenas se houver déficit.',
   },
   tomate: {
     chave: 'tomate',
@@ -36,9 +36,9 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     emoji: '🍅',
     imagemUrl: '/tomate-cereja.jpg',
     u_solo: 60,
-    fotoperiodo: 14,
+    fotoperiodo: 8,
     N: 50, P: 20, K: 40,
-    descricaoIA: 'Fotoperíodo ajustado para 14h. Solo mantido em 60% de umidade. Carga NPK elevada para floração intensa.',
+    descricaoIA: 'Meta de 8h de sol pleno. Suplementação LED inteligente calculada ao anoitecer para cobrir o déficit de luz do dia.',
   },
   manjericao: {
     chave: 'manjericao',
@@ -46,9 +46,9 @@ export const BANCO_HORTALICAS: Record<ChavePlanta, DadosPlanta> = {
     emoji: '🌿',
     imagemUrl: '/manjericao.jpg',
     u_solo: 55,
-    fotoperiodo: 12,
+    fotoperiodo: 6,
     N: 35, P: 10, K: 25,
-    descricaoIA: 'Ciclo solar de 12h simulado. Solo leve em 55% de umidade. Nutrição NPK reduzida para aroma e densidade foliar.',
+    descricaoIA: 'Meta de 6h de sol direto (manhã/tarde). A IA calcula a iluminação solar recebida e completa com LED se necessário.',
   },
 }
 
@@ -65,6 +65,7 @@ export interface MqttState {
   togglePump: (index: 0 | 1 | 2 | 3) => void
   alterarHortalica: (chave: ChavePlanta) => void
   toggleSmartMode: (mode: boolean) => void
+  resetWifi: () => void
 }
 
 
@@ -305,6 +306,12 @@ export function useMqtt(): MqttState {
     return () => { client.end(true) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode }
+  const resetWifi = useCallback(() => {
+    if (!clientRef.current || !clientRef.current.connected) return
+    clientRef.current.publish(TOPICS.resetWifi, '1')
+    setLogs(prev => pushLog(makeLog('Comando de reset de Wi-Fi enviado ao vaso'), prev))
+  }, [])
+
+  return { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi }
 }
 
