@@ -18,7 +18,7 @@ export type Tab = 'cultivo' | 'inteligencia' | 'telemetria' | 'camera' | 'contro
 
 export default function App() {
   const { status, sensors, lightStage, pumps, logs, hortalica, smartMode, lastRegaMs, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi } = useMqtt()
-  const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica })
+  const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica, smartMode })
 
   // Garantir bloqueio em modo retrato (portrait) para o aplicativo PWA
   useEffect(() => {

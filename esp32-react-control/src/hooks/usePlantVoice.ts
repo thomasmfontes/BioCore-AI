@@ -9,6 +9,7 @@ interface UsePlantVoiceParams {
   lightStage: LightStage
   pumps: [boolean, boolean, boolean, boolean]
   hortalica: DadosPlanta
+  smartMode?: boolean
 }
 
 export function usePlantVoice({
@@ -17,6 +18,7 @@ export function usePlantVoice({
   lightStage,
   pumps,
   hortalica,
+  smartMode = true,
 }: UsePlantVoiceParams) {
   const [voiceState, setVoiceState] = useState<VoiceState>(plantVoiceService.getState())
 
@@ -70,56 +72,47 @@ export function usePlantVoice({
     prevStatusRef.current = status
   }, [status])
 
-  // 2. Reação a Mudanças nas Bombas (Nutrientes N, P, K e Água) - Apenas após hidratação inicial
+  // 2. Reação a Mudanças nas Bombas (No Modo Manual ou por acionamento direto)
   useEffect(() => {
     const prevPumps = prevPumpsRef.current
 
     if (isHydratedRef.current) {
-      // Bomba 0: Nitrogênio (N)
-      if (prevPumps[0] !== pumps[0]) {
-        if (pumps[0]) {
-          plantVoiceService.speakKey('pump_n')
-        } else {
-          plantVoiceService.speakKey('pump_n_off')
+      // Fala de acionamento das bombas (especialmente ativo no modo manual)
+      if (!smartMode) {
+        // Bomba 0: Nitrogênio (N)
+        if (prevPumps[0] !== pumps[0]) {
+          if (pumps[0]) plantVoiceService.speakKey('pump_n')
+          else plantVoiceService.speakKey('pump_n_off')
         }
-      }
 
-      // Bomba 1: Fósforo (P)
-      if (prevPumps[1] !== pumps[1]) {
-        if (pumps[1]) {
-          plantVoiceService.speakKey('pump_p')
-        } else {
-          plantVoiceService.speakKey('pump_p_off')
+        // Bomba 1: Fósforo (P)
+        if (prevPumps[1] !== pumps[1]) {
+          if (pumps[1]) plantVoiceService.speakKey('pump_p')
+          else plantVoiceService.speakKey('pump_p_off')
         }
-      }
 
-      // Bomba 2: Potássio (K)
-      if (prevPumps[2] !== pumps[2]) {
-        if (pumps[2]) {
-          plantVoiceService.speakKey('pump_k')
-        } else {
-          plantVoiceService.speakKey('pump_k_off')
+        // Bomba 2: Potássio (K)
+        if (prevPumps[2] !== pumps[2]) {
+          if (pumps[2]) plantVoiceService.speakKey('pump_k')
+          else plantVoiceService.speakKey('pump_k_off')
         }
-      }
 
-      // Bomba 3: Água H2O
-      if (prevPumps[3] !== pumps[3]) {
-        if (pumps[3]) {
-          plantVoiceService.speakKey('pump_on')
-        } else {
-          plantVoiceService.speakKey('pump_off')
+        // Bomba 3: Água H2O
+        if (prevPumps[3] !== pumps[3]) {
+          if (pumps[3]) plantVoiceService.speakKey('pump_on')
+          else plantVoiceService.speakKey('pump_off')
         }
       }
     }
 
     prevPumpsRef.current = pumps
-  }, [pumps])
+  }, [pumps, smartMode])
 
-  // 3. Reação a Mudanças na Iluminação - Apenas após hidratação inicial
+  // 3. Reação a Mudanças na Iluminação (No Modo Manual ou por acionamento direto)
   useEffect(() => {
     const prevLight = prevLightStageRef.current
     if (prevLight !== lightStage) {
-      if (isHydratedRef.current) {
+      if (isHydratedRef.current && !smartMode) {
         if (prevLight === 0 && lightStage > 0) {
           plantVoiceService.speakKey('light_on')
         } else if (prevLight > 0 && lightStage === 0) {
@@ -128,7 +121,7 @@ export function usePlantVoice({
       }
       prevLightStageRef.current = lightStage
     }
-  }, [lightStage])
+  }, [lightStage, smartMode])
 
   // 4. Reação aos Dados dos Sensores (Umidade do Solo e Temperatura)
   useEffect(() => {
