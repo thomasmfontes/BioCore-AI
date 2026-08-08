@@ -441,30 +441,36 @@ export function useMqtt(): MqttState {
         const idx = parseInt(numStr, 10) - 1
         if (idx >= 0 && idx <= 3) {
           const isON = payloadStr === '1'
-          setPumpsState(prev => {
-            if (prev[idx] === isON) return prev
-            const next = [...prev] as [boolean, boolean, boolean, boolean]
+          const wasON = pumpsRef.current[idx]
+
+          if (wasON !== isON) {
+            const next = [...pumpsRef.current] as [boolean, boolean, boolean, boolean]
             next[idx] = isON
+            setPumpsState(next)
 
             const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
             
             if (isON) {
               pumpStartTimesRef.current[idx] = Date.now()
+              iniciarAtuacao(tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)').then(rowId => {
+                pumpActiveRowIdsRef.current[idx] = rowId
+              })
             } else {
-              // Quando o ESP32 desliga a bomba, calcula duração e grava 1 evento completo no Supabase
+              // Quando o ESP32 desliga a bomba, calcula duração e finaliza a linha existente no Supabase
               const inicioMs = pumpStartTimesRef.current[idx] || Date.now()
-              const fimMs = Date.now()
-              const duracaoMs = fimMs - inicioMs
-              pumpStartTimesRef.current[idx] = null
+              const duracaoMs = Date.now() - inicioMs
+              const activeRowId = pumpActiveRowIdsRef.current[idx]
 
-              registrarAtuacao(tpAtuadores[idx], duracaoMs, 'Acionamento Autônomo (BioCore AI)', inicioMs, fimMs)
+              pumpStartTimesRef.current[idx] = null
+              pumpActiveRowIdsRef.current[idx] = null
+
+              finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)', inicioMs)
             }
 
             try {
               localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
             } catch { /* ignore */ }
-            return next
-          })
+          }
         }
         return
       }
