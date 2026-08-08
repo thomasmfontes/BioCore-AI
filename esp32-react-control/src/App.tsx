@@ -4,6 +4,7 @@ import { usePlantVoice } from './hooks/usePlantVoice'
 import { TopAppBar } from './components/layout/TopAppBar'
 import { BottomNavBar } from './components/layout/BottomNavBar'
 import { CultivoTab } from './components/tabs/CultivoTab'
+import { InteligenciaTab } from './components/tabs/InteligenciaTab'
 import { TelemetriaTab } from './components/tabs/TelemetriaTab'
 import { CameraTab } from './components/tabs/CameraTab'
 import { ControleTab } from './components/tabs/ControleTab'
@@ -13,7 +14,7 @@ import { PwaUpdater } from './components/ui/PwaUpdater'
 import { PwaInstallPrompt } from './components/ui/PwaInstallPrompt'
 import { VoiceWidget } from './components/ui/VoiceWidget'
 
-export type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico'
+export type Tab = 'cultivo' | 'inteligencia' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
 export default function App() {
   const { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi } = useMqtt()
@@ -29,7 +30,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('cultivo')
   const [slideDirection, setSlideDirection] = useState<'right' | 'left'>('right')
 
-  const tabsOrder: Tab[] = ['cultivo', 'telemetria', 'camera', 'controle', 'historico']
+  const tabsOrder: Tab[] = ['cultivo', 'inteligencia', 'telemetria', 'camera', 'controle', 'historico']
 
   const handleTabChange = (newTab: Tab) => {
     if (newTab === activeTab) return
@@ -81,6 +82,16 @@ export default function App() {
               sensors={sensors}
               setShowSelector={setShowSelector}
               onNavigateToCamera={() => handleTabChange('camera')}
+            />
+          )}
+
+          {activeTab === 'inteligencia' && (
+            <InteligenciaTab 
+              smartMode={smartMode}
+              setSmartMode={setSmartMode}
+              sensors={sensors}
+              hortalica={hortalica}
+              status={status}
             />
           )}
 

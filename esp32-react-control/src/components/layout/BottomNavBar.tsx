@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Tab = 'cultivo' | 'telemetria' | 'camera' | 'controle' | 'historico';
+type Tab = 'cultivo' | 'inteligencia' | 'telemetria' | 'camera' | 'controle' | 'historico';
 
 interface BottomNavBarProps {
   activeTab: Tab;
@@ -10,6 +10,7 @@ interface BottomNavBarProps {
 export function BottomNavBar({ activeTab, setActiveTab }: BottomNavBarProps) {
   const tabs = [
     { id: 'cultivo' as Tab, icon: 'potted_plant', label: 'Cultivo' },
+    { id: 'inteligencia' as Tab, icon: 'psychology', label: 'Inteligência' },
     { id: 'telemetria' as Tab, icon: 'monitoring', label: 'Monitoramento' },
     { id: 'camera' as Tab, icon: 'videocam', label: 'Câmera' },
     { id: 'controle' as Tab, icon: 'tune', label: 'Controles' },
