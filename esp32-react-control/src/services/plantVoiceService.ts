@@ -442,6 +442,11 @@ class PlantVoiceService {
       return false
     }
 
+    // Trava de intervalo mínimo (2.5s) entre QUALQUER fala para evitar que mensagens fiquem sobrepostas/encavaladas
+    if (!force && (now - this.lastSpokenTime < 2500) && priorityVal < 3) {
+      return false
+    }
+
     // Se já estiver falando:
     if (this.isSpeaking) {
       // Se a nova mensagem tiver prioridade MAIOR ou se for forçada, interrompe o áudio em reprodução
@@ -555,6 +560,7 @@ class PlantVoiceService {
     }
 
     try {
+      this.synth.cancel()
       this.synth.speak(utterance)
       return true
     } catch {

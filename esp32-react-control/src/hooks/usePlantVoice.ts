@@ -142,6 +142,9 @@ export function usePlantVoice({
     if (!initialGreetingDoneRef.current && status === 'connected') {
       initialGreetingDoneRef.current = true
       prevSoilStateRef.current = currentSoilState
+      // Sincroniza referências sem disparar efeitos secundários acumulados de luz ou bomba no boot:
+      prevLightStageRef.current = lightStage
+      prevPumpsRef.current = pumps
       speakCurrentSummary()
       return
     }
