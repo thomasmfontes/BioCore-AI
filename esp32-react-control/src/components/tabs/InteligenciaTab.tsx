@@ -40,6 +40,8 @@ export function InteligenciaTab({
   const minTotal = minSol + minLed;
 
   const metaLuzMin = hortalica.fotoperiodo * 60;
+  const progressoSolPct = Math.min(100, Math.round((minSol / metaLuzMin) * 100));
+  const progressoLedPct = Math.min(100 - progressoSolPct, Math.round((minLed / metaLuzMin) * 100));
   const progressoTotal = Math.min(100, Math.round((minTotal / metaLuzMin) * 100));
 
   const solFormatado = formatarTempoMinutos(minSol);
@@ -55,11 +57,10 @@ export function InteligenciaTab({
 
   const protecaoNPKAtiva = uSoloAtual < 45;
 
-  // Cálculo de Cooldown de Absorção da Rega (1 Hora = 3600000 ms)
+  // Cálculo de Cooldown de Absorção da Rega
   const agora = Date.now();
   const tempoDecorridoRega = lastRegaMs ? (agora - lastRegaMs) : 4000000;
   
-  // Se o ESP32 enviar rega_cd na telemetria, usa o tempo exato do hardware:
   const regaCdHardware = typeof sensors?.rega_cd === 'number' ? sensors.rega_cd : 0;
   const emCooldownRega = regaCdHardware > 0 || tempoDecorridoRega < 3600000;
   const minRestantesRega = regaCdHardware > 0 
@@ -69,54 +70,60 @@ export function InteligenciaTab({
   let statusIaTitulo = 'SISTEMA EM MONITORAMENTO SAUDÁVEL';
   let statusIaDescricao = `A IA analisa os sensores a cada 10s. Umidade do solo e iluminação estão ideais para o ${hortalica.nome}.`;
   let statusIaIcone = 'check_circle';
-  let statusIaBadgeClass = 'bg-primary/10 text-primary border-primary/20';
+  let statusIaBadgeClass = 'bg-primary/10 text-primary border-primary/20 shadow-[0_0_12px_rgba(44,184,116,0.15)]';
+  let heroGlowBorder = 'border-primary/20';
 
   if (!smartMode) {
     statusIaTitulo = 'MODO AUTÔNOMO DESATIVADO';
     statusIaDescricao = 'A inteligência BioCore AI está em pausa. O vaso depende dos seus acionamentos manuais.';
     statusIaIcone = 'pause_circle';
     statusIaBadgeClass = 'bg-surface-variant/50 text-outline border-outline/30';
+    heroGlowBorder = 'border-outline-variant/30';
   } else if (ledLigado) {
-    statusIaTitulo = 'SUPLEMENTANDO LUZ COM LED';
-    statusIaDescricao = `Anoiteceu e o ${hortalica.nome} ainda não completou a meta de ${hortalica.fotoperiodo}h. O LED está aceso para suprir a luz solar restante.`;
+    statusIaTitulo = 'SUPLEMENTANDO LUZ COM LED PWM';
+    statusIaDescricao = `Anoiteceu e o ${hortalica.nome} ainda não completou a meta de ${hortalica.fotoperiodo}h. O LED está aceso para completar a iluminação.`;
     statusIaIcone = 'light_mode';
-    statusIaBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+    statusIaBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20 shadow-[0_0_12px_rgba(251,191,36,0.15)]';
+    heroGlowBorder = 'border-amber-400/30';
   } else if (uSoloAtual < uSoloAlvo - 5) {
     if (emCooldownRega) {
       statusIaTitulo = `SOLO EM ABSORÇÃO (~${minRestantesRega} MIN)`;
-      statusIaDescricao = `Solo abaixo da meta (${uSoloAtual}% < ${uSoloAlvo}%). Rega realizada recentemente; a próxima rega autônoma será liberada em ~${minRestantesRega} min para evitar encharcamento.`;
+      statusIaDescricao = `Solo abaixo da meta (${uSoloAtual}% < ${uSoloAlvo}%). Rega realizada recentemente; a próxima rega autônoma será liberada em ~${minRestantesRega} min.`;
       statusIaIcone = 'hourglass_top';
-      statusIaBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+      statusIaBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20 shadow-[0_0_12px_rgba(251,191,36,0.15)]';
+      heroGlowBorder = 'border-amber-400/30';
     } else {
       statusIaTitulo = 'SOLO SECO — REGA PROGRAMADA';
       statusIaDescricao = `Umidade do solo (${uSoloAtual}%) abaixo da meta (${uSoloAlvo}%). Rega autônoma de 15s autorizada no próximo ciclo.`;
       statusIaIcone = 'water_drop';
-      statusIaBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20';
+      statusIaBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20 shadow-[0_0_12px_rgba(96,165,250,0.15)]';
+      heroGlowBorder = 'border-blue-400/30';
     }
   }
 
   return (
     <div className="space-y-stack-lg animate-fadeIn">
-      {/* Hero Section: BioCore AI System Status (Estilo Idêntico ao ControleTab / CultivoTab) */}
-      <section className="clay-card-dark rounded-3xl p-stack-md relative overflow-hidden">
-        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
+      {/* Hero Section: BioCore AI System Status */}
+      <section className={`clay-card-dark rounded-3xl p-stack-md relative overflow-hidden border ${heroGlowBorder} transition-all duration-500`}>
+        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-xl drop-shadow-md">psychology</span>
-            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">BioCore AI</span>
+            <span className="material-symbols-outlined text-primary text-xl drop-shadow-[0_0_8px_#5af09d]">psychology</span>
+            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">BioCore AI Engine</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold transition-all ${statusIaBadgeClass}`}>
+            <span className={`text-[9px] px-2.5 py-0.5 rounded-full border font-mono font-bold transition-all ${statusIaBadgeClass}`}>
               {smartMode ? 'AUTÔNOMO' : 'MANUAL'}
             </span>
 
-            {/* Switch Toggle Idêntico ao CultivoTab */}
+            {/* Switch Toggle */}
             <div 
               onClick={() => {
                 navigator.vibrate?.([10, 30, 10]);
                 setSmartMode(!smartMode);
               }}
               className="relative inline-flex items-center cursor-pointer touch-target-min"
+              title="Ativar/Desativar modo autônomo"
             >
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5 ${
                 smartMode ? 'bg-primary/20 border-primary/40' : 'bg-surface-container-highest border-outline'
@@ -129,121 +136,162 @@ export function InteligenciaTab({
           </div>
         </header>
 
-        {/* Diagnóstico em Tempo Real com Estilo Idêntico aos Alertas do ControleTab */}
-        <div className="clay-card-dark rounded-2xl p-3 flex items-start gap-3">
-          <span className={`material-symbols-outlined text-xl mt-0.5 ${
-            smartMode ? (ledLigado ? 'text-amber-400' : 'text-primary') : 'text-outline'
-          }`}>
-            {statusIaIcone}
-          </span>
-          <div className="flex-1">
-            <h3 className="font-title-sm text-xs font-bold text-on-surface mb-0.5">{statusIaTitulo}</h3>
+        {/* Diagnóstico em Tempo Real */}
+        <div className="bg-surface-dark/60 backdrop-blur-md rounded-2xl p-3.5 border border-outline-variant/30 flex items-start gap-3.5">
+          <div className="p-2 rounded-xl bg-surface-container-highest/50 border border-outline-variant/30 shrink-0">
+            <span className={`material-symbols-outlined text-2xl ${
+              smartMode ? (ledLigado ? 'text-amber-400' : 'text-primary') : 'text-outline'
+            }`}>
+              {statusIaIcone}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-title-sm text-xs font-bold text-on-surface mb-0.5 tracking-wide">{statusIaTitulo}</h3>
             <p className="text-xs text-on-surface-variant leading-relaxed">{statusIaDescricao}</p>
           </div>
         </div>
       </section>
 
-      {/* Grid de Métricas da IA (Estilo Idêntico aos Cards do TelemetriaTab) */}
+      {/* Diagnóstico dos 3 Pilares com Design Unificado */}
       <section className="clay-card-dark rounded-3xl p-stack-md">
-        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-          <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Diagnóstico dos Pilares</span>
-          <span className="font-mono-data text-xs text-primary font-semibold">{hortalica.emoji} {hortalica.nome}</span>
+        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-xl">tune</span>
+            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Diagnóstico dos Pilares</span>
+          </div>
+          <span className="font-mono-data text-xs text-primary font-semibold flex items-center gap-1.5 bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+            <span>{hortalica.emoji}</span>
+            <span>{hortalica.nome}</span>
+          </span>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
           {/* Pilar 1: Iluminação DLI */}
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-2.5">
             <div className="flex justify-between items-center">
-              <span className="font-label-caps text-[9px] text-outline uppercase font-bold">Luz Diária</span>
-              <span className="font-mono-data text-[10px] text-amber-400 font-bold">{totalLuzFormatado} / {metaLuzFormatada}</span>
+              <span className="font-label-caps text-[9px] text-outline uppercase font-bold tracking-wider">Luz Diária (DLI)</span>
+              <span className="font-mono-data text-[11px] text-amber-400 font-bold">{totalLuzFormatado} / {metaLuzFormatada}</span>
             </div>
-            <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden border border-outline-variant/30">
+
+            {/* Barra de Progresso Dupla (Sol + LED) */}
+            <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden border border-outline-variant/30 flex">
               <div 
-                className="bg-amber-400 h-full bio-glow transition-all duration-500"
-                style={{ width: `${progressoTotal}%` }}
+                className="bg-amber-400 h-full transition-all duration-500 shadow-[0_0_6px_#fbbf24]"
+                style={{ width: `${progressoSolPct}%` }}
+                title={`Sol Natural: ${solFormatado}`}
+              />
+              <div 
+                className="bg-primary h-full transition-all duration-500 shadow-[0_0_6px_#5af09d]"
+                style={{ width: `${progressoLedPct}%` }}
+                title={`LED PWM: ${ledFormatado}`}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[10px]">
+
+            <div className="grid grid-cols-2 gap-2 pt-0.5 font-mono text-[10px]">
               <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-                <span className="text-outline block text-[8px] uppercase">☀️ Sol Natural</span>
-                <span className="font-bold text-amber-400">{solFormatado}</span>
+                <span className="text-outline block text-[8px] uppercase tracking-wider">☀️ Sol Natural</span>
+                <span className="font-bold text-amber-400 text-xs">{solFormatado}</span>
               </div>
               <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-                <span className="text-outline block text-[8px] uppercase">💡 LED PWM</span>
-                <span className="font-bold text-primary">{ledFormatado}</span>
+                <span className="text-outline block text-[8px] uppercase tracking-wider">💡 LED PWM</span>
+                <span className="font-bold text-primary text-xs">{ledFormatado}</span>
               </div>
             </div>
-            <p className="text-[11px] text-on-surface-variant leading-relaxed pt-1">
-              {progressoTotal >= 100 
-                ? `Meta de ${metaLuzFormatada} atingida! O LED ficará em descanso.` 
-                : ehNoite 
-                  ? 'Anoiteceu. O LED está suplementando o sol recebido.' 
-                  : 'LDR monitorando sol. Ao anoitecer, o LED ligará se faltar luz.'}
-            </p>
+
+            <div className="bg-surface-container-highest/20 p-2.5 rounded-xl border border-outline-variant/20 space-y-1">
+              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                {progressoTotal >= 100 
+                  ? `Meta de ${metaLuzFormatada} atingida! O LED ficará em descanso.` 
+                  : ehNoite 
+                    ? 'Anoiteceu. O LED está suplementando a luz solar restante.' 
+                    : 'Sensor LDR lendo sol natural. Ao anoitecer, o LED ligará se faltar luz.'}
+              </p>
+              <div className="flex items-center gap-1 text-[9px] text-outline font-mono pt-0.5">
+                <span className="material-symbols-outlined text-[11px]">schedule</span>
+                <span>Reset automático diário às 00:00 (NTP BRT)</span>
+              </div>
+            </div>
           </div>
 
           {/* Pilar 2: Irrigação de Solo */}
-          <div className="flex flex-col space-y-2 md:border-l border-outline-variant md:pl-4">
+          <div className="flex flex-col space-y-2.5 md:border-l border-outline-variant md:pl-5">
             <div className="flex justify-between items-center">
-              <span className="font-label-caps text-[9px] text-outline uppercase font-bold">Umidade Solo</span>
-              <span className="font-mono-data text-[10px] text-blue-400 font-bold">{uSoloAtual}% / Meta {uSoloAlvo}%</span>
+              <span className="font-label-caps text-[9px] text-outline uppercase font-bold tracking-wider">Umidade do Solo</span>
+              <span className="font-mono-data text-[11px] text-blue-400 font-bold">{uSoloAtual}% / Meta {uSoloAlvo}%</span>
             </div>
-            <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden border border-outline-variant/30">
+
+            <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden border border-outline-variant/30">
               <div 
-                className="bg-blue-400 h-full transition-all duration-500"
+                className="bg-blue-400 h-full transition-all duration-500 shadow-[0_0_6px_#60a5fa]"
                 style={{ width: `${Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100))}%` }}
               />
             </div>
+
             <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 text-[10px] font-mono flex justify-between items-center">
-              <span className="text-outline text-[8px] uppercase">Estado do Solo</span>
+              <span className="text-outline text-[8px] uppercase tracking-wider">Estado do Solo</span>
               <span className={`font-bold ${uSoloAtual >= uSoloAlvo ? 'text-primary' : (emCooldownRega ? 'text-amber-400' : 'text-blue-400')}`}>
                 {uSoloAtual >= uSoloAlvo ? 'SOLO ÚMIDO' : (emCooldownRega ? `ABSORVENDO (~${minRestantesRega}m)` : 'SOLO SECO')}
               </span>
             </div>
-            <p className="text-[11px] text-on-surface-variant leading-relaxed pt-1">
-              {uSoloAtual >= uSoloAlvo 
-                ? `Umidade ideal para o ${hortalica.nome}. Bomba em repouso.` 
-                : (emCooldownRega
-                    ? `Solo em período de absorção. Próxima rega liberada em ~${minRestantesRega} min.`
-                    : 'Solo abaixo da meta. Rega de 15s autorizada no próximo ciclo.')}
-            </p>
+
+            <div className="bg-surface-container-highest/20 p-2.5 rounded-xl border border-outline-variant/20 space-y-1">
+              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                {uSoloAtual >= uSoloAlvo 
+                  ? `Umidade ideal para o ${hortalica.nome}. Bomba de água em repouso.` 
+                  : (emCooldownRega
+                      ? `Solo em período de absorção. Próxima rega liberada em ~${minRestantesRega} min.`
+                      : 'Solo abaixo da meta. Rega de 15s autorizada no próximo ciclo.')}
+              </p>
+              <div className="flex items-center gap-1 text-[9px] text-outline font-mono pt-0.5">
+                <span className="material-symbols-outlined text-[11px]">shield</span>
+                <span>Proteção contra alagamento radicular</span>
+              </div>
+            </div>
           </div>
 
           {/* Pilar 3: Nutrição NPK */}
-          <div className="flex flex-col space-y-2 md:border-l border-outline-variant md:pl-4">
+          <div className="flex flex-col space-y-2.5 md:border-l border-outline-variant md:pl-5">
             <div className="flex justify-between items-center">
-              <span className="font-label-caps text-[9px] text-outline uppercase font-bold">Nutrição NPK</span>
+              <span className="font-label-caps text-[9px] text-outline uppercase font-bold tracking-wider">Nutrição NPK</span>
               <span className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold ${
                 protecaoNPKAtiva ? 'bg-amber-400/10 text-amber-400 border-amber-400/20' : 'bg-primary/10 text-primary border-primary/20'
               }`}>
                 {protecaoNPKAtiva ? 'PAUSA DE SEGURANÇA' : 'NUTRIÇÃO OK'}
               </span>
             </div>
+
             <div className="grid grid-cols-3 gap-1.5 text-center font-mono pt-0.5">
-              <div className="bg-surface-container-highest/40 p-1.5 rounded-xl border border-outline-variant/30">
-                <span className="text-[8px] text-outline block uppercase">N</span>
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
+                <span className="text-[8px] text-outline block uppercase tracking-wider">Nitrogênio (N)</span>
                 <span className="text-xs font-bold text-primary">{nAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span></span>
               </div>
-              <div className="bg-surface-container-highest/40 p-1.5 rounded-xl border border-outline-variant/30">
-                <span className="text-[8px] text-outline block uppercase">P</span>
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
+                <span className="text-[8px] text-outline block uppercase tracking-wider">Fósforo (P)</span>
                 <span className="text-xs font-bold text-secondary">{pAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span></span>
               </div>
-              <div className="bg-surface-container-highest/40 p-1.5 rounded-xl border border-outline-variant/30">
-                <span className="text-[8px] text-outline block uppercase">K</span>
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
+                <span className="text-[8px] text-outline block uppercase tracking-wider">Potássio (K)</span>
                 <span className="text-xs font-bold text-tertiary">{kAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span></span>
               </div>
             </div>
-            <p className="text-[11px] text-on-surface-variant leading-relaxed pt-1">
-              {protecaoNPKAtiva ? (
-                <span className="text-amber-300">
-                  Umidade &lt; 45%. A IA aguarda água limpa primeiro para proteger as raízes contra queimaduras.
-                </span>
-              ) : (
-                <span>
-                  Solo com boa hidratação (&ge; 45%). Dosagens micro-fracionadas NPK autorizadas.
-                </span>
-              )}
-            </p>
+
+            <div className="bg-surface-container-highest/20 p-2.5 rounded-xl border border-outline-variant/20 space-y-1">
+              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                {protecaoNPKAtiva ? (
+                  <span className="text-amber-300">
+                    Solo com umidade &lt; 45%. A IA aguarda rega de água limpa para proteger as raízes contra queimadura de sais.
+                  </span>
+                ) : (
+                  <span>
+                    Solo com boa hidratação (&ge; 45%). Dosagens micro-fracionadas NPK autorizadas a cada 6 horas.
+                  </span>
+                )}
+              </p>
+              <div className="flex items-center gap-1 text-[9px] text-outline font-mono pt-0.5">
+                <span className="material-symbols-outlined text-[11px]">eco</span>
+                <span>Anti-queima de raízes por salinidade</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
