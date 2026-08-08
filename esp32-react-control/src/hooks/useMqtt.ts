@@ -483,6 +483,11 @@ export function useMqtt(): MqttState {
           // O ESP32 físico acabou de responder! Atualiza para ONLINE no Supabase:
           atualizarStatusDispositivo('ONLINE')
           salvarTelemetria(dataParsed)
+
+          // Se o hardware reportar o estágio atual do LED na telemetria, sincroniza o estado da UI:
+          if (typeof dataParsed.luz === 'number' && [0, 1, 2, 3].includes(dataParsed.luz)) {
+            setLightStageState(dataParsed.luz as LightStage)
+          }
           if (typeof dataParsed.sol_ms === 'number' || typeof dataParsed.led_ms === 'number') {
             const solMs = dataParsed.sol_ms ?? 0
             const ledMs = typeof dataParsed.led_ms === 'number' ? dataParsed.led_ms : Math.round(getTempoLedMs())
