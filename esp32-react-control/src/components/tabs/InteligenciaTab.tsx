@@ -54,8 +54,13 @@ export function InteligenciaTab({
   // Cálculo de Cooldown de Absorção da Rega (1 Hora = 3600000 ms)
   const agora = Date.now();
   const tempoDecorridoRega = lastRegaMs ? (agora - lastRegaMs) : 4000000;
-  const emCooldownRega = tempoDecorridoRega < 3600000;
-  const minRestantesRega = Math.max(1, Math.ceil((3600000 - tempoDecorridoRega) / 60000));
+  
+  // Se o ESP32 enviar rega_cd na telemetria, usa o tempo exato do hardware:
+  const regaCdHardware = typeof sensors?.rega_cd === 'number' ? sensors.rega_cd : 0;
+  const emCooldownRega = regaCdHardware > 0 || tempoDecorridoRega < 3600000;
+  const minRestantesRega = regaCdHardware > 0 
+    ? regaCdHardware 
+    : Math.max(1, Math.ceil((3600000 - tempoDecorridoRega) / 60000));
 
   let statusIaTitulo = 'SISTEMA EM MONITORAMENTO SAUDÁVEL';
   let statusIaDescricao = `A IA analisa os sensores a cada 10s. Umidade do solo e iluminação estão ideais para o ${hortalica.nome}.`;

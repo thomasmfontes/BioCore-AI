@@ -10,6 +10,7 @@ export interface SensorData {
   sol_ms?: number
   led_ms?: number
   luz?: number
+  rega_cd?: number
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error' | 'offline'
