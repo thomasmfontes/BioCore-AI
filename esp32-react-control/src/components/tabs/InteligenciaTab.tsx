@@ -275,33 +275,6 @@ export function InteligenciaTab({
         </div>
 
       </div>
-
-      {/* 3. FEED DE ATUAÇÕES RECENTES */}
-      <section className="clay-card-dark p-5 rounded-3xl border border-outline-variant/30 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-lg">history</span>
-            <h3 className="font-title-sm text-sm font-bold text-on-surface">Feed de Decisões Recentes da IA</h3>
-          </div>
-          <span className="text-[10px] font-mono text-outline">Últimos Eventos</span>
-        </div>
-
-        {logsIA.length === 0 ? (
-          <p className="text-xs text-outline italic text-center py-2">Nenhuma atuação autônoma registrada recentemente.</p>
-        ) : (
-          <div className="space-y-2">
-            {logsIA.map((log) => (
-              <div key={log.id} className="bg-surface/30 p-2.5 rounded-2xl border border-outline/10 flex items-center justify-between text-xs font-mono">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-on-surface">{log.message}</span>
-                </div>
-                <span className="text-[10px] text-outline">{log.time}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
