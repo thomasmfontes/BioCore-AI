@@ -207,11 +207,11 @@ export function InteligenciaTab({
         </div>
 
         <p className="text-[11px] text-on-surface-variant leading-relaxed">
-          {uSoloAtual >= uSoloAlvo 
-            ? `O solo está bem hidratado para o ${hortalica.nome}. Bomba de água em repouso.` 
+          {uSoloAtual >= (uSoloAlvo - 5) 
+            ? `Umidade adequada (${uSoloAtual}%). O solo está na faixa ideal para o ${hortalica.nome} (meta ${uSoloAlvo}%).` 
             : (emCooldownRega
                 ? `Solo em absorção. A última rega foi recente; próxima rega liberada em ~${minRestantesRega} min.`
-                : 'Solo abaixo da meta. A IA executará a rega de 15s no próximo ciclo.')}
+                : `Solo seco (abaixo de ${uSoloAlvo - 5}%). A IA executará a rega de 15s no próximo ciclo.`)}
         </p>
       </section>
 
