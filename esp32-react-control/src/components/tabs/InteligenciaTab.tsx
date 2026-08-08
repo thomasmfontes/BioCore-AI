@@ -82,18 +82,32 @@ export function InteligenciaTab({
     npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
     npkMensagem = `A fertilização aguarda a umidade do solo subir (≥ 45%) para proteger as raízes contra sais.`;
   } else if (pAlto || nBaixo || kBaixo || pBaixo) {
-    if (pAlto && nBaixo) {
+    if (pAlto && nBaixo && kBaixo) {
+      npkBadgeText = 'DESEQUILÍBRIO DETECTADO';
+      npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+      npkMensagem = `Fósforo elevado no solo, enquanto Nitrogênio e Potássio estão abaixo do ideal. A IA dosará Nitrogênio e Potássio no próximo ciclo para equilibrar.`;
+    } else if (pAlto && nBaixo) {
       npkBadgeText = 'DESEQUILÍBRIO DETECTADO';
       npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
       npkMensagem = `Fósforo elevado no solo e Nitrogênio abaixo do ideal. A IA dosará Nitrogênio no próximo ciclo para equilibrar.`;
+    } else if (pAlto && kBaixo) {
+      npkBadgeText = 'DESEQUILÍBRIO DETECTADO';
+      npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+      npkMensagem = `Fósforo elevado no solo e Potássio abaixo do ideal. A IA dosará Potássio no próximo ciclo para equilibrar.`;
     } else if (pAlto) {
       npkBadgeText = 'EXCESSO DE FÓSFORO';
       npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
       npkMensagem = `Fósforo elevado no solo. A dosagem de Fósforo foi suspensa para evitar acúmulo.`;
     } else {
+      const deficientes: string[] = [];
+      if (nBaixo) deficientes.push('Nitrogênio');
+      if (pBaixo) deficientes.push('Fósforo');
+      if (kBaixo) deficientes.push('Potássio');
+
+      const textoDeficientes = deficientes.join(' e ');
       npkBadgeText = 'REPOSIÇÃO PENDENTE';
       npkBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20';
-      npkMensagem = `Nutrientes abaixo da meta ideal para o ${hortalica.nome}. Micro-dosagem de NPK agendada.`;
+      npkMensagem = `${textoDeficientes} ${deficientes.length > 1 ? 'estão' : 'está'} abaixo da meta ideal para o ${hortalica.nome}. Micro-dosagem de NPK agendada.`;
     }
   }
 
