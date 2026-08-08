@@ -63,22 +63,26 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
             <span className="material-symbols-outlined text-xl text-primary">bolt</span>
             <h3 className={`font-title-md text-base font-bold transition-colors duration-300 ${smartMode ? 'text-primary' : 'text-on-surface'}`}>BioCore AI</h3>
           </div>
-          {/* Switch Toggle */}
-          <div className="relative inline-flex items-center touch-target-min">
-            <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5
-              ${smartMode 
-                ? 'bg-primary/20 border-primary/40' 
-                : 'bg-surface-container-highest border-outline'
-              }
-            `}>
-              <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5
-                ${smartMode 
-                  ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' 
-                  : 'bg-outline left-0.5'
-                }
-              `}></div>
+          {/* Switch Toggle Botão Real */}
+          <button 
+            id="toggle-smart-mode-cultivo"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.vibrate?.([10, 30, 10]);
+              setSmartMode(!smartMode);
+            }}
+            className="relative inline-flex items-center justify-center cursor-pointer p-1 min-w-[44px] min-h-[44px] touch-target-min outline-none focus:outline-none z-20 active:scale-95 transition-transform"
+            title="Ativar ou desativar modo inteligente BioCore AI"
+          >
+            <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5 ${
+              smartMode ? 'bg-primary/20 border-primary/40' : 'bg-surface-container-highest border-outline'
+            }`}>
+              <div className={`w-3.5 h-3.5 rounded-full transition-all absolute top-0.5 ${
+                smartMode ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' : 'bg-outline left-0.5'
+              }`} />
             </div>
-          </div>
+          </button>
         </div>
 
         <div>

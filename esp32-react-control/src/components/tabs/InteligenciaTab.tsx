@@ -110,13 +110,16 @@ export function InteligenciaTab({
               {smartMode ? 'AUTÔNOMO' : 'MANUAL'}
             </span>
 
-            {/* Switch Toggle 100% Idêntico ao CultivoTab */}
-            <div 
-              onClick={() => {
+            {/* Switch Toggle Botão Real */}
+            <button 
+              id="toggle-smart-mode-inteligencia"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
                 navigator.vibrate?.([10, 30, 10]);
                 setSmartMode(!smartMode);
               }}
-              className="relative inline-flex items-center cursor-pointer touch-target-min"
+              className="relative inline-flex items-center justify-center cursor-pointer p-1 min-w-[44px] min-h-[44px] touch-target-min outline-none focus:outline-none z-20 active:scale-95 transition-transform"
               title="Ativar ou desativar modo inteligente BioCore AI"
             >
               <div className={`w-10 h-5 rounded-full relative border transition-colors p-0.5 ${
@@ -126,7 +129,7 @@ export function InteligenciaTab({
                   smartMode ? 'bg-primary right-0.5 shadow-[0_0_8px_#5af09d]' : 'bg-outline left-0.5'
                 }`} />
               </div>
-            </div>
+            </button>
           </div>
         </header>
 
