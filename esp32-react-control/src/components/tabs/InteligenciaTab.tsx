@@ -11,9 +11,8 @@ interface InteligenciaTabProps {
   lastRegaMs?: number | null;
 }
 
-function formatarTempoMs(ms: number): string {
-  if (!ms || ms <= 0) return '0 min';
-  const totalMin = Math.round(ms / 60000);
+function formatarTempoMinutos(totalMin: number): string {
+  if (!totalMin || totalMin <= 0) return '0 min';
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
   if (h === 0) return `${m} min`;
@@ -34,13 +33,18 @@ export function InteligenciaTab({
   
   const solMs = sensors?.sol_ms ?? 0;
   const ledMs = sensors?.led_ms ?? 0;
-  const luzTotalMs = solMs + ledMs;
-  const metaLuzMs = hortalica.fotoperiodo * 3600000;
-  
-  const progressoTotal = Math.min(100, Math.round((luzTotalMs / metaLuzMs) * 100));
-  const solFormatado = formatarTempoMs(solMs);
-  const ledFormatado = formatarTempoMs(ledMs);
-  const totalLuzFormatado = formatarTempoMs(luzTotalMs);
+
+  // Garante igualdade matemática absoluta entre as parcelas e o total exibido
+  const minSol = Math.round(solMs / 60000);
+  const minLed = Math.round(ledMs / 60000);
+  const minTotal = minSol + minLed;
+
+  const metaLuzMin = hortalica.fotoperiodo * 60;
+  const progressoTotal = Math.min(100, Math.round((minTotal / metaLuzMin) * 100));
+
+  const solFormatado = formatarTempoMinutos(minSol);
+  const ledFormatado = formatarTempoMinutos(minLed);
+  const totalLuzFormatado = formatarTempoMinutos(minTotal);
   const metaLuzFormatada = `${hortalica.fotoperiodo}h`;
 
   const nAtual = sensors?.N ?? 0;
