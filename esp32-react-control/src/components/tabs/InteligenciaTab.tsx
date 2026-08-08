@@ -63,7 +63,7 @@ export function InteligenciaTab({
     ? regaCdHardware 
     : Math.max(1, Math.ceil((3600000 - tempoDecorridoRega) / 60000));
 
-  // Avaliação Agronômica Real de NPK
+  // Avaliação Agronômica Real de NPK (Linguagem Humana & Limpa)
   const nBaixo = nAtual < (hortalica.N - 15);
   const pAlto  = pAtual > (hortalica.P + 15);
   const pBaixo = pAtual < (hortalica.P - 10);
@@ -81,11 +81,11 @@ export function InteligenciaTab({
     if (pAlto && nBaixo) {
       npkBadgeText = 'DESEQUILÍBRIO DETECTADO';
       npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
-      npkMensagem = `Fósforo elevado no solo (${pAtual} mg/kg vs meta ${hortalica.P}) e Nitrogênio abaixo do ideal (${nAtual}/${hortalica.N} mg/kg). A IA dosará Nitrogênio no próximo ciclo para compensar.`;
+      npkMensagem = `Fósforo elevado no solo e Nitrogênio abaixo do ideal. A IA dosará Nitrogênio no próximo ciclo para equilibrar.`;
     } else if (pAlto) {
       npkBadgeText = 'EXCESSO DE FÓSFORO';
       npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
-      npkMensagem = `Fósforo elevado no solo (${pAtual} mg/kg vs meta de ${hortalica.P} mg/kg). Fertirrigação de Fósforo suspensa.`;
+      npkMensagem = `Fósforo elevado no solo. A dosagem de Fósforo foi suspensa para evitar acúmulo.`;
     } else {
       npkBadgeText = 'REPOSIÇÃO PENDENTE';
       npkBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20';
