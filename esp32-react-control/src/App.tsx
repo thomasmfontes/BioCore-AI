@@ -92,7 +92,6 @@ export default function App() {
               sensors={sensors}
               hortalica={hortalica}
               status={status}
-              logs={logs}
             />
           )}
 
