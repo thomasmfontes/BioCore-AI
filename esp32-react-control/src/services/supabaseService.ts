@@ -328,6 +328,29 @@ export async function getHistoricoEventos(deviceId: string = DEVICE_ID) {
     return []
   }
 }
+
+/**
+ * Busca a data/hora do último acionamento da Bomba de Água (BOMBA_H2O) no Supabase
+ */
+export async function getUltimoAcionamentoBombaH2O(deviceId: string = DEVICE_ID): Promise<number | null> {
+  try {
+    const { data } = await supabase
+      .from('t_historico_atuacao')
+      .select('dt_inicio')
+      .eq('id_device', deviceId)
+      .eq('tp_atuador', 'BOMBA_H2O')
+      .order('dt_inicio', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (data?.dt_inicio) {
+      return new Date(data.dt_inicio).getTime()
+    }
+    return null
+  } catch {
+    return null
+  }
+}
 /**
  * Atualiza o status de conectividade do dispositivo na tabela t_dispositivo (ONLINE/OFFLINE)
  */

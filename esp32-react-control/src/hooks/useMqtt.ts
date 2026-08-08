@@ -11,7 +11,8 @@ import {
   getCultivoAtivo, 
   salvarCultivoAtivo, 
   getHistoricoEventos,
-  atualizarStatusDispositivo
+  atualizarStatusDispositivo,
+  getUltimoAcionamentoBombaH2O
 } from '../services/supabaseService'
 
 // ─── Banco de Hortaliças ─────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ export interface MqttState {
   logs: LogEntry[]
   hortalica: DadosPlanta
   smartMode: boolean
+  lastRegaMs: number | null
   setLight: (stage: LightStage) => void
   togglePump: (index: 0 | 1 | 2 | 3) => void
   alterarHortalica: (chave: ChavePlanta) => void
@@ -126,6 +128,8 @@ export function useMqtt(): MqttState {
       return true
     }
   })
+
+  const [lastRegaMs, setLastRegaMs] = useState<number | null>(null)
 
   const [lightStage, setLightStageState] = useState<LightStage>(() => {
     try {
@@ -353,7 +357,12 @@ export function useMqtt(): MqttState {
       }
     })
 
-    // 2. Restaura histórico persistente de eventos
+    // 2. Restaura histórico de rega da Bomba de Água
+    getUltimoAcionamentoBombaH2O().then(ts => {
+      if (ts) setLastRegaMs(ts)
+    })
+
+    // 3. Restaura histórico persistente de eventos
     getHistoricoEventos().then(eventos => {
       if (eventos && eventos.length > 0) {
         setLogs(eventos)
@@ -451,12 +460,14 @@ export function useMqtt(): MqttState {
             const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
             
             if (isON) {
+              if (idx === 3) setLastRegaMs(Date.now())
               pumpStartTimesRef.current[idx] = Date.now()
               iniciarAtuacao(tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)').then(rowId => {
                 pumpActiveRowIdsRef.current[idx] = rowId
               })
             } else {
               // Quando o ESP32 desliga a bomba, calcula duração e finaliza a linha existente no Supabase
+              if (idx === 3) setLastRegaMs(Date.now())
               const inicioMs = pumpStartTimesRef.current[idx] || Date.now()
               const duracaoMs = Date.now() - inicioMs
               const activeRowId = pumpActiveRowIdsRef.current[idx]
@@ -520,6 +531,6 @@ export function useMqtt(): MqttState {
     setLogs(prev => pushLog(makeLog('Comando de reset de Wi-Fi enviado ao vaso'), prev))
   }, [])
 
-  return { status, sensors, lightStage, pumps, logs, hortalica, smartMode, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi }
+  return { status, sensors, lightStage, pumps, logs, hortalica, smartMode, lastRegaMs, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi }
 }
 

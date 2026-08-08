@@ -8,6 +8,7 @@ interface InteligenciaTabProps {
   sensors: SensorData | null;
   hortalica: DadosPlanta;
   status: string;
+  lastRegaMs?: number | null;
 }
 
 function formatarTempoMs(ms: number): string {
@@ -26,6 +27,7 @@ export function InteligenciaTab({
   sensors,
   hortalica,
   status,
+  lastRegaMs = null,
 }: InteligenciaTabProps) {
   const uSoloAtual = sensors?.u_solo ?? 0;
   const uSoloAlvo = hortalica.u_solo;
@@ -49,6 +51,12 @@ export function InteligenciaTab({
 
   const protecaoNPKAtiva = uSoloAtual < 45;
 
+  // Cálculo de Cooldown de Absorção da Rega (1 Hora = 3600000 ms)
+  const agora = Date.now();
+  const tempoDecorridoRega = lastRegaMs ? (agora - lastRegaMs) : 4000000;
+  const emCooldownRega = tempoDecorridoRega < 3600000;
+  const minRestantesRega = Math.max(1, Math.ceil((3600000 - tempoDecorridoRega) / 60000));
+
   let statusIaTitulo = 'SISTEMA EM MONITORAMENTO SAUDÁVEL';
   let statusIaDescricao = `A IA analisa os sensores a cada 10s. Umidade do solo e iluminação estão ideais para o ${hortalica.nome}.`;
   let statusIaIcone = 'check_circle';
@@ -65,10 +73,17 @@ export function InteligenciaTab({
     statusIaIcone = 'light_mode';
     statusIaBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
   } else if (uSoloAtual < uSoloAlvo - 5) {
-    statusIaTitulo = 'SOLO SECO — REGA PROGRAMADA';
-    statusIaDescricao = `Umidade do solo (${uSoloAtual}%) abaixo da meta (${uSoloAlvo}%). Rega autônoma de 15s autorizada respeitando absorção.`;
-    statusIaIcone = 'water_drop';
-    statusIaBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20';
+    if (emCooldownRega) {
+      statusIaTitulo = `SOLO EM ABSORÇÃO (~${minRestantesRega} MIN)`;
+      statusIaDescricao = `Solo abaixo da meta (${uSoloAtual}% < ${uSoloAlvo}%). Rega realizada recentemente; a próxima rega autônoma será liberada em ~${minRestantesRega} min para evitar encharcamento.`;
+      statusIaIcone = 'hourglass_top';
+      statusIaBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+    } else {
+      statusIaTitulo = 'SOLO SECO — REGA PROGRAMADA';
+      statusIaDescricao = `Umidade do solo (${uSoloAtual}%) abaixo da meta (${uSoloAlvo}%). Rega autônoma de 15s autorizada no próximo ciclo.`;
+      statusIaIcone = 'water_drop';
+      statusIaBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20';
+    }
   }
 
   return (
@@ -172,14 +187,16 @@ export function InteligenciaTab({
             </div>
             <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 text-[10px] font-mono flex justify-between items-center">
               <span className="text-outline text-[8px] uppercase">Estado do Solo</span>
-              <span className={`font-bold ${uSoloAtual >= uSoloAlvo ? 'text-primary' : 'text-blue-400'}`}>
-                {uSoloAtual >= uSoloAlvo ? 'SOLO ÚMIDO' : 'SOLO SECO'}
+              <span className={`font-bold ${uSoloAtual >= uSoloAlvo ? 'text-primary' : (emCooldownRega ? 'text-amber-400' : 'text-blue-400')}`}>
+                {uSoloAtual >= uSoloAlvo ? 'SOLO ÚMIDO' : (emCooldownRega ? `ABSORVENDO (~${minRestantesRega}m)` : 'SOLO SECO')}
               </span>
             </div>
             <p className="text-[11px] text-on-surface-variant leading-relaxed pt-1">
               {uSoloAtual >= uSoloAlvo 
                 ? `Umidade ideal para o ${hortalica.nome}. Bomba em repouso.` 
-                : 'Solo abaixo da meta. Rega de 15s autorizada no próximo ciclo.'}
+                : (emCooldownRega
+                    ? `Solo em período de absorção. Próxima rega liberada em ~${minRestantesRega} min.`
+                    : 'Solo abaixo da meta. Rega de 15s autorizada no próximo ciclo.')}
             </p>
           </div>
 
