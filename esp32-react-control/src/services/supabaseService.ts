@@ -57,7 +57,8 @@ export async function getControleLuzHoje(deviceId: string = DEVICE_ID): Promise<
  * Atualiza ou insere o registro de luz diária no Supabase com mesclagem segura
  */
 export async function salvarControleLuzHoje(dados: Partial<ControleLuzDiaria>, deviceId: string = DEVICE_ID) {
-  const hoje = new Date().toISOString().split('T')[0]
+  // Usa a data local no fuso do Brasil (YYYY-MM-DD) para virar o dia exatamente à meia-noite local (00:00 BRT)
+  const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
 
   try {
     // 1. Busca linha existente do dia para não zerar fotoperíodo ou contadores acumulados
