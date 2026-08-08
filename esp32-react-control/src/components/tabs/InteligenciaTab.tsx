@@ -63,6 +63,36 @@ export function InteligenciaTab({
     ? regaCdHardware 
     : Math.max(1, Math.ceil((3600000 - tempoDecorridoRega) / 60000));
 
+  // Avaliação Agronômica Real de NPK
+  const nBaixo = nAtual < (hortalica.N - 15);
+  const pAlto  = pAtual > (hortalica.P + 15);
+  const pBaixo = pAtual < (hortalica.P - 10);
+  const kBaixo = kAtual < (hortalica.K - 15);
+
+  let npkMensagem = `Nutrientes equilibrados para o crescimento saudável do ${hortalica.nome}.`;
+  let npkBadgeText = 'NUTRIÇÃO OK';
+  let npkBadgeClass = 'bg-primary/10 text-primary border-primary/20';
+
+  if (protecaoNPKAtiva) {
+    npkBadgeText = 'AGUARDANDO ÁGUA';
+    npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+    npkMensagem = `A fertilização aguarda a umidade do solo subir (≥ 45%) para proteger as raízes contra sais.`;
+  } else if (pAlto || nBaixo || kBaixo || pBaixo) {
+    if (pAlto && nBaixo) {
+      npkBadgeText = 'DESEQUILÍBRIO DETECTADO';
+      npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+      npkMensagem = `Fósforo elevado no solo (${pAtual} mg/kg vs meta ${hortalica.P}) e Nitrogênio abaixo do ideal (${nAtual}/${hortalica.N} mg/kg). A IA dosará Nitrogênio no próximo ciclo para compensar.`;
+    } else if (pAlto) {
+      npkBadgeText = 'EXCESSO DE FÓSFORO';
+      npkBadgeClass = 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+      npkMensagem = `Fósforo elevado no solo (${pAtual} mg/kg vs meta de ${hortalica.P} mg/kg). Fertirrigação de Fósforo suspensa.`;
+    } else {
+      npkBadgeText = 'REPOSIÇÃO PENDENTE';
+      npkBadgeClass = 'bg-blue-400/10 text-blue-400 border-blue-400/20';
+      npkMensagem = `Nutrientes abaixo da meta ideal para o ${hortalica.nome}. Micro-dosagem de NPK agendada.`;
+    }
+  }
+
   return (
     <div className="space-y-stack-lg animate-fadeIn">
       {/* Top Header Card — Padronizado 100% com BioCore AI e Toggle do CultivoTab */}
@@ -185,45 +215,41 @@ export function InteligenciaTab({
         </p>
       </section>
 
-      {/* Card 3: Nutrição NPK */}
+      {/* Card 3: Nutrição NPK com Diagnóstico Dinâmico Real */}
       <section className="clay-card-dark rounded-3xl p-stack-md">
         <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">eco</span>
             <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Nutrição NPK</span>
           </div>
-          <span className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold ${
-            protecaoNPKAtiva ? 'bg-amber-400/10 text-amber-400 border-amber-400/20' : 'bg-primary/10 text-primary border-primary/20'
-          }`}>
-            {protecaoNPKAtiva ? 'AGUARDANDO ÁGUA' : 'NUTRIÇÃO OK'}
+          <span className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold ${npkBadgeClass}`}>
+            {npkBadgeText}
           </span>
         </header>
 
         <div className="grid grid-cols-3 gap-2 text-center font-mono mb-2.5">
           <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
             <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Nitrogênio</span>
-            <span className="text-xs font-bold text-primary">{nAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span></span>
+            <span className={`text-xs font-bold ${nAtual < (hortalica.N - 15) ? 'text-amber-400' : 'text-primary'}`}>
+              {nAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span>
+            </span>
           </div>
           <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
             <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Fósforo</span>
-            <span className="text-xs font-bold text-secondary">{pAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span></span>
+            <span className={`text-xs font-bold ${pAtual > (hortalica.P + 15) ? 'text-amber-400' : 'text-secondary'}`}>
+              {pAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span>
+            </span>
           </div>
           <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
             <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Potássio</span>
-            <span className="text-xs font-bold text-tertiary">{kAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span></span>
+            <span className={`text-xs font-bold ${kAtual < (hortalica.K - 15) ? 'text-amber-400' : 'text-tertiary'}`}>
+              {kAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span>
+            </span>
           </div>
         </div>
 
         <p className="text-[11px] text-on-surface-variant leading-relaxed">
-          {protecaoNPKAtiva ? (
-            <span className="text-amber-300">
-              A fertilização aguarda a umidade do solo subir para proteger as raízes contra sais.
-            </span>
-          ) : (
-            <span>
-              Nutrientes equilibrados para o crescimento saudável do {hortalica.nome}.
-            </span>
-          )}
+          {npkMensagem}
         </p>
       </section>
 
