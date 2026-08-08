@@ -31,7 +31,7 @@ const DEVICE_ID = 'biocore_01'
  * Obtém o estado de luz do dia atual salvo no Supabase
  */
 export async function getControleLuzHoje(deviceId: string = DEVICE_ID): Promise<ControleLuzDiaria | null> {
-  const hoje = new Date().toISOString().split('T')[0]
+  const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
 
   try {
     const { data, error } = await supabase
