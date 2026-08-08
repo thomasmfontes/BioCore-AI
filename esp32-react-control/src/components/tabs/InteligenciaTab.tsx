@@ -28,6 +28,10 @@ export function InteligenciaTab({
   status,
   lastRegaMs = null,
 }: InteligenciaTabProps) {
+  const isLive = status === 'connected' && sensors !== null;
+  const isConnecting = status === 'connecting' || (status === 'connected' && sensors === null);
+  const offline = !isLive;
+
   const uSoloAtual = sensors?.u_solo ?? 0;
   const uSoloAlvo = hortalica.u_solo;
   
@@ -63,7 +67,7 @@ export function InteligenciaTab({
     ? regaCdHardware 
     : Math.max(1, Math.ceil((3600000 - tempoDecorridoRega) / 60000));
 
-  // Avaliação Agronômica Real de NPK (Linguagem Humana & Limpa)
+  // Avaliação Agronômica Real de NPK
   const nBaixo = nAtual < (hortalica.N - 15);
   const pAlto  = pAtual > (hortalica.P + 15);
   const pBaixo = pAtual < (hortalica.P - 10);
@@ -95,7 +99,7 @@ export function InteligenciaTab({
 
   return (
     <div className="space-y-stack-lg animate-fadeIn">
-      {/* Top Header Card — Padronizado 100% com BioCore AI e Toggle do CultivoTab */}
+      {/* Top Header Card — Sempre Clicável para Alternar o Modo */}
       <section className="clay-card-dark rounded-3xl p-stack-md relative overflow-hidden">
         <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
           <div className="flex items-center gap-2">
@@ -150,112 +154,152 @@ export function InteligenciaTab({
         </div>
       </section>
 
-      {/* Card 1: Iluminação Diária */}
-      <section className="clay-card-dark rounded-3xl p-stack-md">
-        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-amber-400 text-xl">light_mode</span>
-            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Iluminação Diária</span>
-          </div>
-          <span className="font-mono-data text-xs text-amber-400 font-bold">
-            {totalLuzFormatado} <span className="text-outline font-normal">/ {metaLuzFormatada}</span>
+      {/* Banner 1: Aguardando Conexão / Offline (Igual às outras telas) */}
+      {offline && (
+        <div className="clay-card-dark rounded-2xl p-3 flex items-center gap-3 animate-fadeIn border border-amber-400/20">
+          <span className={`material-symbols-outlined text-amber-400 text-xl ${isConnecting ? 'animate-spin [animation-direction:reverse]' : ''}`}>
+            {isConnecting ? 'sync' : 'sensors_off'}
           </span>
-        </header>
-
-        <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
-          <div 
-            className="bg-gradient-to-r from-amber-400 to-primary h-full transition-all duration-500"
-            style={{ width: `${progressoTotal}%` }}
-          />
+          <p className="text-xs text-on-surface-variant leading-relaxed">
+            {isConnecting ? (
+              <><b>Aguardando conexão...</b> O diagnóstico em tempo real será exibido assim que os dados do BioCore AI chegarem.</>
+            ) : (
+              <><b>Dispositivo Offline.</b> Ligue ou verifique a conexão do vaso para exibir a análise da IA.</>
+            )}
+          </p>
         </div>
+      )}
 
-        <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
-          <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-            <span className="text-outline text-[9px] font-sans">☀️ Sol Natural</span>
-            <span className="font-bold text-amber-400">{solFormatado}</span>
-          </div>
-
-          <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-            <span className="text-outline text-[9px] font-sans">💡 LED PWM</span>
-            <span className="font-bold text-primary">{ledFormatado}</span>
-          </div>
+      {/* Banner 2: Modo Inteligente Desativado */}
+      {!smartMode && !offline && (
+        <div className="clay-card-dark rounded-2xl p-3 flex items-center gap-3 animate-fadeIn border border-amber-400/20">
+          <span className="material-symbols-outlined text-amber-400 text-xl">lock</span>
+          <p className="text-xs text-on-surface-variant leading-relaxed">
+            O <b>BioCore AI Autônomo</b> está desativado. Ative o botão no topo para liberar o controle automático da planta.
+          </p>
         </div>
+      )}
 
-        <p className="text-[11px] text-on-surface-variant leading-relaxed">
-          {progressoTotal >= 100 
-            ? `Meta de ${metaLuzFormatada} atingida! A iluminação do dia foi completada.`
-            : ehNoite 
-              ? `Anoiteceu. O LED acendeu para completar as ${metaLuzFormatada} de luz necessárias.` 
-              : 'Monitorando sol natural via sensor LDR. Ao anoitecer, o LED acenderá se faltar luz.'}
-        </p>
-      </section>
+      {/* Container de Cards Esmaecido quando o Modo Inteligente estiver Desativado ou Offline */}
+      <div className={`space-y-stack-lg transition-all duration-300 ${
+        (!smartMode || offline) ? 'opacity-40 pointer-events-none grayscale-[0.2]' : ''
+      }`}>
 
-      {/* Card 2: Água no Solo */}
-      <section className="clay-card-dark rounded-3xl p-stack-md">
-        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-400 text-xl">water_drop</span>
-            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Água no Solo</span>
-          </div>
-          <span className="font-mono-data text-xs text-blue-400 font-bold">
-            {uSoloAtual}% <span className="text-outline font-normal">/ Meta {uSoloAlvo}%</span>
-          </span>
-        </header>
-
-        <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
-          <div 
-            className="bg-blue-400 h-full transition-all duration-500"
-            style={{ width: `${Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100))}%` }}
-          />
-        </div>
-
-        <p className="text-[11px] text-on-surface-variant leading-relaxed">
-          {uSoloAtual >= (uSoloAlvo - 5) 
-            ? `Umidade adequada (${uSoloAtual}%). O solo está na faixa ideal para o ${hortalica.nome} (meta ${uSoloAlvo}%).` 
-            : (emCooldownRega
-                ? `Solo em absorção. A última rega foi recente; próxima rega liberada em ~${minRestantesRega} min.`
-                : `Solo seco (abaixo de ${uSoloAlvo - 5}%). A IA executará a rega de 15s no próximo ciclo.`)}
-        </p>
-      </section>
-
-      {/* Card 3: Nutrição NPK com Diagnóstico Dinâmico Real */}
-      <section className="clay-card-dark rounded-3xl p-stack-md">
-        <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-xl">eco</span>
-            <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Nutrição NPK</span>
-          </div>
-          <span className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold ${npkBadgeClass}`}>
-            {npkBadgeText}
-          </span>
-        </header>
-
-        <div className="grid grid-cols-3 gap-2 text-center font-mono mb-2.5">
-          <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-            <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Nitrogênio</span>
-            <span className={`text-xs font-bold ${nAtual < (hortalica.N - 15) ? 'text-amber-400' : 'text-primary'}`}>
-              {nAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span>
+        {/* Card 1: Iluminação Diária */}
+        <section className="clay-card-dark rounded-3xl p-stack-md">
+          <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-400 text-xl">light_mode</span>
+              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Iluminação Diária</span>
+            </div>
+            <span className="font-mono-data text-xs text-amber-400 font-bold">
+              {sensors ? totalLuzFormatado : '--'} <span className="text-outline font-normal">/ {metaLuzFormatada}</span>
             </span>
-          </div>
-          <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-            <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Fósforo</span>
-            <span className={`text-xs font-bold ${pAtual > (hortalica.P + 15) ? 'text-amber-400' : 'text-secondary'}`}>
-              {pAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span>
-            </span>
-          </div>
-          <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-            <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Potássio</span>
-            <span className={`text-xs font-bold ${kAtual < (hortalica.K - 15) ? 'text-amber-400' : 'text-tertiary'}`}>
-              {kAtual} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span>
-            </span>
-          </div>
-        </div>
+          </header>
 
-        <p className="text-[11px] text-on-surface-variant leading-relaxed">
-          {npkMensagem}
-        </p>
-      </section>
+          <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
+            <div 
+              className="bg-gradient-to-r from-amber-400 to-primary h-full transition-all duration-500"
+              style={{ width: `${sensors ? progressoTotal : 0}%` }}
+            />
+          </div>
 
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
+            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+              <span className="text-outline text-[9px] font-sans">☀️ Sol Natural</span>
+              <span className="font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
+            </div>
+
+            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+              <span className="text-outline text-[9px] font-sans">💡 LED PWM</span>
+              <span className="font-bold text-primary">{sensors ? ledFormatado : '--'}</span>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-on-surface-variant leading-relaxed">
+            {sensors ? (
+              progressoTotal >= 100 
+                ? `Meta de ${metaLuzFormatada} atingida! A iluminação do dia foi completada.`
+                : ehNoite 
+                  ? `Anoiteceu. O LED acendeu para completar as ${metaLuzFormatada} de luz necessárias.` 
+                  : 'Monitorando sol natural via sensor LDR. Ao anoitecer, o LED acenderá se faltar luz.'
+            ) : (
+              'Aguardando telemetria dos sensores de iluminação...'
+            )}
+          </p>
+        </section>
+
+        {/* Card 2: Água no Solo */}
+        <section className="clay-card-dark rounded-3xl p-stack-md">
+          <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-400 text-xl">water_drop</span>
+              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Água no Solo</span>
+            </div>
+            <span className="font-mono-data text-xs text-blue-400 font-bold">
+              {sensors ? `${uSoloAtual}%` : '--'} <span className="text-outline font-normal">/ Meta {uSoloAlvo}%</span>
+            </span>
+          </header>
+
+          <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
+            <div 
+              className="bg-blue-400 h-full transition-all duration-500"
+              style={{ width: `${sensors ? Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100)) : 0}%` }}
+            />
+          </div>
+
+          <p className="text-[11px] text-on-surface-variant leading-relaxed">
+            {sensors ? (
+              uSoloAtual >= (uSoloAlvo - 5) 
+                ? `Umidade adequada (${uSoloAtual}%). O solo está na faixa ideal para o ${hortalica.nome} (meta ${uSoloAlvo}%).` 
+                : (emCooldownRega
+                    ? `Solo em absorção. A última rega foi recente; próxima rega liberada em ~${minRestantesRega} min.`
+                    : `Solo seco (abaixo de ${uSoloAlvo - 5}%). A IA executará a rega de 15s no próximo ciclo.`)
+            ) : (
+              'Aguardando telemetria do sensor de umidade do solo...'
+            )}
+          </p>
+        </section>
+
+        {/* Card 3: Nutrição NPK */}
+        <section className="clay-card-dark rounded-3xl p-stack-md">
+          <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-xl">eco</span>
+              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Nutrição NPK</span>
+            </div>
+            <span className={`text-[9px] px-2 py-0.5 rounded-full border font-mono font-bold ${sensors ? npkBadgeClass : 'bg-surface-variant/50 text-outline border-outline/30'}`}>
+              {sensors ? npkBadgeText : 'AGUARDANDO DADOS'}
+            </span>
+          </header>
+
+          <div className="grid grid-cols-3 gap-2 text-center font-mono mb-2.5">
+            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
+              <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Nitrogênio</span>
+              <span className={`text-xs font-bold ${nAtual < (hortalica.N - 15) ? 'text-amber-400' : 'text-primary'}`}>
+                {sensors ? nAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span>
+              </span>
+            </div>
+            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
+              <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Fósforo</span>
+              <span className={`text-xs font-bold ${pAtual > (hortalica.P + 15) ? 'text-amber-400' : 'text-secondary'}`}>
+                {sensors ? pAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span>
+              </span>
+            </div>
+            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
+              <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Potássio</span>
+              <span className={`text-xs font-bold ${kAtual < (hortalica.K - 15) ? 'text-amber-400' : 'text-tertiary'}`}>
+                {sensors ? kAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span>
+              </span>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-on-surface-variant leading-relaxed">
+            {sensors ? npkMensagem : 'Aguardando telemetria do sensor NPK de nutrição...'}
+          </p>
+        </section>
+
+      </div>
     </div>
   );
 }
