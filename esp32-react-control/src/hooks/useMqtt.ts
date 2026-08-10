@@ -362,12 +362,17 @@ export function useMqtt(): MqttState {
       if (ts) setLastRegaMs(ts)
     })
 
-    // 3. Restaura histórico persistente de eventos
-    getHistoricoEventos().then(eventos => {
-      if (eventos && eventos.length > 0) {
-        setLogs(eventos)
-      }
-    })
+    // 3. Restaura histórico persistente de eventos e ativa auto-sincronização a cada 5s
+    const atualizarHistorico = () => {
+      getHistoricoEventos().then(eventos => {
+        if (eventos && eventos.length > 0) {
+          setLogs(eventos)
+        }
+      })
+    }
+
+    atualizarHistorico()
+    const syncInterval = setInterval(atualizarHistorico, 5000)
 
     const client = mqtt.connect(MQTT_CONFIG.url, {
       username:        MQTT_CONFIG.username,
@@ -430,6 +435,7 @@ export function useMqtt(): MqttState {
             setLightStageState(stage)
             const labels = ['Desligada', '25%', '50%', '100%']
             registrarAtuacao('LED_PWM', undefined, `Suplementação/Ajuste de Luz (${labels[stage]})`)
+            setLogs(prev => pushLog(makeLog(`Luz LED → ${labels[stage]}`), prev))
             salvarControleLuzHoje({
               vl_estagio_luz_atual: stage,
               vl_fotoperiodo_meta_hs: hortalicaRef.current.fotoperiodo,
@@ -457,15 +463,16 @@ export function useMqtt(): MqttState {
             setPumpsState(next)
 
             const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
+            const nomesBombas = ['Bomba Nitrogênio (N)', 'Bomba Fósforo (P)', 'Bomba Potássio (K)', 'Bomba de Água (H2O)']
             
             if (isON) {
               if (idx === 3) setLastRegaMs(Date.now())
               pumpStartTimesRef.current[idx] = Date.now()
+              setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → LIGADA`), prev))
               iniciarAtuacao(tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)').then(rowId => {
                 pumpActiveRowIdsRef.current[idx] = rowId
               })
             } else {
-              // Quando o ESP32 desliga a bomba, calcula duração e finaliza a linha existente no Supabase
               if (idx === 3) setLastRegaMs(Date.now())
               const inicioMs = pumpStartTimesRef.current[idx] || Date.now()
               const duracaoMs = Date.now() - inicioMs
@@ -473,6 +480,9 @@ export function useMqtt(): MqttState {
 
               pumpStartTimesRef.current[idx] = null
               pumpActiveRowIdsRef.current[idx] = null
+
+              const durSec = Math.max(1, Math.round(duracaoMs / 1000))
+              setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → DESLIGADA (${durSec}s)`), prev))
 
               finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)', inicioMs)
             }
@@ -521,7 +531,10 @@ export function useMqtt(): MqttState {
     client.on('error',     () => { setStatus('error');    atualizarStatusDispositivo('OFFLINE'); setLogs(prev => pushLog(makeLog('Erro de conexão'), prev)) })
     client.on('reconnect', () => { setStatus('connecting') })
 
-    return () => { client.end(true) }
+    return () => { 
+      clearInterval(syncInterval)
+      client.end(true) 
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetWifi = useCallback(() => {
