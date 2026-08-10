@@ -489,7 +489,7 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-40px);
+    transform: translateX(40px);
   }
 }
 
