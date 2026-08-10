@@ -219,7 +219,7 @@ export function InteligenciaTab({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 text-center font-mono mb-3">
+            <div className="grid grid-cols-2 gap-2.5 text-center font-mono mb-2">
               <div className="bg-amber-400/10 p-2.5 rounded-xl border border-amber-400/20 flex flex-col justify-between">
                 <span className="text-[9px] text-amber-300 font-bold block uppercase font-sans mb-0.5 tracking-wider">Sol Natural</span>
                 <span className="text-xs font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
@@ -232,7 +232,7 @@ export function InteligenciaTab({
             </div>
           </div>
 
-          <p className="text-[11px] text-on-surface-variant leading-relaxed mt-2">
+          <p className="text-[11px] text-on-surface-variant leading-relaxed">
             {sensors ? (
               progressoTotal >= 100 
                 ? `Meta de ${metaLuzFormatada} de luz atingida no dia! A iluminação está completa para o ${hortalica.nome}.`
@@ -267,7 +267,7 @@ export function InteligenciaTab({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 text-center font-mono mb-3">
+            <div className="grid grid-cols-2 gap-2.5 text-center font-mono mb-2">
               <div className="bg-blue-400/10 p-2.5 rounded-xl border border-blue-400/20 flex flex-col justify-between">
                 <span className="text-[9px] text-blue-300 font-bold block uppercase font-sans mb-0.5 tracking-wider">Última Rega</span>
                 <span className="text-xs font-bold text-blue-400">
@@ -284,7 +284,7 @@ export function InteligenciaTab({
             </div>
           </div>
 
-          <p className="text-[11px] text-on-surface-variant leading-relaxed mt-2">
+          <p className="text-[11px] text-on-surface-variant leading-relaxed">
             {sensors ? (
               uSoloAtual >= (uSoloAlvo - 5) 
                 ? `Umidade adequada (${uSoloAtual}%). O solo está na faixa ideal para o ${hortalica.nome} (meta ${uSoloAlvo}%).` 
@@ -309,7 +309,7 @@ export function InteligenciaTab({
             </span>
           </header>
 
-          <div className="grid grid-cols-3 gap-2.5 text-center font-mono mb-3">
+          <div className="grid grid-cols-3 gap-2.5 text-center font-mono mb-2">
             <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-primary/30 flex flex-col justify-between transition-all">
               <span className="text-[9px] text-primary font-bold block uppercase font-sans mb-0.5 tracking-wider">Nitrogênio</span>
               <span className={`text-xs font-bold ${nBaixo ? 'text-amber-400' : 'text-primary'}`}>
