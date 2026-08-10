@@ -214,7 +214,7 @@ export function InteligenciaTab({
 
             <div className="w-full bg-surface-container-highest/80 h-2.5 rounded-full overflow-hidden mb-3 border border-amber-400/30 shadow-inner">
               <div 
-                className="solar-radiation-fill transition-all duration-500"
+                className="solar-neon-fill transition-all duration-500"
                 style={{ width: `${sensors ? progressoTotal : 0}%` }}
               />
             </div>
