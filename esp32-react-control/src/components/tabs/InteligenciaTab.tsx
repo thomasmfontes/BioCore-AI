@@ -260,7 +260,7 @@ export function InteligenciaTab({
               </span>
             </header>
 
-            <div className="w-full bg-surface-container-highest/80 h-2 rounded-full overflow-hidden mb-3 border border-blue-400/20 shadow-inner">
+            <div className="w-full bg-surface-container-highest/80 h-2.5 rounded-full overflow-hidden mb-3 border border-blue-400/30 shadow-inner">
               <div 
                 className="water-wave-fill transition-all duration-500"
                 style={{ width: `${sensors ? Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100)) : 0}%` }}
