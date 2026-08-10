@@ -195,42 +195,44 @@ export function InteligenciaTab({
       )}
 
       {/* Container de Cards Esmaecido quando o Modo Inteligente estiver Desativado ou Offline */}
-      <div className={`space-y-stack-lg transition-all duration-300 ${
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-stack-lg transition-all duration-300 ${
         (!smartMode || offline) ? 'opacity-40 pointer-events-none grayscale-[0.2]' : ''
       }`}>
 
         {/* Card 1: Iluminação Diária */}
-        <section className="clay-card-dark rounded-3xl p-stack-md">
-          <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-amber-400 text-xl">light_mode</span>
-              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Iluminação Diária</span>
-            </div>
-            <span className="font-mono-data text-xs text-amber-400 font-bold">
-              {sensors ? totalLuzFormatado : '--'} <span className="text-outline font-normal">/ {metaLuzFormatada}</span>
-            </span>
-          </header>
+        <section className="clay-card-dark rounded-3xl p-stack-md flex flex-col justify-between h-full">
+          <div>
+            <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400 text-xl">light_mode</span>
+                <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Iluminação Diária</span>
+              </div>
+              <span className="font-mono-data text-xs text-amber-400 font-bold">
+                {sensors ? totalLuzFormatado : '--'} <span className="text-outline font-normal">/ {metaLuzFormatada}</span>
+              </span>
+            </header>
 
-          <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
-            <div 
-              className="bg-gradient-to-r from-amber-400 to-primary h-full transition-all duration-500"
-              style={{ width: `${sensors ? progressoTotal : 0}%` }}
-            />
+            <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
+              <div 
+                className="bg-gradient-to-r from-amber-400 to-primary h-full transition-all duration-500"
+                style={{ width: `${sensors ? progressoTotal : 0}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+                <span className="text-outline text-[9px] font-sans">☀️ Sol Natural</span>
+                <span className="font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
+              </div>
+
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+                <span className="text-outline text-[9px] font-sans">💡 LED PWM</span>
+                <span className="font-bold text-primary">{sensors ? ledFormatado : '--'}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
-            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-              <span className="text-outline text-[9px] font-sans">☀️ Sol Natural</span>
-              <span className="font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
-            </div>
-
-            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-              <span className="text-outline text-[9px] font-sans">💡 LED PWM</span>
-              <span className="font-bold text-primary">{sensors ? ledFormatado : '--'}</span>
-            </div>
-          </div>
-
-          <p className="text-[11px] text-on-surface-variant leading-relaxed">
+          <p className="text-[11px] text-on-surface-variant leading-relaxed mt-2">
             {sensors ? (
               progressoTotal >= 100 
                 ? `Meta de ${metaLuzFormatada} de luz atingida no dia! A iluminação está completa para o ${hortalica.nome}.`
@@ -246,25 +248,27 @@ export function InteligenciaTab({
         </section>
 
         {/* Card 2: Água no Solo */}
-        <section className="clay-card-dark rounded-3xl p-stack-md">
-          <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-blue-400 text-xl">water_drop</span>
-              <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Água no Solo</span>
-            </div>
-            <span className="font-mono-data text-xs text-blue-400 font-bold">
-              {sensors ? `${uSoloAtual}%` : '--'} <span className="text-outline font-normal">/ Meta {uSoloAlvo}%</span>
-            </span>
-          </header>
+        <section className="clay-card-dark rounded-3xl p-stack-md flex flex-col justify-between h-full">
+          <div>
+            <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-400 text-xl">water_drop</span>
+                <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Água no Solo</span>
+              </div>
+              <span className="font-mono-data text-xs text-blue-400 font-bold">
+                {sensors ? `${uSoloAtual}%` : '--'} <span className="text-outline font-normal">/ Meta {uSoloAlvo}%</span>
+              </span>
+            </header>
 
-          <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
-            <div 
-              className="bg-blue-400 h-full transition-all duration-500"
-              style={{ width: `${sensors ? Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100)) : 0}%` }}
-            />
+            <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
+              <div 
+                className="bg-blue-400 h-full transition-all duration-500"
+                style={{ width: `${sensors ? Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100)) : 0}%` }}
+              />
+            </div>
           </div>
 
-          <p className="text-[11px] text-on-surface-variant leading-relaxed">
+          <p className="text-[11px] text-on-surface-variant leading-relaxed mt-2">
             {sensors ? (
               uSoloAtual >= (uSoloAlvo - 5) 
                 ? `Umidade adequada (${uSoloAtual}%). O solo está na faixa ideal para o ${hortalica.nome} (meta ${uSoloAlvo}%).` 
@@ -277,8 +281,8 @@ export function InteligenciaTab({
           </p>
         </section>
 
-        {/* Card 3: Nutrição NPK */}
-        <section className="clay-card-dark rounded-3xl p-stack-md">
+        {/* Card 3: Nutrição NPK (Span completo no Desktop) */}
+        <section className="clay-card-dark rounded-3xl p-stack-md md:col-span-2">
           <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-xl">eco</span>
