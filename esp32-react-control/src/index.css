@@ -519,12 +519,12 @@
 
 /* Clean & Sleek Solar Neon Glow Progress Bar */
 .solar-neon-fill {
-  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #34d399 100%);
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 45%, #ff00ff 100%);
   position: relative;
   height: 100%;
   border-radius: 9999px;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
 }
 
 .solar-neon-fill::after {

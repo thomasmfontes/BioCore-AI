@@ -225,9 +225,9 @@ export function InteligenciaTab({
                 <span className="text-xs font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
               </div>
 
-              <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20 flex flex-col justify-between">
-                <span className="text-[9px] text-primary font-bold block uppercase font-sans mb-0.5 tracking-wider">LED PWM</span>
-                <span className="text-xs font-bold text-primary">{sensors ? ledFormatado : '--'}</span>
+              <div className="bg-[#FF00FF]/10 p-2.5 rounded-xl border border-[#FF00FF]/30 flex flex-col justify-between">
+                <span className="text-[9px] text-[#FF00FF] font-bold block uppercase font-sans mb-0.5 tracking-wider">LED PWM</span>
+                <span className="text-xs font-bold text-[#FF00FF]">{sensors ? ledFormatado : '--'}</span>
               </div>
             </div>
           </div>
