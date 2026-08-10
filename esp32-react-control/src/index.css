@@ -471,35 +471,59 @@
   animation: slideFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom Liquid Water Wave Animation — Seamless 100% Fluid Loop */
-@keyframes waterWave {
+/* Hyper-Realistic 3D Liquid Water System with Parallax Waves & Surface Gloss */
+@keyframes waterWaveFront {
   0% {
-    background-position-x: 0px;
+    transform: translateX(0);
   }
   100% {
-    background-position-x: -40px;
+    transform: translateX(-60px);
+  }
+}
+
+@keyframes waterWaveBack {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(60px);
   }
 }
 
 .water-wave-fill {
-  background: linear-gradient(90deg, #2563eb, #38bdf8, #60a5fa);
+  background: linear-gradient(180deg, #38bdf8 0%, #2563eb 45%, #1e40af 100%);
   position: relative;
   height: 100%;
   border-radius: 9999px;
   overflow: hidden;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 0 12px rgba(56, 189, 248, 0.5);
 }
 
+/* Camada Traseira de Profundidade (Back Wave - Deslocamento para Direita) */
+.water-wave-fill::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -60px;
+  right: -60px;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' preserveAspectRatio='none'%3E%3Cpath d='M0,8 C15,14 35,2 60,8 L60,20 L0,20 Z' fill='rgba(255, 255, 255, 0.25)'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 60px 100%;
+  animation: waterWaveBack 2.4s linear infinite;
+}
+
+/* Camada Frontal de Crista & Brilho (Front Wave - Deslocamento para Esquerda) */
 .water-wave-fill::after {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
+  left: -60px;
+  right: -60px;
   bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20' preserveAspectRatio='none'%3E%3Cpath d='M0,10 Q10,4 20,10 T40,10 L40,20 L0,20 Z' fill='rgba(255, 255, 255, 0.4)'%3E%3C/path%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' preserveAspectRatio='none'%3E%3Cpath d='M0,10 C20,4 40,16 60,10 L60,20 L0,20 Z' fill='rgba(255, 255, 255, 0.5)'%3E%3C/path%3E%3C/svg%3E");
   background-repeat: repeat-x;
-  background-size: 40px 100%;
-  animation: waterWave 1.2s linear infinite;
+  background-size: 60px 100%;
+  animation: waterWaveFront 1.5s linear infinite;
 }
 
