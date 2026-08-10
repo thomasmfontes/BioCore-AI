@@ -425,18 +425,17 @@ export function useMqtt(): MqttState {
       if (topic === TOPICS.light) {
         const stage = Number(payloadStr) as LightStage
         if (!isNaN(stage) && [0, 1, 2, 3].includes(stage)) {
-          setLightStageState(prev => {
-            if (prev !== stage) {
-              const labels = ['Desligada', '25%', '50%', '100%']
-              registrarAtuacao('LED_PWM', undefined, `Suplementação/Ajuste de Luz (${labels[stage]})`)
-              salvarControleLuzHoje({
-                vl_estagio_luz_atual: stage,
-                vl_fotoperiodo_meta_hs: hortalicaRef.current.fotoperiodo,
-                vl_tempo_led_acumulado_ms: Math.round(getTempoLedMs())
-              })
-            }
-            return stage
-          })
+          if (lightStageRef.current !== stage) {
+            lightStageRef.current = stage
+            setLightStageState(stage)
+            const labels = ['Desligada', '25%', '50%', '100%']
+            registrarAtuacao('LED_PWM', undefined, `Suplementação/Ajuste de Luz (${labels[stage]})`)
+            salvarControleLuzHoje({
+              vl_estagio_luz_atual: stage,
+              vl_fotoperiodo_meta_hs: hortalicaRef.current.fotoperiodo,
+              vl_tempo_led_acumulado_ms: Math.round(getTempoLedMs())
+            })
+          }
           try {
             localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
           } catch { /* ignore */ }
