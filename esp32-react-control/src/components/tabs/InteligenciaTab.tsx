@@ -266,6 +266,22 @@ export function InteligenciaTab({
                 style={{ width: `${sensors ? Math.min(100, Math.round((uSoloAtual / uSoloAlvo) * 100)) : 0}%` }}
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+                <span className="text-outline text-[9px] font-sans">🕒 Última Rega</span>
+                <span className="font-bold text-blue-400">
+                  {lastRegaMs ? new Date(lastRegaMs).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Nenhuma hoje'}
+                </span>
+              </div>
+
+              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+                <span className="text-outline text-[9px] font-sans">⏳ Absorção</span>
+                <span className={`font-bold ${emCooldownRega ? 'text-amber-400' : 'text-primary'}`}>
+                  {emCooldownRega ? `~${minRestantesRega} min` : 'Pronto'}
+                </span>
+              </div>
+            </div>
           </div>
 
           <p className="text-[11px] text-on-surface-variant leading-relaxed mt-2">
