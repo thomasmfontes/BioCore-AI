@@ -12,12 +12,12 @@ interface InteligenciaTabProps {
 }
 
 function formatarTempoMinutos(totalMin: number): string {
-  if (!totalMin || totalMin <= 0) return '0 min';
+  if (!totalMin || totalMin <= 0) return '00:00';
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}min`;
+  const hh = String(h).padStart(2, '0');
+  const mm = String(m).padStart(2, '0');
+  return `${hh}:${mm}`;
 }
 
 export function InteligenciaTab({
@@ -48,7 +48,7 @@ export function InteligenciaTab({
   const solFormatado = formatarTempoMinutos(minSol);
   const ledFormatado = formatarTempoMinutos(minLed);
   const totalLuzFormatado = formatarTempoMinutos(minTotal);
-  const metaLuzFormatada = `${hortalica.fotoperiodo}h`;
+  const metaLuzFormatada = `${String(hortalica.fotoperiodo).padStart(2, '0')}:00`;
 
   const nAtual = sensors?.N ?? 0;
   const pAtual = sensors?.P ?? 0;
@@ -235,11 +235,11 @@ export function InteligenciaTab({
           <p className="text-[11px] text-on-surface-variant leading-relaxed">
             {sensors ? (
               progressoTotal >= 100 
-                ? `Meta de ${metaLuzFormatada} de luz atingida no dia! A iluminação está completa para o ${hortalica.nome}.`
+                ? `Meta de ${hortalica.fotoperiodo}h de luz atingida no dia! A iluminação está completa para o ${hortalica.nome}.`
                 : ledLigado 
-                  ? `Luminosidade abaixo da meta. O LED está ativado para completar as ${metaLuzFormatada} de luz necessárias.` 
+                  ? `Luminosidade abaixo da meta. O LED está ativado para completar as ${hortalica.fotoperiodo}h de luz necessárias.` 
                   : (ehNoite 
-                      ? `Ambiente com pouca luz. O LED acenderá para suplementar as ${metaLuzFormatada} diárias.` 
+                      ? `Ambiente com pouca luz. O LED acenderá para suplementar as ${hortalica.fotoperiodo}h diárias.` 
                       : `Luminosidade natural detectada via sensor LDR. O LED acenderá automaticamente se a iluminação cair.`)
             ) : (
               'Aguardando telemetria dos sensores de iluminação...'
