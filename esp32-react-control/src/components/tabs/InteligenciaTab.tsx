@@ -310,23 +310,43 @@ export function InteligenciaTab({
           </header>
 
           <div className="grid grid-cols-3 gap-2.5 text-center font-mono mb-2">
-            <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-primary/30 flex flex-col justify-between transition-all">
-              <span className="text-[9px] text-primary font-bold block uppercase font-sans mb-0.5 tracking-wider">Nitrogênio</span>
+            <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/30 flex flex-col justify-between transition-all">
+              <span className="text-[9px] text-primary font-bold block uppercase font-sans mb-1 tracking-wider">Nitrogênio</span>
               <span className={`text-xs font-bold ${nBaixo ? 'text-amber-400' : 'text-primary'}`}>
                 {sensors ? nAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span>
               </span>
+              <div className="w-full bg-surface-container-highest/60 h-1.5 mt-1.5 rounded-full overflow-hidden border border-primary/20">
+                <div 
+                  className="bg-primary h-full transition-all duration-500"
+                  style={{ width: `${sensors ? Math.min(100, Math.round((nAtual / hortalica.N) * 100)) : 0}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-secondary/30 flex flex-col justify-between transition-all">
-              <span className="text-[9px] text-secondary font-bold block uppercase font-sans mb-0.5 tracking-wider">Fósforo</span>
+
+            <div className="bg-secondary/10 p-2.5 rounded-xl border border-secondary/30 flex flex-col justify-between transition-all">
+              <span className="text-[9px] text-secondary font-bold block uppercase font-sans mb-1 tracking-wider">Fósforo</span>
               <span className={`text-xs font-bold ${pAlto ? 'text-amber-400' : 'text-secondary'}`}>
                 {sensors ? pAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span>
               </span>
+              <div className="w-full bg-surface-container-highest/60 h-1.5 mt-1.5 rounded-full overflow-hidden border border-secondary/20">
+                <div 
+                  className={`h-full transition-all duration-500 ${pAlto ? 'bg-amber-400' : 'bg-secondary'}`}
+                  style={{ width: `${sensors ? Math.min(100, Math.round((pAtual / hortalica.P) * 100)) : 0}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-tertiary/30 flex flex-col justify-between transition-all">
-              <span className="text-[9px] text-tertiary font-bold block uppercase font-sans mb-0.5 tracking-wider">Potássio</span>
+
+            <div className="bg-tertiary/10 p-2.5 rounded-xl border border-tertiary/30 flex flex-col justify-between transition-all">
+              <span className="text-[9px] text-tertiary font-bold block uppercase font-sans mb-1 tracking-wider">Potássio</span>
               <span className={`text-xs font-bold ${kBaixo ? 'text-amber-400' : 'text-tertiary'}`}>
                 {sensors ? kAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span>
               </span>
+              <div className="w-full bg-surface-container-highest/60 h-1.5 mt-1.5 rounded-full overflow-hidden border border-tertiary/20">
+                <div 
+                  className="bg-tertiary h-full transition-all duration-500"
+                  style={{ width: `${sensors ? Math.min(100, Math.round((kAtual / hortalica.K) * 100)) : 0}%` }}
+                />
+              </div>
             </div>
           </div>
 
