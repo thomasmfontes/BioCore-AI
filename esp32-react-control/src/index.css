@@ -517,8 +517,23 @@
   animation: waterWaveFlow 1.8s linear infinite;
 }
 
-/* Sunbeam Light Energy Animation for Illumination Bar */
-@keyframes sunRayFlow {
+/* Solar Radiation Plasma & Photonic Energy System */
+@keyframes solarRadiationPulse {
+  0% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4), inset 0 0 10px rgba(254, 240, 138, 0.3);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.7);
+    filter: brightness(1.2);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4), inset 0 0 10px rgba(254, 240, 138, 0.3);
+    filter: brightness(1);
+  }
+}
+
+@keyframes solarHeatWaves {
   0% {
     background-position: 0% 50%;
   }
@@ -530,42 +545,26 @@
   }
 }
 
-@keyframes sunPulseMove {
-  0% {
-    transform: translateX(-40px);
-  }
-  100% {
-    transform: translateX(40px);
-  }
-}
-
-.sun-ray-fill {
-  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 35%, #34d399 70%, #10b981 100%);
-  background-size: 200% 200%;
-  animation: sunRayFlow 3s ease infinite;
+.solar-radiation-fill {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 35%, #fef08a 50%, #fbbf24 65%, #34d399 100%);
+  background-size: 250% 100%;
+  animation: solarHeatWaves 2.5s ease-in-out infinite, solarRadiationPulse 2s ease-in-out infinite;
   position: relative;
   height: 100%;
   border-radius: 9999px;
   overflow: hidden;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
 }
 
-.sun-ray-fill::after {
+.solar-radiation-fill::after {
   content: '';
   position: absolute;
   top: 0;
-  left: -40px;
-  right: -40px;
+  left: 0;
+  right: 0;
   bottom: 0;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.4) 0px,
-    rgba(255, 255, 255, 0.4) 10px,
-    transparent 10px,
-    transparent 20px
-  );
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.5) 0%, rgba(251, 191, 36, 0) 75%);
   background-size: 40px 100%;
-  animation: sunPulseMove 1.5s linear infinite;
-  opacity: 0.35;
+  animation: solarHeatWaves 1.8s linear infinite;
+  opacity: 0.5;
 }
 
