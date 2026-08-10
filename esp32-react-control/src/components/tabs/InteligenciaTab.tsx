@@ -212,9 +212,9 @@ export function InteligenciaTab({
               </span>
             </header>
 
-            <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mb-3 border border-outline-variant/30">
+            <div className="w-full bg-surface-container-highest/80 h-2.5 rounded-full overflow-hidden mb-3 border border-amber-400/30 shadow-inner">
               <div 
-                className="bg-gradient-to-r from-amber-400 to-primary h-full transition-all duration-500"
+                className="sun-ray-fill transition-all duration-500"
                 style={{ width: `${sensors ? progressoTotal : 0}%` }}
               />
             </div>
