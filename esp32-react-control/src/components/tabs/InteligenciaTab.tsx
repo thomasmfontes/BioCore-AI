@@ -293,22 +293,22 @@ export function InteligenciaTab({
             </span>
           </header>
 
-          <div className="grid grid-cols-3 gap-2 text-center font-mono mb-2.5">
-            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-              <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Nitrogênio</span>
-              <span className={`text-xs font-bold ${nAtual < (hortalica.N - 15) ? 'text-amber-400' : 'text-primary'}`}>
+          <div className="grid grid-cols-3 gap-2.5 text-center font-mono mb-3">
+            <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-primary/30 flex flex-col justify-between transition-all">
+              <span className="text-[9px] text-primary font-bold block uppercase font-sans mb-0.5 tracking-wider">Nitrogênio</span>
+              <span className={`text-xs font-bold ${nBaixo ? 'text-amber-400' : 'text-primary'}`}>
                 {sensors ? nAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.N}</span>
               </span>
             </div>
-            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-              <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Fósforo</span>
-              <span className={`text-xs font-bold ${pAtual > (hortalica.P + 15) ? 'text-amber-400' : 'text-secondary'}`}>
+            <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-secondary/30 flex flex-col justify-between transition-all">
+              <span className="text-[9px] text-secondary font-bold block uppercase font-sans mb-0.5 tracking-wider">Fósforo</span>
+              <span className={`text-xs font-bold ${pAlto ? 'text-amber-400' : 'text-secondary'}`}>
                 {sensors ? pAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.P}</span>
               </span>
             </div>
-            <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30">
-              <span className="text-[8px] text-outline block uppercase font-sans mb-0.5">Potássio</span>
-              <span className={`text-xs font-bold ${kAtual < (hortalica.K - 15) ? 'text-amber-400' : 'text-tertiary'}`}>
+            <div className="bg-surface-container-highest/40 p-2.5 rounded-xl border border-tertiary/30 flex flex-col justify-between transition-all">
+              <span className="text-[9px] text-tertiary font-bold block uppercase font-sans mb-0.5 tracking-wider">Potássio</span>
+              <span className={`text-xs font-bold ${kBaixo ? 'text-amber-400' : 'text-tertiary'}`}>
                 {sensors ? kAtual : '--'} <span className="text-[8px] text-outline font-normal">/{hortalica.K}</span>
               </span>
             </div>
