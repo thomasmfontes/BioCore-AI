@@ -233,10 +233,12 @@ export function InteligenciaTab({
           <p className="text-[11px] text-on-surface-variant leading-relaxed">
             {sensors ? (
               progressoTotal >= 100 
-                ? `Meta de ${metaLuzFormatada} atingida! A iluminação do dia foi completada.`
-                : ehNoite 
-                  ? `Anoiteceu. O LED acendeu para completar as ${metaLuzFormatada} de luz necessárias.` 
-                  : 'Monitorando sol natural via sensor LDR. Ao anoitecer, o LED acenderá se faltar luz.'
+                ? `Meta de ${metaLuzFormatada} de luz atingida no dia! A iluminação está completa para o ${hortalica.nome}.`
+                : ledLigado 
+                  ? `Luminosidade abaixo da meta. O LED está ativado para completar as ${metaLuzFormatada} de luz necessárias.` 
+                  : (ehNoite 
+                      ? `Ambiente com pouca luz. O LED acenderá para suplementar as ${metaLuzFormatada} diárias.` 
+                      : `Luminosidade natural detectada via sensor LDR. O LED acenderá automaticamente se a iluminação cair.`)
             ) : (
               'Aguardando telemetria dos sensores de iluminação...'
             )}
