@@ -219,15 +219,15 @@ export function InteligenciaTab({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
-              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-                <span className="text-outline text-[9px] font-sans">☀️ Sol Natural</span>
-                <span className="font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
+            <div className="grid grid-cols-2 gap-2.5 text-center font-mono mb-3">
+              <div className="bg-amber-400/10 p-2.5 rounded-xl border border-amber-400/20 flex flex-col justify-between">
+                <span className="text-[9px] text-amber-300 font-bold block uppercase font-sans mb-0.5 tracking-wider">Sol Natural</span>
+                <span className="text-xs font-bold text-amber-400">{sensors ? solFormatado : '--'}</span>
               </div>
 
-              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-                <span className="text-outline text-[9px] font-sans">💡 LED PWM</span>
-                <span className="font-bold text-primary">{sensors ? ledFormatado : '--'}</span>
+              <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20 flex flex-col justify-between">
+                <span className="text-[9px] text-primary font-bold block uppercase font-sans mb-0.5 tracking-wider">LED PWM</span>
+                <span className="text-xs font-bold text-primary">{sensors ? ledFormatado : '--'}</span>
               </div>
             </div>
           </div>
@@ -267,17 +267,17 @@ export function InteligenciaTab({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono mb-2.5">
-              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-                <span className="text-outline text-[9px] font-sans">🕒 Última Rega</span>
-                <span className="font-bold text-blue-400">
+            <div className="grid grid-cols-2 gap-2.5 text-center font-mono mb-3">
+              <div className="bg-blue-400/10 p-2.5 rounded-xl border border-blue-400/20 flex flex-col justify-between">
+                <span className="text-[9px] text-blue-300 font-bold block uppercase font-sans mb-0.5 tracking-wider">Última Rega</span>
+                <span className="text-xs font-bold text-blue-400">
                   {lastRegaMs ? new Date(lastRegaMs).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Nenhuma hoje'}
                 </span>
               </div>
 
-              <div className="bg-surface-container-highest/40 p-2 rounded-xl border border-outline-variant/30 flex items-center justify-between">
-                <span className="text-outline text-[9px] font-sans">⏳ Absorção</span>
-                <span className={`font-bold ${emCooldownRega ? 'text-amber-400' : 'text-primary'}`}>
+              <div className="bg-blue-400/10 p-2.5 rounded-xl border border-blue-400/20 flex flex-col justify-between">
+                <span className="text-[9px] text-blue-300 font-bold block uppercase font-sans mb-0.5 tracking-wider">Absorção</span>
+                <span className={`text-xs font-bold ${emCooldownRega ? 'text-amber-400' : 'text-primary'}`}>
                   {emCooldownRega ? `~${minRestantesRega} min` : 'Pronto'}
                 </span>
               </div>
