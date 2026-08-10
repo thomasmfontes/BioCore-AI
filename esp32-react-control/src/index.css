@@ -471,13 +471,13 @@
   animation: slideFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom Liquid Water Wave Animation */
+/* Custom Liquid Water Wave Animation — Seamless 100% Fluid Loop */
 @keyframes waterWave {
   0% {
     background-position-x: 0px;
   }
   100% {
-    background-position-x: 60px;
+    background-position-x: -40px;
   }
 }
 
@@ -497,9 +497,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' preserveAspectRatio='none'%3E%3Cpath d='M0,10 C15,4 35,16 60,10 L60,20 L0,20 Z' fill='rgba(255, 255, 255, 0.4)'%3E%3C/path%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20' preserveAspectRatio='none'%3E%3Cpath d='M0,10 Q10,4 20,10 T40,10 L40,20 L0,20 Z' fill='rgba(255, 255, 255, 0.4)'%3E%3C/path%3E%3C/svg%3E");
   background-repeat: repeat-x;
   background-size: 40px 100%;
-  animation: waterWave 1.6s linear infinite;
+  animation: waterWave 1.2s linear infinite;
 }
 
