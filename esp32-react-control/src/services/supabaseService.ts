@@ -28,10 +28,22 @@ export interface ControleLuzDiaria {
 const DEVICE_ID = 'biocore_01'
 
 /**
+ * Retorna a data de referência agrícola (o ciclo diário vira às 06:00 da manhã, no amanhecer local)
+ */
+export function getDataReferenciaAgricola(): string {
+  const agora = new Date()
+  // Se for antes das 06:00 da manhã (madrugada), a data de referência pertence ao ciclo que iniciou às 06:00 de ontem:
+  if (agora.getHours() < 6) {
+    agora.setDate(agora.getDate() - 1)
+  }
+  return agora.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
+}
+
+/**
  * Obtém o estado de luz do dia atual salvo no Supabase
  */
 export async function getControleLuzHoje(deviceId: string = DEVICE_ID): Promise<ControleLuzDiaria | null> {
-  const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
+  const hoje = getDataReferenciaAgricola()
 
   try {
     const { data, error } = await supabase
@@ -57,8 +69,8 @@ export async function getControleLuzHoje(deviceId: string = DEVICE_ID): Promise<
  * Atualiza ou insere o registro de luz diária no Supabase com mesclagem segura
  */
 export async function salvarControleLuzHoje(dados: Partial<ControleLuzDiaria>, deviceId: string = DEVICE_ID) {
-  // Usa a data local no fuso do Brasil (YYYY-MM-DD) para virar o dia exatamente à meia-noite local (00:00 BRT)
-  const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
+  // Usa a data de referência agrícola (troca às 06:00 AM no amanhecer local)
+  const hoje = getDataReferenciaAgricola()
 
   try {
     // 1. Busca linha existente do dia para não zerar fotoperíodo ou contadores acumulados
