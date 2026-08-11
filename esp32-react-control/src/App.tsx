@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useMqtt, BANCO_HORTALICAS } from './hooks/useMqtt'
 import { usePlantVoice } from './hooks/usePlantVoice'
 import { TopAppBar } from './components/layout/TopAppBar'
@@ -33,6 +33,7 @@ export default function App() {
     alterarHortalica,
     toggleSmartMode,
     refillReservoir,
+    resetLuzHoje,
     resetWifi,
   } = useMqtt()
   const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica, smartMode })
@@ -64,7 +65,6 @@ export default function App() {
   const setSmartMode = (mode: boolean) => {
     toggleSmartMode(mode)
   }
-
 
   const [showSelector, setShowSelector] = useState<boolean>(false)
 
@@ -113,6 +113,7 @@ export default function App() {
               hortalica={hortalica}
               status={status}
               lastRegaMs={lastRegaMs}
+              onResetLuz={resetLuzHoje}
             />
           )}
 

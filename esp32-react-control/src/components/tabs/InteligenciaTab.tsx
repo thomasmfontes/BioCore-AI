@@ -1,6 +1,7 @@
 import React from 'react';
 import type { SensorData } from '../../types';
 import type { DadosPlanta } from '../../hooks/useMqtt';
+import { resetarControleLuzHoje } from '../../services/supabaseService';
 
 interface InteligenciaTabProps {
   smartMode: boolean;
@@ -9,6 +10,7 @@ interface InteligenciaTabProps {
   hortalica: DadosPlanta;
   status: string;
   lastRegaMs?: number | null;
+  onResetLuz?: () => Promise<void>;
 }
 
 function formatarTempoMinutos(totalMin: number): string {
@@ -27,6 +29,7 @@ export function InteligenciaTab({
   hortalica,
   status,
   lastRegaMs = null,
+  onResetLuz,
 }: InteligenciaTabProps) {
   const isLive = status === 'connected' && sensors !== null;
   const isConnecting = status === 'connecting' || (status === 'connected' && sensors === null);

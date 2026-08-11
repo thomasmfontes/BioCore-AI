@@ -113,8 +113,7 @@ export async function salvarControleLuzHoje(dados: Partial<ControleLuzDiaria>, d
 
     const { data, error } = await supabase
       .from('t_controle_luz_diaria')
-      .upsert(payload, { onConflict: 'id_device,dt_referencia' })
-      .select()
+      .upsert(payload, { onConflict: 'id_device,dt_referencia' })      .select()
 
     if (error) {
       console.error('[Supabase] Erro ao salvar controle de luz:', error)
@@ -123,6 +122,67 @@ export async function salvarControleLuzHoje(dados: Partial<ControleLuzDiaria>, d
     return data
   } catch (err) {
     console.error('[Supabase] Exceção ao salvar luz:', err)
+  }
+}
+
+/**
+ * Retorna os baselines de sol/led para o dia agrícola atual salvos no localStorage
+ */
+export function getBaselineHoje(): { sol: number; led: number } | null {
+  try {
+    const hoje = getDataReferenciaAgricola()
+    const saved = localStorage.getItem(`biocore_baseline_${hoje}`)
+    return saved ? JSON.parse(saved) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Define o baseline dos acumuladores do ESP32 para o dia atual no localStorage
+ */
+export function resetarBaselineLuzHoje(rawSolMs: number = 0, rawLedMs: number = 0) {
+  const hoje = getDataReferenciaAgricola()
+  const payload = { sol: rawSolMs, led: rawLedMs }
+  try {
+    localStorage.setItem(`biocore_baseline_${hoje}`, JSON.stringify(payload))
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Reseta os contadores de tempo de luz do dia de referência atual se dados de ontem tiverem sido herdados.
+ */
+export async function resetarControleLuzHoje(rawSolMs: number = 0, rawLedMs: number = 0, deviceId: string = DEVICE_ID) {
+  const hoje = getDataReferenciaAgricola()
+
+  // Define os baselines no localStorage para abater das mensagens MQTT do ESP32 antigo
+  resetarBaselineLuzHoje(rawSolMs, rawLedMs)
+
+  try {
+    const payload = {
+      id_device: deviceId,
+      dt_referencia: hoje,
+      vl_tempo_sol_acumulado_ms: 0,
+      vl_tempo_led_acumulado_ms: 0,
+      st_compensacao_concluida: false,
+      vl_estagio_luz_atual: 0,
+      dt_ultima_atualizacao: new Date().toISOString(),
+    }
+
+    const { data, error } = await supabase
+      .from('t_controle_luz_diaria')
+      .upsert(payload, { onConflict: 'id_device,dt_referencia' })
+      .select()
+
+    if (error) {
+      console.error('[Supabase] Erro ao resetar controle de luz do dia:', error)
+    }
+
+    return data
+  } catch (err) {
+    console.error('[Supabase] Exceção ao resetar controle de luz do dia:', err)
   }
 }
 

@@ -14,7 +14,11 @@ import {
   atualizarStatusDispositivo,
   getUltimoAcionamentoBombaH2O,
   getEstimativaReservatorio,
-  registrarReabastecimentoReservatorio
+  registrarReabastecimentoReservatorio,
+  getBaselineHoje,
+  resetarBaselineLuzHoje,
+  resetarControleLuzHoje,
+  getDataReferenciaAgricola
 } from '../services/supabaseService'
 
 // ─── Banco de Hortaliças ─────────────────────────────────────────────────────
@@ -95,6 +99,7 @@ export interface MqttState {
   alterarHortalica: (chave: ChavePlanta) => void
   toggleSmartMode: (mode: boolean) => void
   refillReservoir: () => Promise<boolean>
+  resetLuzHoje: () => Promise<void>
   resetWifi: () => void
 }
 
@@ -164,11 +169,26 @@ export function useMqtt(): MqttState {
   const activeLightRowIdRef = useRef<number | null>(null)
   const activeLightStartTimeRef = useRef<number | null>(null)
 
+  const lastRawSolMsRef = useRef<number>(0)
+  const lastRawLedMsRef = useRef<number>(0)
+
   useEffect(() => {
     pumpsRef.current = pumps
   }, [pumps])
 
   const [logs, setLogs]             = useState<LogEntry[]>([])
+
+  const resetLuzHoje = useCallback(async () => {
+    const rawSol = lastRawSolMsRef.current
+    const rawLed = lastRawLedMsRef.current
+    await resetarControleLuzHoje(rawSol, rawLed)
+    setSensors(prev => prev ? {
+      ...prev,
+      sol_ms: 0,
+      led_ms: 0
+    } : null)
+    setLogs(prev => pushLog(makeLog('Contagem de luz zerada para o dia de hoje (00:00)'), prev))
+  }, [])
 
   const carregarReservatorio = useCallback(async () => {
     setReservoirLoading(true)
@@ -544,19 +564,35 @@ export function useMqtt(): MqttState {
       if (topic === TOPICS.data) {
         try {
           const dataParsed = JSON.parse(payloadStr) as SensorData
-          setSensors(dataParsed)
-          // O ESP32 físico acabou de responder! Atualiza para ONLINE no Supabase:
-          atualizarStatusDispositivo('ONLINE')
-          salvarTelemetria(dataParsed)
-
+          
           // Se o hardware reportar o estágio atual do LED na telemetria, sincroniza o estado da UI:
           if (typeof dataParsed.luz === 'number' && [0, 1, 2, 3].includes(dataParsed.luz)) {
             lightStageRef.current = dataParsed.luz as LightStage
             setLightStageState(dataParsed.luz as LightStage)
           }
+
           if (typeof dataParsed.sol_ms === 'number' || typeof dataParsed.led_ms === 'number') {
-            const solMs = dataParsed.sol_ms ?? 0
-            const ledMs = typeof dataParsed.led_ms === 'number' ? dataParsed.led_ms : Math.round(getTempoLedMs())
+            const rawSolMs = dataParsed.sol_ms ?? 0
+            const rawLedMs = typeof dataParsed.led_ms === 'number' ? dataParsed.led_ms : Math.round(getTempoLedMs())
+
+            lastRawSolMsRef.current = rawSolMs
+            lastRawLedMsRef.current = rawLedMs
+
+            let baseline = getBaselineHoje()
+
+            // Se o ESP32 antigo estiver enviando um acúmulo gigante (> 12h) herdado de ontem e sem baseline salvo para hoje:
+            if (!baseline && (rawSolMs > 12 * 3600000 || rawLedMs > 12 * 3600000)) {
+              resetarBaselineLuzHoje(rawSolMs, rawLedMs)
+              baseline = { sol: rawSolMs, led: rawLedMs }
+            }
+
+            const solMs = baseline ? Math.max(0, rawSolMs - baseline.sol) : rawSolMs
+            const ledMs = baseline ? Math.max(0, rawLedMs - baseline.led) : rawLedMs
+
+            // Sobrescreve os dados processados para renderização na UI
+            dataParsed.sol_ms = solMs
+            dataParsed.led_ms = ledMs
+
             const metaHs = hortalicaRef.current.fotoperiodo
             const metaMs = metaHs * 3600000
             const concluida = (solMs + ledMs) >= metaMs
@@ -569,7 +605,13 @@ export function useMqtt(): MqttState {
               vl_estagio_luz_atual: lightStageRef.current,
             })
           }
+
+          setSensors(dataParsed)
+          // O ESP32 físico acabou de responder! Atualiza para ONLINE no Supabase:
+          atualizarStatusDispositivo('ONLINE')
+          salvarTelemetria(dataParsed)
         } catch { /* payload malformado */ }
+        return
       }
     })
 
@@ -605,6 +647,7 @@ export function useMqtt(): MqttState {
     alterarHortalica,
     toggleSmartMode,
     refillReservoir,
+    resetLuzHoje,
     resetWifi,
   }
 }
