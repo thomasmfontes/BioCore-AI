@@ -506,6 +506,7 @@ export function useMqtt(): MqttState {
 
           // Se o hardware reportar o estágio atual do LED na telemetria, sincroniza o estado da UI:
           if (typeof dataParsed.luz === 'number' && [0, 1, 2, 3].includes(dataParsed.luz)) {
+            lightStageRef.current = dataParsed.luz as LightStage
             setLightStageState(dataParsed.luz as LightStage)
           }
           if (typeof dataParsed.sol_ms === 'number' || typeof dataParsed.led_ms === 'number') {

@@ -199,6 +199,8 @@ export async function finalizarAtuacao(
   }
 }
 
+const ultimasAtuacoesCache: Record<string, { motivo: string; timestamp: number }> = {}
+
 /**
  * Registra histórico de atuação instantânea no Supabase
  */
@@ -211,6 +213,17 @@ export async function registrarAtuacao(
   deviceId: string = DEVICE_ID
 ) {
   try {
+    const agoraMs = Date.now()
+    const chave = `${deviceId}_${tpAtuador}`
+    const ultimo = ultimasAtuacoesCache[chave]
+
+    // Previne gravação duplicada da mesma atuação com o mesmo motivo em menos de 30 segundos:
+    if (ultimo && ultimo.motivo === (motivo || '') && (agoraMs - ultimo.timestamp) < 30000) {
+      return
+    }
+
+    ultimasAtuacoesCache[chave] = { motivo: motivo || '', timestamp: agoraMs }
+
     const inicioDate = dtInicioMs ? new Date(dtInicioMs).toISOString() : new Date().toISOString()
     const fimDate = dtFimMs ? new Date(dtFimMs).toISOString() : (duracaoMs ? new Date().toISOString() : null)
 
