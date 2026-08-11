@@ -152,6 +152,7 @@ export function useMqtt(): MqttState {
   const pumpsRef = useRef<[boolean, boolean, boolean, boolean]>(pumps)
   const pumpStartTimesRef = useRef<(number | null)[]>([null, null, null, null])
   const pumpActiveRowIdsRef = useRef<(number | null)[]>([null, null, null, null])
+  const isManualPumpActionRef = useRef<[boolean, boolean, boolean, boolean]>([false, false, false, false])
 
   const activeLightRowIdRef = useRef<number | null>(null)
   const activeLightStartTimeRef = useRef<number | null>(null)
@@ -163,7 +164,7 @@ export function useMqtt(): MqttState {
   const [logs, setLogs]             = useState<LogEntry[]>([])
 
   const toggleSmartMode = useCallback((mode: boolean) => {
-    clientRef.current?.publish(TOPICS.smart, mode ? '1' : '0', { retain: true })
+    clientRef.current?.publish(TOPICS.smart, mode ? '1' : '0', { retain: false })
     setSmartModeState(mode)
     try {
       localStorage.setItem('biocore_smart_mode', String(mode))
@@ -259,6 +260,8 @@ export function useMqtt(): MqttState {
   const togglePump = useCallback((index: 0 | 1 | 2 | 3) => {
     const currentValue = pumpsRef.current[index]
     const newValue = !currentValue
+
+    isManualPumpActionRef.current[index] = true
 
     const next = [...pumpsRef.current] as [boolean, boolean, boolean, boolean]
     next[index] = newValue
@@ -462,29 +465,35 @@ export function useMqtt(): MqttState {
             next[idx] = isON
             setPumpsState(next)
 
-            const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
-            const nomesBombas = ['Bomba Nitrogênio (N)', 'Bomba Fósforo (P)', 'Bomba Potássio (K)', 'Bomba de Água (H2O)']
-            
-            if (isON) {
-              if (idx === 3) setLastRegaMs(Date.now())
-              pumpStartTimesRef.current[idx] = Date.now()
-              setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → LIGADA`), prev))
-              iniciarAtuacao(tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)').then(rowId => {
-                pumpActiveRowIdsRef.current[idx] = rowId
-              })
-            } else {
-              if (idx === 3) setLastRegaMs(Date.now())
-              const inicioMs = pumpStartTimesRef.current[idx] || Date.now()
-              const duracaoMs = Date.now() - inicioMs
-              const activeRowId = pumpActiveRowIdsRef.current[idx]
+            const isManual = isManualPumpActionRef.current[idx]
+            isManualPumpActionRef.current[idx] = false
 
-              pumpStartTimesRef.current[idx] = null
-              pumpActiveRowIdsRef.current[idx] = null
+            // Se a bomba foi acionada manualmente no aplicativo, o registro inicial/final já foi feito por togglePump()!
+            if (!isManual) {
+              const tpAtuadores: ('BOMBA_N' | 'BOMBA_P' | 'BOMBA_K' | 'BOMBA_H2O')[] = ['BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O']
+              const nomesBombas = ['Bomba Nitrogênio (N)', 'Bomba Fósforo (P)', 'Bomba Potássio (K)', 'Bomba de Água (H2O)']
+              
+              if (isON) {
+                if (idx === 3) setLastRegaMs(Date.now())
+                pumpStartTimesRef.current[idx] = Date.now()
+                setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → LIGADA`), prev))
+                iniciarAtuacao(tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)').then(rowId => {
+                  pumpActiveRowIdsRef.current[idx] = rowId
+                })
+              } else {
+                if (idx === 3) setLastRegaMs(Date.now())
+                const inicioMs = pumpStartTimesRef.current[idx] || Date.now()
+                const duracaoMs = Date.now() - inicioMs
+                const activeRowId = pumpActiveRowIdsRef.current[idx]
 
-              const durSec = Math.max(1, Math.round(duracaoMs / 1000))
-              setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → DESLIGADA (${durSec}s)`), prev))
+                pumpStartTimesRef.current[idx] = null
+                pumpActiveRowIdsRef.current[idx] = null
 
-              finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)', inicioMs)
+                const durSec = Math.max(1, Math.round(duracaoMs / 1000))
+                setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → DESLIGADA (${durSec}s)`), prev))
+
+                finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)', inicioMs)
+              }
             }
 
             try {
