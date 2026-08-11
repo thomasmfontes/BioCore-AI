@@ -117,7 +117,7 @@ export function InteligenciaTab({
       <section className="clay-card-dark rounded-3xl p-stack-md relative overflow-hidden">
         <header className="flex justify-between items-center mb-stack-md border-b border-outline-variant pb-2">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-xl drop-shadow-md">psychology</span>
+            <span className="material-symbols-outlined text-primary text-xl drop-shadow-md">memory</span>
             <span className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">BioCore AI</span>
           </div>
 
