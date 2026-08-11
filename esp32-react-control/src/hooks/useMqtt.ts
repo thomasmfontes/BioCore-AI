@@ -580,8 +580,8 @@ export function useMqtt(): MqttState {
 
             let baseline = getBaselineHoje()
 
-            // Se o ESP32 antigo estiver enviando um acúmulo gigante (> 12h) herdado de ontem e sem baseline salvo para hoje:
-            if (!baseline && (rawSolMs > 12 * 3600000 || rawLedMs > 12 * 3600000)) {
+            // Se ainda não houver estaca zero salva para hoje, a primeira leitura do dia fixa o ponto inicial de contagem:
+            if (!baseline) {
               resetarBaselineLuzHoje(rawSolMs, rawLedMs)
               baseline = { sol: rawSolMs, led: rawLedMs }
             }
