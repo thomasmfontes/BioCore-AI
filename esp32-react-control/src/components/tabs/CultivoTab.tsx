@@ -60,7 +60,7 @@ export function CultivoTab({ hortalica, smartMode, setSmartMode, sensors, setSho
       >
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">bolt</span>
+            <span className="material-symbols-outlined text-xl text-primary">memory</span>
             <h3 className={`font-title-md text-base font-bold transition-colors duration-300 ${smartMode ? 'text-primary' : 'text-on-surface'}`}>BioCore AI</h3>
           </div>
           {/* Switch Toggle Botão Real */}
