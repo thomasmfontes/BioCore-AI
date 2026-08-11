@@ -47,20 +47,41 @@ const emptyReservoirEstimate: ReservoirEstimate = {
 }
 
 /**
- * Retorna a data de referência agrícola (o ciclo diário vira às 06:00 da manhã, no amanhecer local)
+ * Retorna a data de referência agrícola (o ciclo diário vira às 06:00 da manhã no amanhecer em SP)
  */
 export function getDataReferenciaAgricola(): string {
   const agora = new Date()
-  // Se for antes das 06:00 da manhã (madrugada), a data de referência pertence ao ciclo que iniciou às 06:00 de ontem:
-  if (agora.getHours() < 6) {
-    agora.setDate(agora.getDate() - 1)
+  const options: Intl.DateTimeFormatOptions = { 
+    timeZone: 'America/Sao_Paulo', 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit', 
+    hour: '2-digit', 
+    hour12: false 
   }
-  return agora.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
+  const formatter = new Intl.DateTimeFormat('en-US', options)
+  const parts = formatter.formatToParts(agora)
+  
+  let year = '', month = '', day = '', hour = 0
+  for (const part of parts) {
+    if (part.type === 'year') year = part.value
+    if (part.type === 'month') month = part.value
+    if (part.type === 'day') day = part.value
+    if (part.type === 'hour') hour = parseInt(part.value, 10)
+  }
+
+  // Se for antes das 06:00 AM (madrugada em SP), pertence ao dia de ontem
+  if (hour < 6) {
+    const d = new Date(`${year}-${month}-${day}T12:00:00Z`)
+    d.setDate(d.getDate() - 1)
+    year = String(d.getUTCFullYear())
+    month = String(d.getUTCMonth() + 1).padStart(2, '0')
+    day = String(d.getUTCDate()).padStart(2, '0')
+  }
+
+  return `${year}-${month}-${day}`
 }
 
-/**
- * Obtém o estado de luz do dia atual salvo no Supabase
- */
 export async function getControleLuzHoje(deviceId: string = DEVICE_ID): Promise<ControleLuzDiaria | null> {
   const hoje = getDataReferenciaAgricola()
 
