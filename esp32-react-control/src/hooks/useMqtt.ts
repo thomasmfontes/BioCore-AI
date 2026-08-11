@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import mqtt from 'mqtt'
 import { MQTT_CONFIG, TOPICS } from '../config/mqtt'
-import type { SensorData, ConnectionStatus, LightStage, LogEntry } from '../types'
+import type { SensorData, ConnectionStatus, LightStage, LogEntry, ReservoirEstimate } from '../types'
 import { 
   salvarTelemetria, 
   salvarControleLuzHoje, 
@@ -12,7 +12,9 @@ import {
   salvarCultivoAtivo, 
   getHistoricoEventos,
   atualizarStatusDispositivo,
-  getUltimoAcionamentoBombaH2O
+  getUltimoAcionamentoBombaH2O,
+  getEstimativaReservatorio,
+  registrarReabastecimentoReservatorio
 } from '../services/supabaseService'
 
 // ─── Banco de Hortaliças ─────────────────────────────────────────────────────
@@ -86,10 +88,13 @@ export interface MqttState {
   hortalica: DadosPlanta
   smartMode: boolean
   lastRegaMs: number | null
+  reservoir: ReservoirEstimate | null
+  reservoirLoading: boolean
   setLight: (stage: LightStage) => void
   togglePump: (index: 0 | 1 | 2 | 3) => void
   alterarHortalica: (chave: ChavePlanta) => void
   toggleSmartMode: (mode: boolean) => void
+  refillReservoir: () => Promise<boolean>
   resetWifi: () => void
 }
 
@@ -130,6 +135,8 @@ export function useMqtt(): MqttState {
   })
 
   const [lastRegaMs, setLastRegaMs] = useState<number | null>(null)
+  const [reservoir, setReservoir] = useState<ReservoirEstimate | null>(null)
+  const [reservoirLoading, setReservoirLoading] = useState(true)
 
   const [lightStage, setLightStageState] = useState<LightStage>(() => {
     try {
@@ -162,6 +169,27 @@ export function useMqtt(): MqttState {
   }, [pumps])
 
   const [logs, setLogs]             = useState<LogEntry[]>([])
+
+  const carregarReservatorio = useCallback(async () => {
+    setReservoirLoading(true)
+    const estimate = await getEstimativaReservatorio()
+    setReservoir(estimate)
+    setReservoirLoading(false)
+  }, [])
+
+  const refillReservoir = useCallback(async () => {
+    setReservoirLoading(true)
+    const success = await registrarReabastecimentoReservatorio()
+
+    if (success) {
+      await carregarReservatorio()
+      setLogs(prev => pushLog(makeLog('Reservatório reabastecido para 1,5 L'), prev))
+      return true
+    }
+
+    setReservoirLoading(false)
+    return false
+  }, [carregarReservatorio])
 
   const toggleSmartMode = useCallback((mode: boolean) => {
     clientRef.current?.publish(TOPICS.smart, mode ? '1' : '0', { retain: false })
@@ -291,10 +319,13 @@ export function useMqtt(): MqttState {
       pumpActiveRowIdsRef.current[index] = null
 
       finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[index], 'Manual (Aplicativo)', inicioMs)
+        .then(() => {
+          if (index === 3) carregarReservatorio()
+        })
     }
 
     setLogs(p => pushLog(makeLog(`${names[index]} → ${newValue ? 'ON' : 'OFF'}`), p))
-  }, [])
+  }, [carregarReservatorio])
 
   const alterarHortalica = useCallback((chave: ChavePlanta) => {
     const planta = BANCO_HORTALICAS[chave]
@@ -364,6 +395,8 @@ export function useMqtt(): MqttState {
     getUltimoAcionamentoBombaH2O().then(ts => {
       if (ts) setLastRegaMs(ts)
     })
+
+    carregarReservatorio()
 
     // 3. Restaura histórico persistente de eventos e ativa auto-sincronização a cada 5s
     const atualizarHistorico = () => {
@@ -493,6 +526,9 @@ export function useMqtt(): MqttState {
                 setLogs(prev => pushLog(makeLog(`${nomesBombas[idx]} → DESLIGADA (${durSec}s)`), prev))
 
                 finalizarAtuacao(activeRowId, duracaoMs, tpAtuadores[idx], 'Acionamento Autônomo (BioCore AI)', inicioMs)
+                  .then(() => {
+                    if (idx === 3) carregarReservatorio()
+                  })
               }
             }
 
@@ -553,6 +589,23 @@ export function useMqtt(): MqttState {
     setLogs(prev => pushLog(makeLog('Comando de reset de Wi-Fi enviado ao vaso'), prev))
   }, [])
 
-  return { status, sensors, lightStage, pumps, logs, hortalica, smartMode, lastRegaMs, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi }
+  return {
+    status,
+    sensors,
+    lightStage,
+    pumps,
+    logs,
+    hortalica,
+    smartMode,
+    lastRegaMs,
+    reservoir,
+    reservoirLoading,
+    setLight,
+    togglePump,
+    alterarHortalica,
+    toggleSmartMode,
+    refillReservoir,
+    resetWifi,
+  }
 }
 

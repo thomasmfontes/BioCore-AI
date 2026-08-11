@@ -473,25 +473,158 @@
 
 /* Sleek Liquid Water Wave Animation — Modern & Elegant Fluid Gloss */
 @keyframes waterShimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @keyframes waterWaveFlow {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 40px; }
+}
+
+@keyframes waveMoveLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes waveMoveRight {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes bubbleFloat {
   0% {
-    transform: translateX(0);
+    transform: translateY(120%) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.6;
   }
   100% {
-    transform: translateX(40px);
+    transform: translateY(-24px) scale(1.2);
+    opacity: 0;
   }
 }
+
+@keyframes causticShimmer {
+  0% {
+    background-position: 0% 0%;
+    opacity: 0.25;
+  }
+  50% {
+    background-position: 100% 100%;
+    opacity: 0.45;
+  }
+  100% {
+    background-position: 0% 0%;
+    opacity: 0.25;
+  }
+}
+
+/* Tanque de Acrílico/Vidro 3D com Nível de Água */
+.water-tank-glass {
+  position: relative;
+  background: rgba(8, 14, 22, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem;
+  box-shadow:
+    inset 0 3px 6px rgba(255, 255, 255, 0.25),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.8),
+    inset 4px 0 10px rgba(255, 255, 255, 0.1),
+    0 16px 36px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+/* Reflexos verticais de vidro acrílico */
+.water-tank-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0.05) 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  pointer-events: none;
+  z-index: 25;
+  border-radius: 1.5rem;
+}
+
+/* Tampa metálica superior do acrílico */
+.water-tank-glass::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  border-radius: 0 0 4px 4px;
+  z-index: 26;
+}
+
+.water-tank-liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transition: height 0.8s cubic-bezier(0.34, 1.15, 0.64, 1);
+  will-change: height;
+}
+
+.water-tank-liquid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.35) 0%, transparent 60%);
+  background-size: 200% 200%;
+  animation: causticShimmer 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.water-tank-liquid-blue {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 35%, #0369a1 70%, #075985 100%);
+  box-shadow: inset 0 3px 8px rgba(255, 255, 255, 0.5), 0 -6px 20px rgba(56, 189, 248, 0.6);
+}
+
+.water-tank-liquid-warning {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 35%, #b45309 70%, #78350f 100%);
+  box-shadow: inset 0 3px 8px rgba(255, 255, 255, 0.5), 0 -6px 20px rgba(251, 191, 36, 0.6);
+}
+
+.water-tank-liquid-error {
+  background: linear-gradient(180deg, #f87171 0%, #dc2626 35%, #b91c1c 70%, #7f1d1d 100%);
+  box-shadow: inset 0 3px 8px rgba(255, 255, 255, 0.5), 0 -6px 20px rgba(248, 113, 113, 0.6);
+}
+
+/* Ondas contínuas na superfície */
+.wave-anim-1 {
+  animation: waveMoveLeft 3s linear infinite;
+  will-change: transform;
+}
+
+.wave-anim-2 {
+  animation: waveMoveRight 2s linear infinite;
+  will-change: transform;
+}
+
+/* Bolhas no líquido distribuídas pelo reservatório horizontal */
+.bubble-float-1 { left: 8%; animation: bubbleFloat 2.8s ease-in-out infinite; }
+.bubble-float-2 { left: 28%; animation: bubbleFloat 3.8s ease-in-out 0.8s infinite; }
+.bubble-float-3 { left: 48%; animation: bubbleFloat 3.2s ease-in-out 0.4s infinite; }
+.bubble-float-4 { left: 68%; animation: bubbleFloat 4.1s ease-in-out 1.5s infinite; }
+.bubble-float-5 { left: 85%; animation: bubbleFloat 3.5s ease-in-out 1.0s infinite; }
+
+
+
 
 .water-wave-fill {
   background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);

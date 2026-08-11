@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_telemetria_dispositivo_data ON t_telemetria_leitu
 CREATE TABLE IF NOT EXISTS t_historico_atuacao (
     id_atuacao                BIGSERIAL PRIMARY KEY,
     id_device                 VARCHAR(50) NOT NULL REFERENCES t_dispositivo(id_device) ON DELETE CASCADE,
-    tp_atuador                VARCHAR(30) NOT NULL, -- 'BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O', 'LED_PWM', 'BIOCORE_AI'
+    tp_atuador                VARCHAR(30) NOT NULL, -- 'BOMBA_N', 'BOMBA_P', 'BOMBA_K', 'BOMBA_H2O', 'LED_PWM', 'BIOCORE_AI', 'RESERVATORIO_H2O'
     vl_duracao_ms             INT,
     ds_motivo                 TEXT,
     dt_inicio                 TIMESTAMPTZ DEFAULT NOW(),

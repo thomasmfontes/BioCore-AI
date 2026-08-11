@@ -23,6 +23,19 @@ export interface LogEntry {
   message: string
 }
 
+export interface ReservoirEstimate {
+  configured: boolean
+  capacityMl: number
+  remainingMl: number
+  consumedMl: number
+  percentage: number
+  remainingWaterings: number
+  averageDailyConsumptionMl: number | null
+  predictedRefillAt: number | null
+  lastRefillAt: number | null
+  wateringEventsInWindow: number
+}
+
 export type VoicePriority = 'critical' | 'warning' | 'info'
 
 export type VoiceAudioKey =

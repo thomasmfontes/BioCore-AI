@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { SensorData } from '../types'
+import type { ReservoirEstimate, SensorData } from '../types'
 
 export interface HortalicaDb {
   cd_hortalica: string
@@ -26,6 +26,25 @@ export interface ControleLuzDiaria {
 }
 
 const DEVICE_ID = 'biocore_01'
+const RESERVOIR_CAPACITY_ML = 1500
+const WATER_FLOW_ML_PER_MINUTE = 40
+const STANDARD_WATERING_SECONDS = 15
+const FORECAST_WINDOW_DAYS = 7
+
+const emptyReservoirEstimate: ReservoirEstimate = {
+  configured: false,
+  capacityMl: RESERVOIR_CAPACITY_ML,
+  remainingMl: RESERVOIR_CAPACITY_ML,
+  consumedMl: 0,
+  percentage: 100,
+  remainingWaterings: Math.floor(
+    RESERVOIR_CAPACITY_ML / ((WATER_FLOW_ML_PER_MINUTE / 60) * STANDARD_WATERING_SECONDS)
+  ),
+  averageDailyConsumptionMl: null,
+  predictedRefillAt: null,
+  lastRefillAt: null,
+  wateringEventsInWindow: 0,
+}
 
 /**
  * Retorna a data de referência agrícola (o ciclo diário vira às 06:00 da manhã, no amanhecer local)
@@ -129,6 +148,130 @@ export async function salvarTelemetria(telemetria: SensorData, deviceId: string 
     }
   } catch (err) {
     console.error('[Supabase] Exceção na telemetria:', err)
+  }
+}
+
+/**
+ * Registra o momento em que o usuário confirmou o reservatório cheio.
+ * O evento funciona como o marco inicial para descontar o consumo das regas seguintes.
+ */
+export async function registrarReabastecimentoReservatorio(
+  deviceId: string = DEVICE_ID
+): Promise<boolean> {
+  try {
+    const agora = new Date().toISOString()
+    const { error } = await supabase.from('t_historico_atuacao').insert({
+      id_device: deviceId,
+      tp_atuador: 'RESERVATORIO_H2O',
+      ds_motivo: 'Reservatório reabastecido para 1,5 L',
+      dt_inicio: agora,
+      dt_fim: agora,
+      dt_atuacao: agora,
+    })
+
+    if (error) {
+      console.error('[Supabase] Erro ao registrar reabastecimento:', error)
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.error('[Supabase] Exceção ao registrar reabastecimento:', err)
+    return false
+  }
+}
+
+/**
+ * Estima o nível usando a vazão calibrada de 40 ml/min e a duração real da bomba.
+ * A previsão diária usa as regas concluídas nos últimos 7 dias e só é exibida
+ * depois de pelo menos 3 acionamentos, evitando uma data baseada em pouca amostra.
+ */
+export async function getEstimativaReservatorio(
+  deviceId: string = DEVICE_ID
+): Promise<ReservoirEstimate> {
+  try {
+    const { data: ultimoReabastecimento, error: refillError } = await supabase
+      .from('t_historico_atuacao')
+      .select('dt_inicio')
+      .eq('id_device', deviceId)
+      .eq('tp_atuador', 'RESERVATORIO_H2O')
+      .order('dt_inicio', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (refillError || !ultimoReabastecimento?.dt_inicio) {
+      if (refillError) console.error('[Supabase] Erro ao buscar reabastecimento:', refillError)
+      return { ...emptyReservoirEstimate }
+    }
+
+    const nowMs = Date.now()
+    const refillMs = new Date(ultimoReabastecimento.dt_inicio).getTime()
+    const forecastStartMs = Math.max(refillMs, nowMs - FORECAST_WINDOW_DAYS * 86400000)
+
+    const [consumptionResult, forecastResult] = await Promise.all([
+      supabase
+        .from('t_historico_atuacao')
+        .select('vl_duracao_ms')
+        .eq('id_device', deviceId)
+        .eq('tp_atuador', 'BOMBA_H2O')
+        .gte('dt_inicio', new Date(refillMs).toISOString())
+        .not('vl_duracao_ms', 'is', null),
+      supabase
+        .from('t_historico_atuacao')
+        .select('vl_duracao_ms, dt_inicio')
+        .eq('id_device', deviceId)
+        .eq('tp_atuador', 'BOMBA_H2O')
+        .gte('dt_inicio', new Date(forecastStartMs).toISOString())
+        .not('vl_duracao_ms', 'is', null),
+    ])
+
+    if (consumptionResult.error || forecastResult.error) {
+      console.error(
+        '[Supabase] Erro ao calcular reservatório:',
+        consumptionResult.error || forecastResult.error
+      )
+      return { ...emptyReservoirEstimate, configured: true, lastRefillAt: refillMs }
+    }
+
+    const totalDurationMs = (consumptionResult.data || []).reduce(
+      (total, item) => total + Number(item.vl_duracao_ms || 0),
+      0
+    )
+    const forecastDurationMs = (forecastResult.data || []).reduce(
+      (total, item) => total + Number(item.vl_duracao_ms || 0),
+      0
+    )
+
+    const consumedMl = (totalDurationMs / 60000) * WATER_FLOW_ML_PER_MINUTE
+    const remainingMl = Math.max(0, RESERVOIR_CAPACITY_ML - consumedMl)
+    const standardWateringMl = (WATER_FLOW_ML_PER_MINUTE / 60) * STANDARD_WATERING_SECONDS
+    const elapsedSinceRefillDays = Math.max(1, (nowMs - refillMs) / 86400000)
+    const averageWindowDays = Math.min(FORECAST_WINDOW_DAYS, elapsedSinceRefillDays)
+    const wateringEventsInWindow = forecastResult.data?.length || 0
+    const averageDailyConsumptionMl = wateringEventsInWindow >= 3
+      ? ((forecastDurationMs / 60000) * WATER_FLOW_ML_PER_MINUTE) / averageWindowDays
+      : null
+    const predictedRefillAt = averageDailyConsumptionMl && averageDailyConsumptionMl > 0
+      ? nowMs + (remainingMl / averageDailyConsumptionMl) * 86400000
+      : null
+
+    return {
+      configured: true,
+      capacityMl: RESERVOIR_CAPACITY_ML,
+      remainingMl: Math.round(remainingMl),
+      consumedMl: Math.round(consumedMl),
+      percentage: Math.round((remainingMl / RESERVOIR_CAPACITY_ML) * 100),
+      remainingWaterings: Math.floor(remainingMl / standardWateringMl),
+      averageDailyConsumptionMl: averageDailyConsumptionMl
+        ? Math.round(averageDailyConsumptionMl * 10) / 10
+        : null,
+      predictedRefillAt,
+      lastRefillAt: refillMs,
+      wateringEventsInWindow,
+    }
+  } catch (err) {
+    console.error('[Supabase] Exceção ao estimar reservatório:', err)
+    return { ...emptyReservoirEstimate }
   }
 }
 

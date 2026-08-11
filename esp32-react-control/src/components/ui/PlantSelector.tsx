@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { ChavePlanta, DadosPlanta } from '../../hooks/useMqtt';
 
 interface PlantSelectorProps {
@@ -35,7 +36,7 @@ export function PlantSelector({
 
   if (!render) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
       {/* Backdrop */}
       <div
@@ -96,6 +97,7 @@ export function PlantSelector({
           Cancelar
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

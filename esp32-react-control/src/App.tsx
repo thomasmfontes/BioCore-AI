@@ -17,7 +17,24 @@ import { VoiceWidget } from './components/ui/VoiceWidget'
 export type Tab = 'cultivo' | 'inteligencia' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
 export default function App() {
-  const { status, sensors, lightStage, pumps, logs, hortalica, smartMode, lastRegaMs, setLight, togglePump, alterarHortalica, toggleSmartMode, resetWifi } = useMqtt()
+  const {
+    status,
+    sensors,
+    lightStage,
+    pumps,
+    logs,
+    hortalica,
+    smartMode,
+    lastRegaMs,
+    reservoir,
+    reservoirLoading,
+    setLight,
+    togglePump,
+    alterarHortalica,
+    toggleSmartMode,
+    refillReservoir,
+    resetWifi,
+  } = useMqtt()
   const voice = usePlantVoice({ status, sensors, lightStage, pumps, hortalica, smartMode })
 
   // Garantir bloqueio em modo retrato (portrait) para o aplicativo PWA
@@ -82,6 +99,9 @@ export default function App() {
               sensors={sensors}
               setShowSelector={setShowSelector}
               onNavigateToCamera={() => handleTabChange('camera')}
+              reservoir={reservoir}
+              reservoirLoading={reservoirLoading}
+              onRefillReservoir={refillReservoir}
             />
           )}
 
