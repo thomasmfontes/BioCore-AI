@@ -210,7 +210,7 @@ export function useMqtt(): MqttState {
   const clientRef                   = useRef<mqtt.MqttClient | null>(null)
 
   const setLight = useCallback((stage: LightStage) => {
-    clientRef.current?.publish(TOPICS.light, String(stage), { retain: true })
+    clientRef.current?.publish(TOPICS.light, String(stage), { retain: false })
     setLightStageState(stage)
     try {
       localStorage.setItem(STORAGE_LUZ_KEY, String(stage))
@@ -264,7 +264,7 @@ export function useMqtt(): MqttState {
     next[index] = newValue
     setPumpsState(next)
 
-    clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0', { retain: true })
+    clientRef.current?.publish(TOPICS.pump((index + 1) as 1 | 2 | 3 | 4), newValue ? '1' : '0', { retain: false })
     try {
       localStorage.setItem(STORAGE_BOMBAS_KEY, JSON.stringify(next))
     } catch { /* ignore */ }
