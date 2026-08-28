@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/camera-proxy",
-      "destination": "https://thomas-q.tail6cf6eb.ts.net"
+      "destination": "https://thomas-q-1.tail6cf6eb.ts.net"
     },
     {
       "source": "/api/camera-proxy/:path*",
-      "destination": "https://thomas-q.tail6cf6eb.ts.net/:path*"
+      "destination": "https://thomas-q-1.tail6cf6eb.ts.net/:path*"
     }
   ]
 }

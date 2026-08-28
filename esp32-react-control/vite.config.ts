@@ -7,7 +7,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api/camera-proxy': {
-        target: 'https://thomas-q.tail6cf6eb.ts.net',
+        target: 'https://thomas-q-1.tail6cf6eb.ts.net',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api\/camera-proxy/, ''),
