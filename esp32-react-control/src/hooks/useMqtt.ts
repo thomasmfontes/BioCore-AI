@@ -431,8 +431,10 @@ export function useMqtt(): MqttState {
     const syncInterval = setInterval(atualizarHistorico, 5000)
 
     const client = mqtt.connect(MQTT_CONFIG.url, {
+      clientId:        `biocore_web_${Math.random().toString(16).substring(2, 10)}`,
       username:        MQTT_CONFIG.username,
       password:        MQTT_CONFIG.password,
+      clean:           true,
       reconnectPeriod: 5000,
       connectTimeout:  10000,
     })
@@ -621,7 +623,18 @@ export function useMqtt(): MqttState {
 
     return () => { 
       clearInterval(syncInterval)
-      client.end(true) 
+      if (client.connected) {
+        client.end(false)
+      } else {
+        client.once('connect', () => {
+          client.end(false)
+        })
+        setTimeout(() => {
+          if (!client.disconnected) {
+            client.end(true)
+          }
+        }, 3000)
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
