@@ -44,12 +44,7 @@ interface PlantCameraProps {
 }
 
 export function PlantCamera({ className = '', showDetails = true }: PlantCameraProps) {
-  const isLocalhost = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.startsWith('192.168.')
-  );
-  const defaultUrl = isLocalhost ? "/api/camera-proxy" : "https://thomas-q-1.tail6cf6eb.ts.net";
+  const defaultUrl = "/api/camera-proxy";
   const rawBaseUrl = import.meta.env.VITE_CAMERA_STREAM_URL || defaultUrl;
   const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
