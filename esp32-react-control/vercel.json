@@ -7,6 +7,14 @@
     {
       "source": "/api/camera-proxy/:path*",
       "destination": "https://thomas-q-1.tail6cf6eb.ts.net/:path*"
+    },
+    {
+      "source": "/sorteio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sorteio/:path*",
+      "destination": "/index.html"
     }
   ]
 }

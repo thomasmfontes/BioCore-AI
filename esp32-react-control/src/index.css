@@ -671,3 +671,64 @@
   border-radius: 9999px 9999px 0 0;
 }
 
+
+
+/* Animação de Confirmação de Sucesso (Estilo Mercado Livre / Pagamento Aprovado) */
+@keyframes mlCircleDraw {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes mlCheckDraw {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes mlPopBounce {
+  0% {
+    transform: scale(0.65);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-ml-pop {
+  animation: mlPopBounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-ml-circle {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: mlCircleDraw 0.65s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.animate-ml-check {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: mlCheckDraw 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.35s forwards;
+}

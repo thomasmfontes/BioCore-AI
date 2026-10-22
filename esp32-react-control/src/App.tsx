@@ -13,10 +13,14 @@ import { PlantSelector } from './components/ui/PlantSelector'
 import { PwaUpdater } from './components/ui/PwaUpdater'
 import { PwaInstallPrompt } from './components/ui/PwaInstallPrompt'
 import { VoiceWidget } from './components/ui/VoiceWidget'
+import { SorteioPage } from './components/sorteio/SorteioPage'
+import { SucessoPage } from './components/sorteio/SucessoPage'
+import { AdminPage } from './components/sorteio/AdminPage'
 
 export type Tab = 'cultivo' | 'inteligencia' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
-export default function App() {
+// Dashboard Principal do Vaso Inteligente (ESP32)
+function BioCoreDashboard() {
   const {
     status,
     sensors,
@@ -173,4 +177,43 @@ export default function App() {
       </div>
     </div>
   )
+}
+
+// Roteador Raiz: direciona entre Dashboard, /sorteio e /sorteio/admin
+export default function App() {
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    return (window.location.pathname + window.location.hash).toLowerCase()
+  })
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath((window.location.pathname + window.location.hash).toLowerCase())
+    }
+
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
+  }, [])
+
+  // 1. Rota Administrativa da Banca
+  if (currentPath.includes('/sorteio/admin')) {
+    return <AdminPage />
+  }
+
+  // 2. Rota de Confirmação / Sucesso da Inscrição
+  if (currentPath.includes('/sorteio/sucesso')) {
+    return <SucessoPage />
+  }
+
+  // 3. Rota Pública do Sorteio da Alexa
+  if (currentPath.includes('/sorteio')) {
+    return <SorteioPage />
+  }
+
+  // 3. Aplicação Padrão do BioCore AI (Vaso Inteligente)
+  return <BioCoreDashboard />
 }

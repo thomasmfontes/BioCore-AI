@@ -72,3 +72,14 @@ export interface VoiceState {
 }
 
 
+
+
+export interface ParticipanteSorteio {
+  id?: string
+  nome_completo: string
+  whatsapp: string
+  instagram: string
+  votou_confirmado: boolean
+  sorteado?: boolean
+  created_at?: string
+}
