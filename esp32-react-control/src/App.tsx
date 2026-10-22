@@ -16,6 +16,7 @@ import { VoiceWidget } from './components/ui/VoiceWidget'
 import { SorteioPage } from './components/sorteio/SorteioPage'
 import { SucessoPage } from './components/sorteio/SucessoPage'
 import { AdminPage } from './components/sorteio/AdminPage'
+import { BannerPage } from './components/sorteio/BannerPage'
 
 export type Tab = 'cultivo' | 'inteligencia' | 'telemetria' | 'camera' | 'controle' | 'historico'
 
@@ -199,17 +200,22 @@ export default function App() {
     }
   }, [])
 
-  // 1. Rota Administrativa da Banca
+  // 1. Rota do Banner Oficial para Impressão
+  if (currentPath.includes('/banner') || currentPath.includes('/sorteio/banner')) {
+    return <BannerPage />
+  }
+
+  // 2. Rota Administrativa da Banca
   if (currentPath.includes('/sorteio/admin')) {
     return <AdminPage />
   }
 
-  // 2. Rota de Confirmação / Sucesso da Inscrição
+  // 3. Rota de Confirmação / Sucesso da Inscrição
   if (currentPath.includes('/sorteio/sucesso')) {
     return <SucessoPage />
   }
 
-  // 3. Rota Pública do Sorteio da Alexa
+  // 4. Rota Pública do Sorteio da Alexa
   if (currentPath.includes('/sorteio')) {
     return <SorteioPage />
   }

@@ -6,7 +6,8 @@ import {
   RefreshCw, 
   Lock, 
   ArrowLeft, 
-  AlertCircle 
+  AlertCircle,
+  Image as ImageIcon
 } from 'lucide-react'
 import { listarParticipantes, exportarParticipantesCSV } from '../../services/sorteioService'
 import { ParticipanteSorteio } from '../../types'
@@ -184,6 +185,14 @@ export function AdminPage() {
 
         {/* Canto Direito: Ações */}
         <div className="flex items-center gap-1.5 ml-auto">
+          <a
+            href="/banner"
+            className="h-8 px-2.5 rounded-full flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors outline-none active:scale-95 border border-white/5 cursor-pointer"
+            title="Ver e imprimir banner oficial"
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-primary" />
+            <span className="hidden sm:inline font-medium">Banner</span>
+          </a>
           <button
             onClick={carregarDados}
             disabled={loading}
