@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Check, Loader2, AlertCircle } from 'lucide-react'
+import { Check, Loader2, AlertCircle, ExternalLink } from 'lucide-react'
 import { cadastrarParticipante } from '../../services/sorteioService'
 import { ParticipanteSorteio } from '../../types'
 
@@ -190,6 +190,19 @@ export function RaffleForm({ onSuccess }: RaffleFormProps) {
           <span className="text-[11px] leading-tight">
             Confirmo que votei no projeto <strong className="text-white font-semibold">BioCore AI</strong> no NEXT.<span className="text-primary ml-0.5">*</span>
           </span>
+        </div>
+
+        {/* Link auxiliar de votação */}
+        <div className="px-1 -mt-1 text-right">
+          <a
+            href="https://www2.fiap.com.br/next-votacao/index.php?id=16"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary-fixed transition-colors font-medium underline underline-offset-2"
+          >
+            <span>Ainda não votou? Clique aqui para votar</span>
+            <ExternalLink className="w-3 h-3 stroke-[2.5]" />
+          </a>
         </div>
 
         {/* Checkbox 2: Print da Votação */}

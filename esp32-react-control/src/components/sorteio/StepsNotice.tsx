@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExternalLink, Camera } from 'lucide-react'
+import { ExternalLink, Camera, Vote } from 'lucide-react'
 import { InstagramIcon } from './InstagramIcon'
 
 export function StepsNotice() {
@@ -20,8 +20,22 @@ export function StepsNotice() {
               Vote no BioCore AI
             </h4>
             <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">
-              Escaneie com seu celular o QR Code oficial da organização disponível no nosso stand.
+              Escaneie o QR Code na banca ou vote pelo link oficial abaixo.
             </p>
+
+            {/* Botão Clicável de Votação */}
+            <div className="mt-2.5">
+              <a
+                href="https://www2.fiap.com.br/next-votacao/index.php?id=16"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-fixed text-[#00210f] text-xs font-bold active:scale-95 transition-all shadow-[0_2px_10px_rgba(90,240,157,0.2)]"
+              >
+                <Vote className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Abrir Votação do BioCore AI</span>
+                <ExternalLink className="w-3 h-3 stroke-[2.5]" />
+              </a>
+            </div>
 
             {/* Aviso sucinto para tirar print */}
             <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-300 text-[11px] font-medium">
